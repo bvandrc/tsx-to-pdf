@@ -1,6 +1,6 @@
 {
   "name": "tsx-to-pdf",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Generate a page-exact PDF from a document written in TSX and Tailwind. Live preview at the printed size, diffable HTML alongside, and a build that can be configured to fail when the layout overflows.",
   "keywords": [
     "pdf",
