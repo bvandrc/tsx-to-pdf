@@ -45,7 +45,7 @@ const getFontSubtypes = (pdf: PDFDocument): string[] =>
  */
 export const buildPdf = async (
   pageUrl: string,
-  { maxPages, page: sheet, checkPdfFontTypes, producer }: ResolvedConfig
+  { maxPages, page: sheet, checkPdfFontTypes, author, producer }: ResolvedConfig
 ): Promise<Uint8Array> => {
   const { chromium } = await playwright()
 
@@ -121,6 +121,12 @@ export const buildPdf = async (
     pdf.setModificationDate(EPOCH)
     pdf.setProducer(producer)
     pdf.setCreator(producer)
+
+    // Only when given: pdf-lib would otherwise write an empty /Author, which
+    // reads as "authored by nobody" rather than as absent.
+    if (author !== undefined) {
+      pdf.setAuthor(author)
+    }
 
     // pdf-lib derives a fresh /ID from the current time on save unless one is set.
     const id = PDFHexString.of('0'.repeat(32))

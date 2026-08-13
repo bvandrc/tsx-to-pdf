@@ -79,10 +79,15 @@ export type Config = {
    */
   checkPdfFontTypes?: boolean
   /**
-   * `/Producer` and `/Creator` in the PDF, which readers show under document
-   * properties. Chromium writes its own renderer version and a timestamp there;
-   * both vary per run, so this is overwritten with something fixed. Set it to
-   * your own name to keep the tool out of the file.
+   * `/Author` in the PDF: the person who wrote the document. Left unset when
+   * you don't give one, rather than guessed at.
+   */
+  author?: string
+  /**
+   * `/Producer` and `/Creator` in the PDF, which name the *software* that made
+   * it — Chromium writes `Skia/PDF m141` and a browser user-agent string, both
+   * of which vary per run, so this is overwritten with something fixed. Your
+   * own name belongs in `author`, not here.
    * @default 'tsx-to-pdf'
    */
   producer?: string
@@ -162,6 +167,7 @@ const CONFIG_SCHEMA: GenericSchema<Config> = object({
   ),
   maxPages: optional(pipe(number(), integer(), minValue(1))),
   checkPdfFontTypes: optional(boolean()),
+  author: optional(string()),
   producer: optional(string()),
   port: optional(pipe(number(), integer())),
 })
@@ -215,6 +221,7 @@ export const loadConfig = async (path: string): Promise<ResolvedConfig> => {
     page: toDimensions(config.pageSize),
     maxPages: config.maxPages,
     checkPdfFontTypes: config.checkPdfFontTypes ?? true,
+    author: config.author,
     producer: config.producer ?? 'tsx-to-pdf',
     port: config.port ?? 4000,
   }
