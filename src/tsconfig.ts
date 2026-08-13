@@ -34,31 +34,33 @@ const posix = (path: string): string => path.split(sep).join('/')
  * rest.
  */
 export const jsxTsconfig = async (root: string): Promise<string> => {
-  const directory = join(root, 'node_modules', '.tsx-to-pdf')
-  await mkdir(directory, { recursive: true })
+  const pkgDir = join(root, 'node_modules', '.tsx-to-pdf')
+  await mkdir(pkgDir, { recursive: true }) // create if doesn't exist
+  const pkgDirRel = (target: string) => posix(relative(pkgDir, target))
 
-  const project = PROJECT_TSCONFIGS.map((name) => join(root, name)).find(
+  const tsconfigPath = join(pkgDir, 'tsconfig.json')
+
+  const projectConfig = PROJECT_TSCONFIGS.map((name) => join(root, name)).find(
     existsSync
   )
 
-  const path = join(directory, 'tsconfig.json')
-
+  // create the tsconfig in node_modules .
   await writeFile(
-    path,
+    tsconfigPath,
     `${JSON.stringify(
       {
-        ...(project && { extends: posix(relative(directory, project)) }),
+        ...(projectConfig && { extends: pkgDirRel(projectConfig) }),
         compilerOptions: JSX_OPTIONS,
         // `extends` inherits the project's `include`, and tsx only applies a
         // tsconfig to files that one matches — so a project scoped to `src` would
         // leave a document elsewhere with no JSX settings. Widening it here is
         // what makes the document's location stop mattering.
-        include: [`${posix(relative(directory, root))}/**/*`],
+        include: [`${pkgDirRel(root)}/**/*`],
       },
       null,
       2
     )}\n`
   )
 
-  return path
+  return tsconfigPath
 }
