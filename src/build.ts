@@ -3,7 +3,7 @@ import { basename, dirname, join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { mapValues, omit } from 'es-toolkit'
 
-import { buildPage, copyAssets, loadContent } from './build-html.tsx'
+import { buildPage, copyAssets } from './build-html.tsx'
 import { buildPdf } from './build-pdf.ts'
 import type { ResolvedConfig } from './config.ts'
 
@@ -31,7 +31,6 @@ export const build = async (
 
   const { html, css } = await buildPage({
     config,
-    content: await loadContent(config),
     stylesheet: `./${config.name}.css`,
   })
 

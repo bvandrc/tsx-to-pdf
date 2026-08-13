@@ -4,7 +4,7 @@ import { createServer, type ServerResponse } from 'node:http'
 import { dirname, extname, join, sep } from 'node:path'
 import { debounce } from 'es-toolkit'
 
-import { buildPage, buildStylesheet, loadContent } from './build-html.tsx'
+import { buildPage, buildStylesheet } from './build-html.tsx'
 import type { ResolvedConfig } from './config.ts'
 
 /** Shared by the route and the client that subscribes to it. */
@@ -108,11 +108,10 @@ export const serve = (config: ResolvedConfig): void => {
     }
 
     contentRevision()
-      .then((revision) => loadContent(config, revision))
-      .then((content) =>
+      .then((revision) =>
         buildPage({
           config,
-          content,
+          cacheKey: revision,
           stylesheet,
           // Shows the page boundary against a backdrop, and reloads on rebuild.
           head: (

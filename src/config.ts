@@ -8,6 +8,7 @@ import {
   resolve,
 } from 'node:path'
 import { pathToFileURL } from 'node:url'
+import type { SetRequired } from 'type-fest'
 import {
   boolean,
   type GenericSchema,
@@ -36,7 +37,10 @@ export const PAGE_SIZES = {
   a5: { width: '148mm', height: '210mm' },
 } as const satisfies Record<string, PageDimensions>
 
-export type PageSize = keyof typeof PAGE_SIZES
+/** The names, as a value, so the schema and its message can both read them. */
+const PAGE_SIZE_NAMES = Object.keys(PAGE_SIZES) as (keyof typeof PAGE_SIZES)[]
+
+export type PageSize = (typeof PAGE_SIZE_NAMES)[number]
 
 /** Which document to render and how. Paths are relative to the config file. */
 export type Config = {
@@ -76,22 +80,25 @@ export type Config = {
 
 export const defineConfig = (config: Config): Config => config
 
-/** Defaults filled in and paths resolved, which is what the build works from. */
-export type ResolvedConfig = Required<
-  Pick<Config, 'name' | 'port' | 'checkPdfFontTypes' | 'producer'>
-> &
-  // Kept relative as written, for the `@source`/`@import` Tailwind compiles.
-  // `maxPages` stays optional — unset means unlimited, which no default states.
-  Pick<Config, 'entry' | 'styles' | 'maxPages'> & {
-    /** The config file's directory. Relative paths resolve against it. */
-    root: string
-    /** The same three, resolved. `styles` is only ever needed relative. */
-    entryPath: string
-    assetsDir: string
-    outDir: string
-    /** `pageSize` with the named sheets looked up. */
-    page: PageDimensions
-  }
+/**
+ * Defaults filled in and paths resolved, which is what the build works from.
+ *
+ * `entry` and `styles` stay relative as written, for the `@source`/`@import`
+ * Tailwind compiles; `outDir` is resolved in place. `maxPages` stays optional —
+ * unset means unlimited, which no default value states.
+ */
+export type ResolvedConfig = SetRequired<
+  Omit<Config, 'assets' | 'pageSize'>,
+  'name' | 'port' | 'checkPdfFontTypes' | 'producer'
+> & {
+  /** The config file's directory. Relative paths resolve against it. */
+  root: string
+  /** `entry` and `assets` resolved. `styles` is only ever needed relative. */
+  entryPath: string
+  assetsDir: string
+  /** `pageSize` with the named sheets looked up. */
+  page: PageDimensions
+}
 
 const CONFIG_BASENAME = 'tsx-to-pdf.config'
 const CONFIG_EXTENSIONS = ['ts', 'mts', 'js', 'mjs']
@@ -139,10 +146,10 @@ const CONFIG_SCHEMA: GenericSchema<Config> = object({
   pageSize: optional(
     union(
       [
-        picklist(Object.keys(PAGE_SIZES) as PageSize[]),
+        picklist(PAGE_SIZE_NAMES),
         object({ width: string(), height: string() }),
       ],
-      `Expected ${Object.keys(PAGE_SIZES).join(', ')}, or { width, height } as CSS lengths`
+      `Expected ${PAGE_SIZE_NAMES.join(', ')}, or { width, height } as CSS lengths`
     )
   ),
   maxPages: optional(pipe(number(), integer(), minValue(1))),
@@ -152,7 +159,9 @@ const CONFIG_SCHEMA: GenericSchema<Config> = object({
 })
 
 /** `letter` and the rest resolved to the lengths the stylesheet is built from. */
-const dimensions = (pageSize: Config['pageSize'] = 'letter'): PageDimensions =>
+const toDimensions = (
+  pageSize: Config['pageSize'] = 'letter'
+): PageDimensions =>
   typeof pageSize === 'string' ? PAGE_SIZES[pageSize] : pageSize
 
 /**
@@ -195,7 +204,7 @@ export const loadConfig = async (path: string): Promise<ResolvedConfig> => {
     outDir: resolve(root, outDir),
     // `resume.tsx` gives `resume.pdf`, which is what you would have named it.
     name: name ?? basename(entry, extname(entry)),
-    page: dimensions(config.pageSize),
+    page: toDimensions(config.pageSize),
     maxPages: config.maxPages,
     checkPdfFontTypes: config.checkPdfFontTypes ?? true,
     producer: config.producer ?? 'tsx-to-pdf',

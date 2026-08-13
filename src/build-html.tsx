@@ -69,7 +69,7 @@ export const buildStylesheet = async ({
 }
 
 /** What a document module has to provide to be rendered. */
-export type ContentModule = {
+type ContentModule = {
   default: FunctionComponent
   title: string
 }
@@ -81,7 +81,7 @@ export type ContentModule = {
  * A `.tsx` document needs `tsx` registered before this runs. The CLI does that;
  * callers using the API directly have to do it themselves.
  */
-export const loadContent = async (
+const loadContent = async (
   { entryPath }: ResolvedConfig,
   cacheKey: string | number = ''
 ): Promise<ContentModule> =>
@@ -97,17 +97,18 @@ export const buildPage = async ({
   config,
   head,
   stylesheet,
-  content: { default: Content, title },
+  cacheKey,
 }: {
   config: ResolvedConfig
   /** Extra `<head>` content. (The dev server passes its preview styling here.) */
   head?: ComponentChildren
   /** Where the page should link its stylesheet. */
   stylesheet: string
-  /** The document to render, from `loadContent`. */
-  content: ContentModule
+  /** Busts the module cache, so the dev server sees an edited document. */
+  cacheKey?: string | number
 }): Promise<{ html: string; css: string }> => {
   const css = await buildStylesheet(config)
+  const { default: Content, title } = await loadContent(config, cacheKey)
 
   const page = (
     <html lang="en">

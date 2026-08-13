@@ -215,8 +215,9 @@ const loadContent = async ({ entryPath }, cacheKey = "") => await import(`${path
 * Assembles the page and the stylesheet it links. They come from one call because
 * they are one render: Tailwind emits utilities by scanning the document.
 */
-const buildPage = async ({ config, head, stylesheet, content: { default: Content, title } }) => {
+const buildPage = async ({ config, head, stylesheet, cacheKey }) => {
 	const css = await buildStylesheet(config);
+	const { default: Content, title } = await loadContent(config, cacheKey);
 	const page = /* @__PURE__ */ jsxs("html", {
 		lang: "en",
 		children: [/* @__PURE__ */ jsxs("head", { children: [
@@ -331,7 +332,6 @@ const build = async (config, { pdf = true } = {}) => {
 	const paths = outputs(config);
 	const { html, css } = await buildPage({
 		config,
-		content: await loadContent(config),
 		stylesheet: `./${config.name}.css`
 	});
 	await Promise.all(Object.values(paths).map((path) => mkdir(dirname(path), { recursive: true })));
@@ -814,6 +814,8 @@ const PAGE_SIZES = {
 		height: "210mm"
 	}
 };
+/** The names, as a value, so the schema and its message can both read them. */
+const PAGE_SIZE_NAMES = Object.keys(PAGE_SIZES);
 const defineConfig = (config) => config;
 const CONFIG_BASENAME = "tsx-to-pdf.config";
 const CONFIG_NAMES = [
@@ -844,17 +846,17 @@ const CONFIG_SCHEMA = /* @__PURE__ */ object({
 	assets: /* @__PURE__ */ string(),
 	outDir: /* @__PURE__ */ string(),
 	name: /* @__PURE__ */ optional(/* @__PURE__ */ string()),
-	pageSize: /* @__PURE__ */ optional(/* @__PURE__ */ union([/* @__PURE__ */ picklist(Object.keys(PAGE_SIZES)), /* @__PURE__ */ object({
+	pageSize: /* @__PURE__ */ optional(/* @__PURE__ */ union([/* @__PURE__ */ picklist(PAGE_SIZE_NAMES), /* @__PURE__ */ object({
 		width: /* @__PURE__ */ string(),
 		height: /* @__PURE__ */ string()
-	})], `Expected ${Object.keys(PAGE_SIZES).join(", ")}, or { width, height } as CSS lengths`)),
+	})], `Expected ${PAGE_SIZE_NAMES.join(", ")}, or { width, height } as CSS lengths`)),
 	maxPages: /* @__PURE__ */ optional(/* @__PURE__ */ pipe(/* @__PURE__ */ number(), /* @__PURE__ */ integer(), /* @__PURE__ */ minValue(1))),
 	checkPdfFontTypes: /* @__PURE__ */ optional(/* @__PURE__ */ boolean()),
 	producer: /* @__PURE__ */ optional(/* @__PURE__ */ string()),
 	port: /* @__PURE__ */ optional(/* @__PURE__ */ pipe(/* @__PURE__ */ number(), /* @__PURE__ */ integer()))
 });
 /** `letter` and the rest resolved to the lengths the stylesheet is built from. */
-const dimensions = (pageSize = "letter") => typeof pageSize === "string" ? PAGE_SIZES[pageSize] : pageSize;
+const toDimensions = (pageSize = "letter") => typeof pageSize === "string" ? PAGE_SIZES[pageSize] : pageSize;
 /**
 * Reads the config at `path` and fills in its defaults. Loading a TypeScript
 * config needs `tsx` registered first, which the CLI does — hence taking the
@@ -876,7 +878,7 @@ const loadConfig = async (path) => {
 		assetsDir: resolve(root, assets),
 		outDir: resolve(root, outDir),
 		name: name ?? basename(entry, extname(entry)),
-		page: dimensions(config.pageSize),
+		page: toDimensions(config.pageSize),
 		maxPages: config.maxPages,
 		checkPdfFontTypes: config.checkPdfFontTypes ?? true,
 		producer: config.producer ?? "tsx-to-pdf",
@@ -958,9 +960,9 @@ const serve = (config) => {
 			});
 			return;
 		}
-		contentRevision().then((revision) => loadContent(config, revision)).then((content) => buildPage({
+		contentRevision().then((revision) => buildPage({
 			config,
-			content,
+			cacheKey: revision,
 			stylesheet,
 			head: /* @__PURE__ */ jsxs(Fragment, { children: [/* @__PURE__ */ jsx("style", { children: `
                 body { background: #525659; padding: 24px 0; }
