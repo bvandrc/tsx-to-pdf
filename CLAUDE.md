@@ -53,17 +53,6 @@ renderer even though nothing here runs in a browser
   applies a single tsconfig to everything it transforms and only to files the
   `include` matches, so both halves are needed. Their `paths` and `target`
   survive because it extends rather than replaces.
-- **tsdown builds the package**, configured in `tsdown.config.ts`. Bundling is
-  what lets es-toolkit and valibot be devDependencies rather than something every
-  consumer installs: both are small, both tree-shake to the handful of functions
-  used, and neither is likely to be in a consumer's tree already, so inlining
-  them costs less than asking for them. `deps.onlyBundle` names the two, so
-  anything heavier cannot be swallowed by accident — type-fest is a real
-  dependency for exactly that reason, since bundling it inlined 33 kB of helper
-  types into the declarations.
-- **Not tsup**, though it looks equivalent: its declaration step bundles
-  `rollup-plugin-dts` against TypeScript 5 and crashes outright on this repo's
-  TypeScript 7. tsdown only warns and emits correctly.
 - **No subprocesses.** Tailwind is driven through `@tailwindcss/node`'s
   `compile()` plus `@tailwindcss/oxide`'s `Scanner` rather than its CLI. Windows
   `.bin` shims are shell scripts, and spawning them has broken before.
@@ -71,15 +60,6 @@ renderer even though nothing here runs in a browser
   load the *consumer's* config and document; tsdown builds this package. Node
   strips type annotations natively but cannot parse JSX, which is the whole
   reason it is needed.
-- **The package ships compiled JS and cannot ship `.ts` source**, tempting as
-  that is — it would delete
-  the build step and the `dist/` question in one move. `jsxTsconfig` sets
-  `include` but not `exclude`, so TypeScript's default `exclude` of
-  `["node_modules", …]` applies and our own files would match no tsconfig, get no
-  `jsxImportSource`, and compile for React. Setting `exclude: []` would fix that
-  by applying the *consumer's* compiler options to our source — the coupling
-  `jsxTsconfig` exists to remove — and `import { build } from 'tsx-to-pdf'`
-  would stop working from plain Node either way.
 - **The renderer is Preact, but only as a serialiser** — `preact-render-to-string`
   turns static elements into HTML. No hooks, no state, no hydration. Its value is
   that JSX escapes content, so there is no raw-HTML path.
@@ -95,3 +75,23 @@ renderer even though nothing here runs in a browser
 - **Point-based measurements**: sizes are in points because the output is print.
   `html { font-size: 12pt }` makes Tailwind's `0.25rem` spacing unit exactly
   `3pt`, so scale classes land on whole points.
+- **The package ships compiled JS and cannot ship `.ts` source**, tempting as
+  that is — it would delete the build step and the `dist/` question in one move.
+  `jsxTsconfig` sets `include` but not `exclude`, so TypeScript's default
+  `exclude` of `["node_modules", …]` applies and our own files would match no
+  tsconfig, get no `jsxImportSource`, and compile for React. Setting
+  `exclude: []` would fix that by applying the *consumer's* compiler options to
+  our source — the coupling `jsxTsconfig` exists to remove — and
+  `import { build } from 'tsx-to-pdf'` would stop working from plain Node either
+  way.
+- **tsdown builds the package**, configured in `tsdown.config.ts`. Bundling is
+  what lets es-toolkit and valibot be devDependencies rather than something every
+  consumer installs: both are small, both tree-shake to the handful of functions
+  used, and neither is likely to be in a consumer's tree already, so inlining
+  them costs less than asking for them. `deps.onlyBundle` names the two, so
+  anything heavier cannot be swallowed by accident — type-fest is a real
+  dependency for exactly that reason, since bundling it inlined 33 kB of helper
+  types into the declarations. Not tsup, though it looks equivalent: its
+  declaration step bundles `rollup-plugin-dts` against TypeScript 5 and crashes
+  outright on this repo's TypeScript 7, where tsdown only warns and emits
+  correctly.

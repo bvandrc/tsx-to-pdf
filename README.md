@@ -4,19 +4,25 @@ Write a document as JSX — React style, in a `.tsx` file — style it with Tail
 and print it to a page-exact PDF, with the rendered HTML falling out along the way.
 
 `tsx-to-pdf dev` previews the document at its printed page size and serves the
-*same HTML* that Chromium then prints. The preview is not an approximation of the
-PDF; it is the render the PDF is made from.
+*same HTML* that Chromium then prints — the preview is not an approximation of
+the PDF, it is the render the PDF is made from. It watches as you work, so saving
+a file re-renders and reloads the page.
 
 Built for documents that have to fit a page: a resume, a one-pager, a leave-behind.
-Set `maxPages` and the build fails when the layout overflows, so "it still fits"
-is enforced rather than remembered.
+The sheet is yours to choose — `pageSize` takes `letter`, `legal`, `tabloid`,
+`a3`, `a4`, `a5`, or explicit dimensions — and setting `maxPages` fails the build
+when the layout overflows, so "it still fits" is enforced rather than remembered.
+
+## Installation
 
 ```sh
 pnpm add -D tsx-to-pdf preact playwright
 pnpm exec playwright install chromium
 ```
 
-Both are peer dependencies — they belong to your project, not inside this one:
+### Peer dependencies
+
+Both belong to your project, not inside this one:
 
 | package | | why it is yours |
 | --- | --- | --- |
@@ -33,16 +39,6 @@ Two things are required: a document, and somewhere to put the output.
 [`example/`](./example) is all of this filled in, if you would rather read a
 working one than a snippet.
 
-```ts
-// tsx-to-pdf.config.ts
-import type { Config } from 'tsx-to-pdf'
-
-export default {
-  entry: './content/document.tsx',
-  outDir: './outputs',
-} satisfies Config
-```
-
 ```tsx
 // content/document.tsx
 export const title = 'Firstname Lastname'
@@ -57,11 +53,21 @@ const Document = () => (
 export default Document
 ```
 
+```ts
+// tsx-to-pdf.config.ts
+import type { Config } from 'tsx-to-pdf'
+
+export default {
+  entry: './content/document.tsx',
+  outDir: './outputs',
+} satisfies Config
+```
+
 **Add a stylesheet when you want your own theme, and an assets directory when the
-page loads something at render time** — a font, a logo. Neither is required: the
-`.page` class is the sheet itself, sized from your config, and Tailwind's
-utilities are compiled from whatever your JSX uses, so `font-serif` above resolves
-to Tailwind's own stack until you say otherwise.
+page loads something at render time** — a font, a logo, etc. Neither is required:
+the `.page` class is the sheet itself, sized from your config, and Tailwind's
+utilities are compiled from whatever your JSX uses (for example, `font-serif`
+above resolves to Tailwind's own stack until you theme it).
 
 ```ts
 // tsx-to-pdf.config.ts — with both
