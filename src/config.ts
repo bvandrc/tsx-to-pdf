@@ -79,13 +79,10 @@ export type Config = {
    */
   checkPdfFontTypes?: boolean
   /**
-   * `/Producer` and `/Creator` in the PDF, which readers show under document
-   * properties. Chromium writes its own renderer version and a timestamp there;
-   * both vary per run, so this is overwritten with something fixed. Set it to
-   * your own name to keep the tool out of the file.
-   * @default 'tsx-to-pdf'
+   * `/Author` in the PDF: the person who wrote the document. Left unset by
+   * default.
    */
-  producer?: string
+  author?: string
   /**
    * Port for `tsx-to-pdf dev`.
    * @default 4000
@@ -93,10 +90,14 @@ export type Config = {
   port?: number
 }
 
-/** Defaults filled in and paths resolved, which is what the build works from. */
+/**
+ * Paths resolved, and the defaults more than one caller needs filled in. The
+ * rest are defaulted where they are read, against the same value `Config`
+ * documents.
+ */
 export type ResolvedConfig = SetRequired<
   Omit<Config, 'assets' | 'pageSize'>,
-  'name' | 'port' | 'checkPdfFontTypes' | 'producer'
+  'name' | 'port'
 > & {
   /** The config file's directory. Relative paths resolve against it. */
   root: string
@@ -162,7 +163,7 @@ const CONFIG_SCHEMA: GenericSchema<Config> = object({
   ),
   maxPages: optional(pipe(number(), integer(), minValue(1))),
   checkPdfFontTypes: optional(boolean()),
-  producer: optional(string()),
+  author: optional(string()),
   port: optional(pipe(number(), integer())),
 })
 
@@ -214,8 +215,8 @@ export const loadConfig = async (path: string): Promise<ResolvedConfig> => {
     name: name ?? basename(entry, extname(entry)),
     page: toDimensions(config.pageSize),
     maxPages: config.maxPages,
-    checkPdfFontTypes: config.checkPdfFontTypes ?? true,
-    producer: config.producer ?? 'tsx-to-pdf',
+    checkPdfFontTypes: config.checkPdfFontTypes,
+    author: config.author,
     port: config.port ?? 4000,
   }
 }

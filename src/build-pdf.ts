@@ -1,9 +1,17 @@
 import { PDFDict, PDFDocument, PDFHexString, PDFName } from 'pdf-lib'
 
+import { version } from '../package.json' with { type: 'json' }
 import type { ResolvedConfig } from './config.ts'
 
 /** Fixed instant so repeated builds of unchanged sources produce identical bytes. */
 const EPOCH = new Date(0)
+
+/**
+ * The software that made the PDF, which is what `/Producer` and `/Creator`
+ * name — `<product> <version>` is the convention every other generator follows,
+ * from `Skia/PDF m141` to `pdfTeX-1.40.25`.
+ */
+const PRODUCER = `tsx-to-pdf ${version}`
 
 /**
  * Loaded on demand, so `--no-pdf` needs no browser at all. Playwright is the
@@ -45,7 +53,7 @@ const getFontSubtypes = (pdf: PDFDocument): string[] =>
  */
 export const buildPdf = async (
   pageUrl: string,
-  { maxPages, page: sheet, checkPdfFontTypes, producer }: ResolvedConfig
+  { maxPages, page: sheet, checkPdfFontTypes = true, author }: ResolvedConfig
 ): Promise<Uint8Array> => {
   const { chromium } = await playwright()
 
@@ -119,8 +127,12 @@ export const buildPdf = async (
     // relies on that to tell a real change from a rerun.
     pdf.setCreationDate(EPOCH)
     pdf.setModificationDate(EPOCH)
-    pdf.setProducer(producer)
-    pdf.setCreator(producer)
+    pdf.setProducer(PRODUCER)
+    pdf.setCreator(PRODUCER)
+
+    if (author) {
+      pdf.setAuthor(author)
+    }
 
     // pdf-lib derives a fresh /ID from the current time on save unless one is set.
     const id = PDFHexString.of('0'.repeat(32))
