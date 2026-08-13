@@ -23,25 +23,19 @@
     "preact-to-pdf",
     "jsx-to-pdf"
   ],
+  "homepage": "https://github.com/bvandrc/tsx-to-pdf",
+  "bugs": "https://github.com/bvandrc/tsx-to-pdf/issues",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/bvandrc/tsx-to-pdf.git"
   },
-  "homepage": "https://github.com/bvandrc/tsx-to-pdf",
-  "bugs": "https://github.com/bvandrc/tsx-to-pdf/issues",
   "author": {
     "name": "Blake Vandercar",
     "email": "bvandercar@outlook.com"
   },
   "license": "MIT",
   "type": "module",
-  "engines": {
-    "node": ">=22.18"
-  },
-  "packageManager": "pnpm@11.9.0",
-  "bin": {
-    "tsx-to-pdf": "bin/tsx-to-pdf.mjs"
-  },
+  "main": "./dist/index.mjs",
   "exports": {
     ".": {
       "types": "./dist/index.d.mts",
@@ -50,13 +44,19 @@
     "./tsconfig": "./tsconfig.consumer.json",
     "./package.json": "./package.json"
   },
-  "main": "./dist/index.mjs",
   "types": "./dist/index.d.mts",
+  "bin": {
+    "tsx-to-pdf": "bin/tsx-to-pdf.mjs"
+  },
   "files": [
     "bin",
     "dist",
     "tsconfig.consumer.json"
   ],
+  "engines": {
+    "node": ">=22.18"
+  },
+  "packageManager": "pnpm@11.9.0",
   "scripts": {
     "__c0": "====================[ Package ]==================================",
     "build": "tsdown",

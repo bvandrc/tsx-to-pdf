@@ -27,6 +27,11 @@ jobs:
           # the lockfile and restores the store itself.
           cache: pnpm
 
+      # Key order, required fields, sorted dependencies. Before install, so it
+      # fails fast and never walks node_modules.
+      - name: Lint package.json
+        uses: bvandrc/lint-package-json@v2
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
