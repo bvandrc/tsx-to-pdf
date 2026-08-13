@@ -1,23 +1,15 @@
-import { readFileSync } from 'node:fs'
-import { join } from 'node:path'
 import { PDFDict, PDFDocument, PDFHexString, PDFName } from 'pdf-lib'
 
+import { version } from '../package.json' with { type: 'json' }
 import type { ResolvedConfig } from './config.ts'
 
 /** Fixed instant so repeated builds of unchanged sources produce identical bytes. */
 const EPOCH = new Date(0)
 
-/** One level above both `src/` and `dist/`, so this resolves either way. */
-const { version } = JSON.parse(
-  readFileSync(join(import.meta.dirname, '..', 'package.json'), 'utf8')
-) as { version: string }
-
 /**
  * The software that made the PDF, which is what `/Producer` and `/Creator`
  * name — `<product> <version>` is the convention every other generator follows,
- * from `Skia/PDF m141` to `pdfTeX-1.40.25`. Not configurable: Chromium's own
- * values move with the browser, and the point of writing it is to have one that
- * moves only when this package does. A person's name goes in `author`.
+ * from `Skia/PDF m141` to `pdfTeX-1.40.25`.
  */
 const PRODUCER = `tsx-to-pdf ${version}`
 
