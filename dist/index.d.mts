@@ -983,9 +983,7 @@ declare const PAGE_SIZES: {
     readonly height: '210mm';
   };
 };
-/** The names, as a value, so the schema and its message can both read them. */
-declare const PAGE_SIZE_NAMES: (keyof typeof PAGE_SIZES)[];
-type PageSize = (typeof PAGE_SIZE_NAMES)[number];
+type PageSize = keyof typeof PAGE_SIZES;
 /** Which document to render and how. Paths are relative to the config file. */
 type Config = {
   /** A module default-exporting the component, and exporting a `title`. */
@@ -1021,14 +1019,7 @@ type Config = {
   /** Port for `tsx-to-pdf dev`. Defaults to 4000. */
   port?: number;
 };
-declare const defineConfig: (config: Config) => Config;
-/**
- * Defaults filled in and paths resolved, which is what the build works from.
- *
- * `entry` and `styles` stay relative as written, for the `@source`/`@import`
- * Tailwind compiles; `outDir` is resolved in place. `maxPages` stays optional —
- * unset means unlimited, which no default value states.
- */
+/** Defaults filled in and paths resolved, which is what the build works from. */
 type ResolvedConfig = SetRequired<Omit<Config, 'assets' | 'pageSize'>, 'name' | 'port' | 'checkPdfFontTypes' | 'producer'> & {
   /** The config file's directory. Relative paths resolve against it. */
   root: string;
@@ -1067,4 +1058,4 @@ declare const build: (config: ResolvedConfig, { pdf }?: {
  */
 declare const serve: (config: ResolvedConfig) => void;
 //#endregion
-export { type Config, type ResolvedConfig, build, defineConfig, findConfig, loadConfig, serve };
+export { type Config, type ResolvedConfig, build, findConfig, loadConfig, serve };

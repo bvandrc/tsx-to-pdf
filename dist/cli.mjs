@@ -1,7 +1,8 @@
-import { a as build, i as loadConfig, r as findConfig, t as serve } from "./dev-server-DNZH0pdm.mjs";
+import { i as build, n as findConfig, r as loadConfig, t as serve } from "./dev-server-ByX-ayzx.mjs";
 import { mkdir, writeFile } from "node:fs/promises";
 import { dirname, join, relative, sep } from "node:path";
 import { existsSync } from "node:fs";
+import { parseArgs } from "node:util";
 import { register } from "tsx/esm/api";
 //#region src/tsconfig.ts
 /**
@@ -55,30 +56,37 @@ Options:
   --no-pdf         build only: skip the PDF, so no browser is needed
   --port <n>       dev only: overrides the configured port
 `;
-/** The value after `flag`, or undefined. */
-const option = (argv, flag) => {
-	const index = argv.indexOf(flag);
-	return index === -1 ? void 0 : argv[index + 1];
-};
-const main = async (argv) => {
-	const [command] = argv;
-	if (!command || command === "--help" || command === "-h") {
+const main = async (args) => {
+	const { values, positionals } = parseArgs({
+		args,
+		allowPositionals: true,
+		options: {
+			config: { type: "string" },
+			"no-pdf": { type: "boolean" },
+			port: { type: "string" },
+			help: {
+				type: "boolean",
+				short: "h"
+			}
+		}
+	});
+	const [command] = positionals;
+	if (!command || values.help) {
 		console.info(USAGE);
 		return;
 	}
-	const configPath = findConfig(option(argv, "--config"));
+	const configPath = findConfig(values.config);
 	register({ tsconfig: await jsxTsconfig(dirname(configPath)) });
 	const config = await loadConfig(configPath);
 	if (command === "build") {
-		const written = await build(config, { pdf: !argv.includes("--no-pdf") });
+		const written = await build(config, { pdf: !values["no-pdf"] });
 		console.info(`Wrote ${written.join(", ")}`);
 		return;
 	}
 	if (command === "dev") {
-		const port = option(argv, "--port");
-		serve(port ? {
+		serve(values.port ? {
 			...config,
-			port: Number(port)
+			port: Number(values.port)
 		} : config);
 		return;
 	}

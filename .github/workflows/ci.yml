@@ -1,4 +1,4 @@
-name: Lint & Build
+name: Lint & Render
 
 on:
   push:
@@ -8,7 +8,7 @@ on:
 
 jobs:
   build:
-    name: Lint & Build
+    name: Lint & Render
     runs-on: ubuntu-latest
 
     steps:

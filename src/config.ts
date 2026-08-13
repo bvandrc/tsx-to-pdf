@@ -37,10 +37,10 @@ export const PAGE_SIZES = {
   a5: { width: '148mm', height: '210mm' },
 } as const satisfies Record<string, PageDimensions>
 
-/** The names, as a value, so the schema and its message can both read them. */
-const PAGE_SIZE_NAMES = Object.keys(PAGE_SIZES) as (keyof typeof PAGE_SIZES)[]
+export type PageSize = keyof typeof PAGE_SIZES
 
-export type PageSize = (typeof PAGE_SIZE_NAMES)[number]
+/** The names, as a value, so the schema and its message can both read them. */
+const PAGE_SIZE_NAMES = Object.keys(PAGE_SIZES) as PageSize[]
 
 /** Which document to render and how. Paths are relative to the config file. */
 export type Config = {
@@ -78,15 +78,7 @@ export type Config = {
   port?: number
 }
 
-export const defineConfig = (config: Config): Config => config
-
-/**
- * Defaults filled in and paths resolved, which is what the build works from.
- *
- * `entry` and `styles` stay relative as written, for the `@source`/`@import`
- * Tailwind compiles; `outDir` is resolved in place. `maxPages` stays optional —
- * unset means unlimited, which no default value states.
- */
+/** Defaults filled in and paths resolved, which is what the build works from. */
 export type ResolvedConfig = SetRequired<
   Omit<Config, 'assets' | 'pageSize'>,
   'name' | 'port' | 'checkPdfFontTypes' | 'producer'

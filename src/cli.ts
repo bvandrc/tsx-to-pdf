@@ -1,4 +1,5 @@
 import { dirname } from 'node:path'
+import { parseArgs } from 'node:util'
 import { register } from 'tsx/esm/api'
 
 import { build } from './build.ts'
@@ -18,24 +19,28 @@ Options:
   --port <n>       dev only: overrides the configured port
 `
 
-/** The value after `flag`, or undefined. */
-const option = (argv: string[], flag: string): string | undefined => {
-  const index = argv.indexOf(flag)
+const main = async (args: string[]): Promise<void> => {
+  const { values, positionals } = parseArgs({
+    args,
+    allowPositionals: true,
+    options: {
+      config: { type: 'string' },
+      'no-pdf': { type: 'boolean' },
+      port: { type: 'string' },
+      help: { type: 'boolean', short: 'h' },
+    },
+  })
 
-  return index === -1 ? undefined : argv[index + 1]
-}
+  const [command] = positionals
 
-const main = async (argv: string[]): Promise<void> => {
-  const [command] = argv
-
-  if (!command || command === '--help' || command === '-h') {
+  if (!command || values.help) {
     console.info(USAGE)
     return
   }
 
   // Found before registering, since locating it only touches the filesystem
   // while loading it may need TypeScript.
-  const configPath = findConfig(option(argv, '--config'))
+  const configPath = findConfig(values.config)
 
   // Lets the config and the document be TypeScript without the project having
   // to compile them first. Node strips type annotations natively but cannot
@@ -48,14 +53,13 @@ const main = async (argv: string[]): Promise<void> => {
   const config = await loadConfig(configPath)
 
   if (command === 'build') {
-    const written = await build(config, { pdf: !argv.includes('--no-pdf') })
+    const written = await build(config, { pdf: !values['no-pdf'] })
     console.info(`Wrote ${written.join(', ')}`)
     return
   }
 
   if (command === 'dev') {
-    const port = option(argv, '--port')
-    serve(port ? { ...config, port: Number(port) } : config)
+    serve(values.port ? { ...config, port: Number(values.port) } : config)
     return
   }
 

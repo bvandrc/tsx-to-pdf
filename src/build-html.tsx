@@ -33,10 +33,6 @@ const PAGE_CSS = join(import.meta.dirname, 'page.css')
 /**
  * Compiles the page's stylesheet: Tailwind, then the document's own CSS, then
  * the sheet geometry with the configured page size resolved into it.
- *
- * `source(none)` turns off automatic content detection so the `@source` is the
- * only input. Without it any stray file in the project can add utilities to the
- * emitted CSS, which a staleness check would then read as a real change.
  */
 export const buildStylesheet = async ({
   entry,
@@ -45,6 +41,9 @@ export const buildStylesheet = async ({
   page,
 }: ResolvedConfig): Promise<string> => {
   const input = [
+    // `source(none)` turns off automatic content detection so the `@source`
+    // below is the only input. Without it any stray file in the project can add
+    // utilities to the emitted CSS, which a staleness check reads as a change.
     '@import "tailwindcss" source(none);',
     `@import "${styles}";`,
     `@source "${entry}";`,
@@ -75,21 +74,6 @@ type ContentModule = {
 }
 
 /**
- * The configured document. `cacheKey` busts Node's module cache, which the dev
- * server needs so an edit reaches the page without a restart.
- *
- * A `.tsx` document needs `tsx` registered before this runs. The CLI does that;
- * callers using the API directly have to do it themselves.
- */
-const loadContent = async (
-  { entryPath }: ResolvedConfig,
-  cacheKey: string | number = ''
-): Promise<ContentModule> =>
-  (await import(
-    `${pathToFileURL(entryPath).href}${cacheKey && `?v=${cacheKey}`}`
-  )) as ContentModule
-
-/**
  * Assembles the page and the stylesheet it links. They come from one call because
  * they are one render: Tailwind emits utilities by scanning the document.
  */
@@ -108,7 +92,12 @@ export const buildPage = async ({
   cacheKey?: string | number
 }): Promise<{ html: string; css: string }> => {
   const css = await buildStylesheet(config)
-  const { default: Content, title } = await loadContent(config, cacheKey)
+
+  // A `.tsx` document needs `tsx` registered before this import. The CLI does
+  // that; callers using the API directly have to do it themselves.
+  const { default: Content, title } = (await import(
+    `${pathToFileURL(config.entryPath).href}${cacheKey ? `?v=${cacheKey}` : ''}`
+  )) as ContentModule
 
   const page = (
     <html lang="en">

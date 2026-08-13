@@ -21,7 +21,7 @@ const CONTENT_TYPES = {
   '.txt': 'text/plain; charset=utf-8',
 } as const
 
-const contentType = (file: string): string =>
+const getContentType = (file: string): string =>
   (CONTENT_TYPES as Record<string, string>)[extname(file)] ??
   'application/octet-stream'
 
@@ -97,7 +97,7 @@ export const serve = (config: ResolvedConfig): void => {
 
       readFile(asset)
         .then((bytes) => {
-          res.writeHead(200, { 'Content-Type': contentType(asset) })
+          res.writeHead(200, { 'Content-Type': getContentType(asset) })
           res.end(bytes)
         })
         .catch(() => {

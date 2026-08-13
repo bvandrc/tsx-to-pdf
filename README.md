@@ -30,15 +30,15 @@ Three files: a config, a document, a stylesheet.
 
 ```ts
 // tsx-to-pdf.config.ts
-import { defineConfig } from 'tsx-to-pdf'
+import type { Config } from 'tsx-to-pdf'
 
-export default defineConfig({
+export default {
   entry: './content/document.tsx',
   styles: './content/styles.css',
   assets: './content/assets',
   outDir: './outputs',
   name: 'resume',
-})
+} satisfies Config
 ```
 
 ```tsx

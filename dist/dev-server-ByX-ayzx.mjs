@@ -182,10 +182,6 @@ const PAGE_CSS = join(import.meta.dirname, "page.css");
 /**
 * Compiles the page's stylesheet: Tailwind, then the document's own CSS, then
 * the sheet geometry with the configured page size resolved into it.
-*
-* `source(none)` turns off automatic content detection so the `@source` is the
-* only input. Without it any stray file in the project can add utilities to the
-* emitted CSS, which a staleness check would then read as a real change.
 */
 const buildStylesheet = async ({ entry, styles, root, page }) => {
 	const input = [
@@ -204,20 +200,12 @@ const buildStylesheet = async ({ entry, styles, root, page }) => {
 	return compiler.build(scanner.scan());
 };
 /**
-* The configured document. `cacheKey` busts Node's module cache, which the dev
-* server needs so an edit reaches the page without a restart.
-*
-* A `.tsx` document needs `tsx` registered before this runs. The CLI does that;
-* callers using the API directly have to do it themselves.
-*/
-const loadContent = async ({ entryPath }, cacheKey = "") => await import(`${pathToFileURL(entryPath).href}${cacheKey && `?v=${cacheKey}`}`);
-/**
 * Assembles the page and the stylesheet it links. They come from one call because
 * they are one render: Tailwind emits utilities by scanning the document.
 */
 const buildPage = async ({ config, head, stylesheet, cacheKey }) => {
 	const css = await buildStylesheet(config);
-	const { default: Content, title } = await loadContent(config, cacheKey);
+	const { default: Content, title } = await import(`${pathToFileURL(config.entryPath).href}${cacheKey ? `?v=${cacheKey}` : ""}`);
 	const page = /* @__PURE__ */ jsxs("html", {
 		lang: "en",
 		children: [/* @__PURE__ */ jsxs("head", { children: [
@@ -318,7 +306,7 @@ executablePath: process.env.CHROMIUM_EXECUTABLE_PATH || void 0 });
 };
 //#endregion
 //#region src/build.ts
-const outputs = ({ outDir, name }) => mapValues({
+const outputFiles = ({ outDir, name }) => mapValues({
 	PDF: "pdf",
 	HTML: "html",
 	CSS: "css"
@@ -329,7 +317,7 @@ const outputs = ({ outDir, name }) => mapValues({
 * source changed.
 */
 const build = async (config, { pdf = true } = {}) => {
-	const paths = outputs(config);
+	const paths = outputFiles(config);
 	const { html, css } = await buildPage({
 		config,
 		stylesheet: `./${config.name}.css`
@@ -816,7 +804,6 @@ const PAGE_SIZES = {
 };
 /** The names, as a value, so the schema and its message can both read them. */
 const PAGE_SIZE_NAMES = Object.keys(PAGE_SIZES);
-const defineConfig = (config) => config;
 const CONFIG_BASENAME = "tsx-to-pdf.config";
 const CONFIG_NAMES = [
 	"ts",
@@ -899,7 +886,7 @@ const CONTENT_TYPES = {
 	".svg": "image/svg+xml",
 	".txt": "text/plain; charset=utf-8"
 };
-const contentType = (file) => CONTENT_TYPES[extname(file)] ?? "application/octet-stream";
+const getContentType = (file) => CONTENT_TYPES[extname(file)] ?? "application/octet-stream";
 /**
 * Serves the document at its exact printed dimensions on a page-like backdrop, so
 * the preview is the PDF rather than an approximation of it.
@@ -952,7 +939,7 @@ const serve = (config) => {
 				return;
 			}
 			readFile(asset).then((bytes) => {
-				res.writeHead(200, { "Content-Type": contentType(asset) });
+				res.writeHead(200, { "Content-Type": getContentType(asset) });
 				res.end(bytes);
 			}).catch(() => {
 				res.writeHead(404);
@@ -985,4 +972,4 @@ const serve = (config) => {
 	});
 };
 //#endregion
-export { build as a, loadConfig as i, defineConfig as n, findConfig as r, serve as t };
+export { build as i, findConfig as n, loadConfig as r, serve as t };

@@ -2,7 +2,6 @@
 export { build } from './build.ts'
 export {
   type Config,
-  defineConfig,
   findConfig,
   loadConfig,
   type ResolvedConfig,

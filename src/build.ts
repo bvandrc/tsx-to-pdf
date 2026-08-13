@@ -7,7 +7,7 @@ import { buildPage, copyAssets } from './build-html.tsx'
 import { buildPdf } from './build-pdf.ts'
 import type { ResolvedConfig } from './config.ts'
 
-const outputs = ({ outDir, name }: ResolvedConfig) =>
+const outputFiles = ({ outDir, name }: ResolvedConfig) =>
   mapValues({ PDF: 'pdf', HTML: 'html', CSS: 'css' }, (extension) =>
     join(
       outDir,
@@ -27,7 +27,7 @@ export const build = async (
   config: ResolvedConfig,
   { pdf = true }: { pdf?: boolean } = {}
 ): Promise<string[]> => {
-  const paths = outputs(config)
+  const paths = outputFiles(config)
 
   const { html, css } = await buildPage({
     config,
