@@ -1,0 +1,2 @@
+# Committed build output. Collapsed in diffs and excluded from language stats.
+dist/** linguist-generated=true

@@ -1,0 +1,100 @@
+{
+  "name": "tsx-to-pdf",
+  "version": "0.1.0",
+  "description": "Author a document in JSX and Tailwind; print it to a page-exact PDF with a live preview at the printed size.",
+  "keywords": [
+    "pdf",
+    "preact",
+    "jsx",
+    "tsx",
+    "react",
+    "html-to-pdf",
+    "tailwind",
+    "tailwindcss",
+    "print",
+    "resume",
+    "typesetting",
+    "playwright",
+    "react-to-pdf",
+    "tsx-to-pdf",
+    "react-to-html",
+    "tsx-to-html",
+    "tailwind-to-pdf",
+    "preact-to-pdf",
+    "jsx-to-pdf"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bvandrc/tsx-to-pdf.git"
+  },
+  "homepage": "https://github.com/bvandrc/tsx-to-pdf",
+  "bugs": "https://github.com/bvandrc/tsx-to-pdf/issues",
+  "author": {
+    "name": "Blake Vandercar",
+    "email": "bvandercar@outlook.com"
+  },
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=22.18"
+  },
+  "packageManager": "pnpm@11.9.0",
+  "bin": {
+    "tsx-to-pdf": "bin/tsx-to-pdf.mjs"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.mts",
+      "default": "./dist/index.mjs"
+    },
+    "./tsconfig": "./tsconfig.consumer.json",
+    "./package.json": "./package.json"
+  },
+  "main": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
+  "files": [
+    "bin",
+    "dist",
+    "tsconfig.consumer.json"
+  ],
+  "scripts": {
+    "__c0": "====================[ Package ]==================================",
+    "build": "tsdown",
+    "__c1": "====================[ The example document ]=====================",
+    "example": "node bin/tsx-to-pdf.mjs build",
+    "example:html": "node bin/tsx-to-pdf.mjs build --no-pdf",
+    "dev": "node bin/tsx-to-pdf.mjs dev",
+    "__c2": "====================[ Linting & Type Checking ]==================",
+    "check": "npx biome check . && pnpm ts:check",
+    "format": "npx biome check . --fix",
+    "ts:check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@tailwindcss/node": "^4",
+    "@tailwindcss/oxide": "^4",
+    "pdf-lib": "^1",
+    "preact-render-to-string": "^6",
+    "prettier": "^3",
+    "tailwindcss": "^4",
+    "tsx": "^4"
+  },
+  "peerDependencies": {
+    "playwright": "^1",
+    "preact": "^10"
+  },
+  "peerDependenciesMeta": {
+    "playwright": {
+      "optional": true,
+      "reason": "`build --no-pdf` renders the HTML and CSS without a browser."
+    }
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2",
+    "@types/node": "^24",
+    "es-toolkit": "^1",
+    "playwright": "^1",
+    "preact": "^10",
+    "tsdown": "^0.22.14",
+    "typescript": "^7"
+  }
+}

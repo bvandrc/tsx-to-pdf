@@ -1,0 +1,24 @@
+{
+  "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+  "extends": ["./conventions/biome.base.json"],
+  "files": {
+    "includes": [
+      "**",
+      "!!**/coverage",
+      "!**/node_modules",
+      // Generated. Formatting either would only be undone by the next build.
+      "!!dist",
+      "!!example/outputs"
+    ]
+  },
+  "css": {
+    "parser": {
+      "tailwindDirectives": true
+    }
+  },
+  "html": {
+    "formatter": {
+      "enabled": true
+    }
+  }
+}

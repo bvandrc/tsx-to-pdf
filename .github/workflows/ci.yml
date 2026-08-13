@@ -1,0 +1,78 @@
+name: Lint & Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    name: Lint & Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Before setup-node, which needs pnpm on the path to find its store for
+      # `cache: pnpm`. The other order fails with "Unable to locate executable".
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          # Replaces a manual `pnpm store path` + actions/cache pair: it keys on
+          # the lockfile and restores the store itself.
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint & Type Check
+        run: pnpm run check
+
+      # dist/ is committed, because a git-installed dependency has to arrive
+      # already built. That makes it the thing consumers actually run, so it has
+      # to match the source at every commit.
+      - name: Build the package
+        run: pnpm run build
+
+      - name: Is the committed dist/ stale?
+        run: |
+          if ! git diff --quiet -- dist; then
+            echo '::error::dist/ does not match src/. Run `pnpm build` and commit the result.'
+            git diff --stat -- dist
+            exit 1
+          fi
+
+      # Catches package.json problems that only surface at publish time —
+      # a malformed bin path, a file missing from `files`, a bad repository URL.
+      - name: Would this publish cleanly?
+        run: |
+          if npm publish --dry-run 2>&1 | grep -v 'logged in' | grep -i 'warn'; then
+            echo '::error::npm publish reported warnings. Run `npm pkg fix`.'
+            exit 1
+          fi
+
+      # No browser needed, so this fails fast on anything wrong with the
+      # renderer, the config or the stylesheet.
+      - name: Render the example without a browser
+        run: pnpm run example:html
+
+      # Full Chromium, not `--only-shell`: the headless shell is half the
+      # download but lays text out slightly differently. See build-pdf.ts.
+      - name: Install Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      # End to end. Fails if the example overflows its page, if the PDF comes
+      # out untagged, or if a font fell back to Type3.
+      - name: Render the example to a PDF
+        run: pnpm run example
+
+      - name: Upload the rendered example
+        uses: actions/upload-artifact@v4
+        with:
+          name: example
+          path: example/outputs/
