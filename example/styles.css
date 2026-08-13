@@ -1,0 +1,67 @@
+/* How much white surrounds the page. Applied as padding, so the accent banner
+ * sits against the same box the text does. */
+:root {
+  --page-margin: 0.5in;
+}
+
+/*
+ * Committed woff2 rather than a host or CDN font, so the page lays out the same
+ * on every machine.
+ *
+ * Static instances, not the variable original: Chromium cannot embed a variable
+ * font in a PDF and falls back to Type3 glyph procedures, which parsers handle
+ * least well. Regenerate with fontTools if the family is ever updated:
+ *   fonttools varLib.instancer Gelasio[wght].ttf wght=400 --output=... --flavor=woff2
+ */
+@font-face {
+  font-family: "Gelasio";
+  font-style: normal;
+  font-weight: 400;
+  src: url("./fonts/gelasio-regular.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Gelasio";
+  font-style: normal;
+  font-weight: 700;
+  src: url("./fonts/gelasio-bold.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Gelasio";
+  font-style: italic;
+  font-weight: 400;
+  src: url("./fonts/gelasio-italic.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Gelasio";
+  font-style: italic;
+  font-weight: 700;
+  src: url("./fonts/gelasio-bold-italic.woff2") format("woff2");
+}
+
+@theme {
+  --font-serif: "Gelasio", serif;
+  --color-accent: #be0000;
+}
+
+@layer base {
+  body {
+    font-family: var(--font-serif);
+    font-size: 11pt;
+    /* Tight enough to keep a full page of experience on one sheet. */
+    line-height: 1;
+    color: #000;
+  }
+}
+
+@layer components {
+  /*
+   * Native markers, not a ● glyph — Gelasio has no U+25CF, so a glyph would
+   * resolve to whatever symbol font the host has. `circle` gives a hollow one.
+   */
+  ul {
+    list-style: disc outside;
+  }
+}

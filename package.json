@@ -1,0 +1,103 @@
+{
+  "name": "tsx-to-pdf",
+  "version": "1.0.0",
+  "description": "Generate a page-exact PDF from a document written in TSX and Tailwind. Live preview at the printed size, diffable HTML alongside, and a build that can be configured to fail when the layout overflows.",
+  "keywords": [
+    "pdf",
+    "preact",
+    "jsx",
+    "tsx",
+    "react",
+    "html-to-pdf",
+    "tailwind",
+    "tailwindcss",
+    "print",
+    "resume",
+    "typesetting",
+    "playwright",
+    "react-to-pdf",
+    "tsx-to-pdf",
+    "react-to-html",
+    "tsx-to-html",
+    "tailwind-to-pdf",
+    "preact-to-pdf",
+    "jsx-to-pdf"
+  ],
+  "homepage": "https://www.npmjs.com/package/tsx-to-pdf",
+  "bugs": "https://github.com/bvandrc/tsx-to-pdf/issues",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bvandrc/tsx-to-pdf.git"
+  },
+  "author": {
+    "name": "Blake Vandercar",
+    "email": "bvandercar@outlook.com"
+  },
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.mjs",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.mts",
+      "default": "./dist/index.mjs"
+    },
+    "./tsconfig": "./tsconfig.consumer.json",
+    "./package.json": "./package.json"
+  },
+  "types": "./dist/index.d.mts",
+  "bin": {
+    "tsx-to-pdf": "bin/tsx-to-pdf.mjs"
+  },
+  "files": [
+    "bin",
+    "dist",
+    "tsconfig.consumer.json"
+  ],
+  "engines": {
+    "node": ">=22.18"
+  },
+  "packageManager": "pnpm@11.9.0",
+  "scripts": {
+    "__c0": "====================[ Package ]==================================",
+    "prepare": "pnpm build",
+    "build": "tsdown",
+    "__c1": "====================[ The example document ]=====================",
+    "example": "node bin/tsx-to-pdf.mjs build",
+    "example:html": "node bin/tsx-to-pdf.mjs build --no-pdf",
+    "dev": "node bin/tsx-to-pdf.mjs dev",
+    "__c2": "====================[ Linting & Type Checking ]==================",
+    "check": "npx biome check . && pnpm ts:check",
+    "format": "npx biome check . --fix",
+    "ts:check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@tailwindcss/node": "^4",
+    "@tailwindcss/oxide": "^4",
+    "pdf-lib": "^1",
+    "preact-render-to-string": "^6",
+    "prettier": "^3",
+    "tailwindcss": "^4",
+    "tsx": "^4",
+    "type-fest": ">=3"
+  },
+  "peerDependencies": {
+    "playwright": "^1",
+    "preact": "^10"
+  },
+  "peerDependenciesMeta": {
+    "playwright": {
+      "optional": true,
+      "reason": "`build --no-pdf` renders the HTML and CSS without a browser."
+    }
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2",
+    "@types/node": "^24",
+    "es-toolkit": "^1",
+    "playwright": "^1",
+    "preact": "^10",
+    "tsdown": "^0.22",
+    "typescript": "^7",
+    "valibot": "^1"
+  }
+}

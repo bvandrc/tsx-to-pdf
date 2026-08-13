@@ -1,0 +1,62 @@
+name: Lint & Render
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    name: Lint & Render
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Before setup-node, which needs pnpm on the path to find its store for
+      # `cache: pnpm`. The other order fails with "Unable to locate executable".
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          # Replaces a manual `pnpm store path` + actions/cache pair: it keys on
+          # the lockfile and restores the store itself.
+          cache: pnpm
+
+      # Key order, required fields, sorted dependencies. Before install, so it
+      # fails fast and never walks node_modules.
+      - name: Lint package.json
+        uses: bvandrc/lint-package-json@v2
+
+      # Runs `prepare`, which builds the package — so the steps below exercise
+      # `dist/` exactly as a consumer installing from npm would get it.
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint & Type Check
+        run: pnpm run check
+
+      # No browser needed, so this fails fast on anything wrong with the
+      # renderer, the config or the stylesheet.
+      - name: Render the example without a browser
+        run: pnpm run example:html
+
+      # Full Chromium, not `--only-shell`: the headless shell is half the
+      # download but lays text out slightly differently. See build-pdf.ts.
+      - name: Install Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      # End to end. Fails if the example overflows its page, if the PDF comes
+      # out untagged, or if a font fell back to Type3.
+      - name: Render the example to a PDF
+        run: pnpm run example
+
+      - name: Upload the rendered example
+        uses: actions/upload-artifact@v4
+        with:
+          name: example
+          path: example/outputs/

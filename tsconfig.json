@@ -1,0 +1,21 @@
+// https://www.typescriptlang.org/tsconfig
+//
+// Extends the config we ship, so the settings a consumer gets are the ones this
+// repo is actually checked against — anything broken there breaks here first.
+// Added on top: Node types, which a document has no use for, and the stricter
+// lint-ish flags, which are ours to hold ourselves to rather than to impose.
+//
+// `include` covers the whole repo because `tsx` picks the nearest tsconfig whose
+// `include` matches the file it is transforming. Emitting is tsconfig.build.json.
+{
+  "extends": "./tsconfig.consumer.json",
+  "compilerOptions": {
+    "types": ["node"],
+    "rewriteRelativeImportExtensions": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitReturns": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true
+  },
+  "include": ["**/*.ts", "**/*.tsx"]
+}
