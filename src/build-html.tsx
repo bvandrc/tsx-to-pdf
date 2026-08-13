@@ -17,14 +17,15 @@ export const copyAssets = async (
   keep: string[]
 ): Promise<void> => {
   // Cleared first because `cp` only adds: a deleted asset would otherwise sit in
-  // the written output forever. Runs with no `assets` configured too, so
-  // dropping the directory clears what it left behind.
+  // the written output forever.
   for (const name of await readdir(destination)) {
     if (!keep.includes(name)) {
       await rm(join(destination, name), { recursive: true, force: true })
     }
   }
 
+  // Still cleared above when there is nothing to copy, so dropping `assets`
+  // from the config clears what it left behind.
   if (assetsDir) {
     await cp(assetsDir, destination, { recursive: true })
   }

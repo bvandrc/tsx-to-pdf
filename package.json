@@ -77,7 +77,8 @@
     "preact-render-to-string": "^6",
     "prettier": "^3",
     "tailwindcss": "^4",
-    "tsx": "^4"
+    "tsx": "^4",
+    "type-fest": ">=3"
   },
   "peerDependencies": {
     "playwright": "^1",
@@ -96,7 +97,6 @@
     "playwright": "^1",
     "preact": "^10",
     "tsdown": "^0.22",
-    "type-fest": "^5",
     "typescript": "^7",
     "valibot": "^1"
   }

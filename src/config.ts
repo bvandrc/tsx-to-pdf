@@ -47,15 +47,12 @@ export type Config = {
   /** A module default-exporting the component, and exporting a `title`. */
   entry: string
   /**
-   * The document's stylesheet, imported into the page's own CSS. Optional —
+   * The document's stylesheet, imported into the page's own CSS. Not required —
    * Tailwind's utilities and the sheet itself are there either way, so a
    * document that only uses classes needs no stylesheet of its own.
    */
   styles?: string
-  /**
-   * Directory copied in beside the rendered page. Optional — omit it when the
-   * document loads nothing at render time.
-   */
+  /** Directory copied in beside the rendered page. */
   assets?: string
   /** Where the rendered files land. */
   outDir: string
