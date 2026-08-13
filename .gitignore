@@ -4,5 +4,5 @@ node_modules/
 *.tgz
 *.local
 
-# dist/ is committed on purpose — see CLAUDE.md. Only the example's render is not.
+dist/
 example/outputs/

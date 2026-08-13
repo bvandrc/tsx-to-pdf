@@ -32,25 +32,13 @@ jobs:
       - name: Lint package.json
         uses: bvandrc/lint-package-json@v2
 
+      # Runs `prepare`, which builds the package — so the steps below exercise
+      # `dist/` exactly as a consumer installing from npm would get it.
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
       - name: Lint & Type Check
         run: pnpm run check
-
-      # dist/ is committed, because a git-installed dependency has to arrive
-      # already built. That makes it the thing consumers actually run, so it has
-      # to match the source at every commit.
-      - name: Build the package
-        run: pnpm run build
-
-      - name: Is the committed dist/ stale?
-        run: |
-          if ! git diff --quiet -- dist; then
-            echo '::error::dist/ does not match src/. Run `pnpm build` and commit the result.'
-            git diff --stat -- dist
-            exit 1
-          fi
 
       # Catches package.json problems that only surface at publish time —
       # a malformed bin path, a file missing from `files`, a bad repository URL.

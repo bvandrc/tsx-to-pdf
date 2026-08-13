@@ -24,8 +24,8 @@ config points at `example/` so the package always has something to build.
 ## Commands
 
 - `pnpm build` — tsdown bundles `src/` into `dist/`, emits declarations, and
-  copies `page.css` beside them. **Run it and commit `dist/` whenever `src/`
-  changes**; CI fails when the two disagree.
+  copies `page.css` beside them. `prepare` runs it on install and on publish, so
+  it rarely needs invoking by hand.
 - `pnpm example` / `pnpm example:html` / `pnpm dev` — drive the CLI against
   `example/`. The `:html` variant needs no browser.
 - `pnpm check` — Biome plus `tsc --noEmit`; what CI runs. `pnpm format` fixes.
@@ -43,12 +43,12 @@ renderer even though nothing here runs in a browser
 
 ## Repo conventions
 
-- **`dist/` is committed, and there is no `prepare` script.** Building on install
-  is the usual answer, but pnpm blocks build scripts in a git dependency unless
-  the consumer allowlists it by its full URL — which carries the commit, so the
-  entry would need editing on every release here. Committing the output means a
-  `github:` install needs no consumer configuration at all. `.gitattributes`
-  marks it generated so it collapses in diffs.
+- **`dist/` is gitignored, and `prepare` builds it.** npm ships the built output
+  through `files`, so a consumer never runs the build; `prepare` covers publish
+  and local installs alike. It was committed for exactly as long as
+  `bvandrc-resumes` installed this from git — pnpm refuses a git dependency's
+  build scripts unless the consumer allowlists it by a URL carrying the commit,
+  which would have meant editing that entry on every release here.
 - **The consuming project's tsconfig is not trusted to set JSX.** `jsxTsconfig`
   writes one into `node_modules/.tsx-to-pdf/` that extends theirs, pins
   `jsx`/`jsxImportSource`, and widens `include` to the whole project — `tsx`

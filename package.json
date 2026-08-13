@@ -59,6 +59,7 @@
   "packageManager": "pnpm@11.9.0",
   "scripts": {
     "__c0": "====================[ Package ]==================================",
+    "prepare": "pnpm build",
     "build": "tsdown",
     "__c1": "====================[ The example document ]=====================",
     "example": "node bin/tsx-to-pdf.mjs build",
