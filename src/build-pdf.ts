@@ -25,7 +25,7 @@ const playwright = async (): Promise<typeof import('playwright')> => {
 }
 
 /** Every font resource across the document, as `/Type0`, `/Type3` and friends. */
-const fontSubtypes = (pdf: PDFDocument): string[] =>
+const getFontSubtypes = (pdf: PDFDocument): string[] =>
   pdf.getPages().flatMap((page) => {
     const fonts = page.node.Resources()?.lookup(PDFName.of('Font'), PDFDict)
 
@@ -105,7 +105,7 @@ export const buildPdf = async (
 
     // Chromium falls back to Type3 glyph procedures for any font it cannot
     // embed — a variable font, for one — and extractors read those least well.
-    if (checkPdfFontTypes && fontSubtypes(pdf).includes('/Type3')) {
+    if (checkPdfFontTypes && getFontSubtypes(pdf).includes('/Type3')) {
       throw new Error(
         'Fonts embedded as Type3, which extractors read poorly. Chromium does ' +
           'this when it cannot embed the font — check the stylesheet points at ' +

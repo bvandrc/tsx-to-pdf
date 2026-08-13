@@ -8,6 +8,21 @@ import {
   resolve,
 } from 'node:path'
 import { pathToFileURL } from 'node:url'
+import {
+  boolean,
+  type GenericSchema,
+  getDotPath,
+  integer,
+  minValue,
+  number,
+  object,
+  optional,
+  picklist,
+  pipe,
+  safeParse,
+  string,
+  union,
+} from 'valibot'
 
 /** A sheet, as CSS lengths. */
 export type PageDimensions = { width: string; height: string }
@@ -110,24 +125,35 @@ export const findConfig = (explicit?: string, from = process.cwd()): string => {
   return found
 }
 
-const REQUIRED = ['entry', 'styles', 'assets', 'outDir'] as const
-
-const dimensions = (
-  pageSize: Config['pageSize'] = 'letter'
-): PageDimensions => {
-  if (typeof pageSize !== 'string') return pageSize
-
-  const named = PAGE_SIZES[pageSize]
-
-  if (!named) {
-    throw new Error(
-      `Unknown pageSize ${JSON.stringify(pageSize)}. Use one of ` +
-        `${Object.keys(PAGE_SIZES).join(', ')}, or { width, height }.`
+/**
+ * `Config` as a runtime check. Typed as a schema *for* `Config` rather than the
+ * source of it, so the documented type stays hand-written and the two cannot
+ * drift: a key added to one and not the other is a type error here.
+ */
+const CONFIG_SCHEMA: GenericSchema<Config> = object({
+  entry: string(),
+  styles: string(),
+  assets: string(),
+  outDir: string(),
+  name: optional(string()),
+  pageSize: optional(
+    union(
+      [
+        picklist(Object.keys(PAGE_SIZES) as PageSize[]),
+        object({ width: string(), height: string() }),
+      ],
+      `Expected ${Object.keys(PAGE_SIZES).join(', ')}, or { width, height } as CSS lengths`
     )
-  }
+  ),
+  maxPages: optional(pipe(number(), integer(), minValue(1))),
+  checkPdfFontTypes: optional(boolean()),
+  producer: optional(string()),
+  port: optional(pipe(number(), integer())),
+})
 
-  return named
-}
+/** `letter` and the rest resolved to the lengths the stylesheet is built from. */
+const dimensions = (pageSize: Config['pageSize'] = 'letter'): PageDimensions =>
+  typeof pageSize === 'string' ? PAGE_SIZES[pageSize] : pageSize
 
 /**
  * Reads the config at `path` and fills in its defaults. Loading a TypeScript
@@ -141,19 +167,24 @@ export const loadConfig = async (path: string): Promise<ResolvedConfig> => {
     default?: Partial<Config>
   }
 
-  const config = module.default
-
-  if (!config) {
+  if (!module.default) {
     throw new Error(`${path} has no default export.`)
   }
 
-  const missing = REQUIRED.filter((key) => typeof config[key] !== 'string')
+  const result = safeParse(CONFIG_SCHEMA, module.default)
 
-  if (missing.length > 0) {
-    throw new Error(`${path} is missing: ${missing.join(', ')}.`)
+  if (!result.success) {
+    throw new Error(
+      `${path} is invalid:\n${result.issues
+        .map(
+          (issue) => `  ${getDotPath(issue) ?? '(config)'}: ${issue.message}`
+        )
+        .join('\n')}`
+    )
   }
 
-  const { entry, styles, assets, outDir, name } = config as Config
+  const config = result.output
+  const { entry, styles, assets, outDir, name } = config
 
   return {
     root,

@@ -12,12 +12,6 @@ import { existsSync } from 'node:fs'
 import { mkdir, writeFile } from 'node:fs/promises'
 import { join, relative, sep } from 'node:path'
 
-/** Without these the document compiles for React and fails at render. */
-const JSX_OPTIONS = {
-  jsx: 'react-jsx',
-  jsxImportSource: 'preact',
-} as const
-
 const PROJECT_TSCONFIGS = ['tsconfig.json', 'jsconfig.json']
 
 /** `extends` is resolved as a POSIX path, on Windows too. */
@@ -50,7 +44,8 @@ export const jsxTsconfig = async (root: string): Promise<string> => {
     `${JSON.stringify(
       {
         ...(projectConfig && { extends: pkgDirRel(projectConfig) }),
-        compilerOptions: JSX_OPTIONS,
+        // Without these the document compiles for React and fails at render.
+        compilerOptions: { jsx: 'react-jsx', jsxImportSource: 'preact' },
         // `extends` inherits the project's `include`, and tsx only applies a
         // tsconfig to files that one matches — so a project scoped to `src` would
         // leave a document elsewhere with no JSX settings. Widening it here is

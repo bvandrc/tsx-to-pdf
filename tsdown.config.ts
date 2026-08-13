@@ -12,6 +12,6 @@ export default defineConfig({
   // every consumer. Naming it explicitly means a new runtime dependency can
   // never be bundled in by accident — it would have to be added here first.
   deps: {
-    onlyBundle: ['es-toolkit'],
+    onlyBundle: ['es-toolkit', 'valibot'],
   },
 })

@@ -4,7 +4,7 @@ import { pathToFileURL } from 'node:url'
 import { compile as twCompile } from '@tailwindcss/node'
 import { Scanner as twScanner } from '@tailwindcss/oxide'
 import { noop } from 'es-toolkit'
-import type { ComponentChildren, FunctionComponent, VNode } from 'preact'
+import type { ComponentChildren, FunctionComponent } from 'preact'
 import { render as preactRenderJsxToString } from 'preact-render-to-string/jsx'
 import { format as prettify } from 'prettier'
 
@@ -90,47 +90,6 @@ export const loadContent = async (
   )) as ContentModule
 
 /**
- * Indents the markup for reading, without changing what it renders to.
- *
- * The renderer's own `pretty` mode cannot be used for this: it breaks lines
- * inside inline content, and the newline collapses to a space that was never in
- * the document — `C<em>++</em>` comes out as `C ++`. Prettier's default
- * whitespace sensitivity follows CSS display, so inline runs stay on one line.
- *
- * Drop Prettier and pass `pretty: '  '` again once this is fixed upstream:
- * https://github.com/preactjs/preact-render-to-string/issues/273
- */
-const format = (html: string): Promise<string> =>
-  // Wider than the 80 this repo's own source uses: Tailwind class lists are long
-  // enough that 80 splits open tags across lines for no gain in readability.
-  prettify(html, { parser: 'html', printWidth: 100 })
-
-/**
- * Renders, translating the one failure a correct document still hits: JSX
- * compiled for React, because the project's tsconfig did not reach it.
- */
-const renderPage = (page: VNode): string => {
-  try {
-    // Unformatted on purpose — `format` handles that, safely.
-    return preactRenderJsxToString(page, {}, { pretty: false, jsx: false })
-  } catch (error) {
-    if (
-      error instanceof ReferenceError &&
-      error.message.includes('React is not defined')
-    ) {
-      throw new Error(
-        'The document was compiled for React. Its JSX needs `"jsx": ' +
-          '"react-jsx"` and `"jsxImportSource": "preact"`, from a tsconfig ' +
-          'whose `include` covers the document — extend "tsx-to-pdf/tsconfig".',
-        { cause: error }
-      )
-    }
-
-    throw error
-  }
-}
-
-/**
  * Assembles the page and the stylesheet it links. They come from one call because
  * they are one render: Tailwind emits utilities by scanning the document.
  */
@@ -164,8 +123,42 @@ export const buildPage = async ({
     </html>
   )
 
+  let markup: string
+
+  try {
+    markup = preactRenderJsxToString(
+      page,
+      {},
+      {
+        // Prettier indents instead, because this one breaks lines inside inline
+        // content: https://github.com/preactjs/preact-render-to-string/issues/273
+        pretty: false,
+        jsx: false,
+      }
+    )
+  } catch (error) {
+    // The one failure a correct document still hits: JSX compiled for React,
+    // because the project's tsconfig did not reach it.
+    if (
+      error instanceof ReferenceError &&
+      error.message.includes('React is not defined')
+    ) {
+      throw new Error(
+        'The document was compiled for React. Its JSX needs `"jsx": ' +
+          '"react-jsx"` and `"jsxImportSource": "preact"`, from a tsconfig ' +
+          'whose `include` covers the document — extend "tsx-to-pdf/tsconfig".',
+        { cause: error }
+      )
+    }
+
+    throw error
+  }
+
   // doctype must be prepended rather than rendered — it is not an element.
-  const html = await format(`<!doctype html>${renderPage(page)}`)
+  const html = await prettify(`<!doctype html>${markup}`, {
+    parser: 'html',
+    printWidth: 100,
+  })
 
   return { html, css }
 }

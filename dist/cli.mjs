@@ -1,4 +1,4 @@
-import { a as build, i as loadConfig, r as findConfig, t as serve } from "./dev-server-CNs9HX-x.mjs";
+import { a as build, i as loadConfig, r as findConfig, t as serve } from "./dev-server-BXFtF2Ws.mjs";
 import { mkdir, writeFile } from "node:fs/promises";
 import { dirname, join, relative, sep } from "node:path";
 import { existsSync } from "node:fs";
@@ -13,11 +13,6 @@ import { register } from "tsx/esm/api";
 * the settings are generated here and handed to `tsx` directly, layered on top
 * of whatever the project already has.
 */
-/** Without these the document compiles for React and fails at render. */
-const JSX_OPTIONS = {
-	jsx: "react-jsx",
-	jsxImportSource: "preact"
-};
 const PROJECT_TSCONFIGS = ["tsconfig.json", "jsconfig.json"];
 /** `extends` is resolved as a POSIX path, on Windows too. */
 const posix = (path) => path.split(sep).join("/");
@@ -32,16 +27,20 @@ const posix = (path) => path.split(sep).join("/");
 * rest.
 */
 const jsxTsconfig = async (root) => {
-	const directory = join(root, "node_modules", ".tsx-to-pdf");
-	await mkdir(directory, { recursive: true });
-	const project = PROJECT_TSCONFIGS.map((name) => join(root, name)).find(existsSync);
-	const path = join(directory, "tsconfig.json");
-	await writeFile(path, `${JSON.stringify({
-		...project && { extends: posix(relative(directory, project)) },
-		compilerOptions: JSX_OPTIONS,
-		include: [`${posix(relative(directory, root))}/**/*`]
+	const pkgDir = join(root, "node_modules", ".tsx-to-pdf");
+	await mkdir(pkgDir, { recursive: true });
+	const pkgDirRel = (target) => posix(relative(pkgDir, target));
+	const tsconfigPath = join(pkgDir, "tsconfig.json");
+	const projectConfig = PROJECT_TSCONFIGS.map((name) => join(root, name)).find(existsSync);
+	await writeFile(tsconfigPath, `${JSON.stringify({
+		...projectConfig && { extends: pkgDirRel(projectConfig) },
+		compilerOptions: {
+			jsx: "react-jsx",
+			jsxImportSource: "preact"
+		},
+		include: [`${pkgDirRel(root)}/**/*`]
 	}, null, 2)}\n`);
-	return path;
+	return tsconfigPath;
 };
 //#endregion
 //#region src/cli.ts
