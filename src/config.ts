@@ -54,27 +54,38 @@ export type Config = {
   outDir: string
   /**
    * Basename they are given: `<name>.pdf`, `<name>.html`, `<name>.css`.
-   * Defaults to the entry's own basename.
+   * @default the basename of `entry`
    */
   name?: string
-  /** A named sheet, or explicit CSS lengths. Defaults to `letter`. */
+  /**
+   * A named page size, or explicit CSS dimensions.
+   * @default 'letter'
+   */
   pageSize?: PageSize | PageDimensions
-  /** Building past this many pages fails. Unset, the length is not checked. */
+  /**
+   * Trigger failure if the build exceeds this many pages.
+   * @default undefined — the length is not checked
+   */
   maxPages?: number
   /**
    * Fail when a font is embedded as Type3, which text extractors read poorly.
    * Chromium does this for any font it cannot embed — a variable font, for one.
-   * Defaults to true; turn it off if you would rather have the PDF anyway.
+   * Turn it off if you would rather have the PDF anyway.
+   * @default true
    */
   checkPdfFontTypes?: boolean
   /**
    * `/Producer` and `/Creator` in the PDF, which readers show under document
    * properties. Chromium writes its own renderer version and a timestamp there;
-   * both vary per run, so this is overwritten with something fixed. Defaults to
-   * `tsx-to-pdf` — set it to your own name to keep the tool out of the file.
+   * both vary per run, so this is overwritten with something fixed. Set it to
+   * your own name to keep the tool out of the file.
+   * @default 'tsx-to-pdf'
    */
   producer?: string
-  /** Port for `tsx-to-pdf dev`. Defaults to 4000. */
+  /**
+   * Port for `tsx-to-pdf dev`.
+   * @default 4000
+   */
   port?: number
 }
 
@@ -126,8 +137,9 @@ export const findConfig = (explicit?: string, from = process.cwd()): string => {
 
 /**
  * `Config` as a runtime check. Typed as a schema *for* `Config` rather than the
- * source of it, so the documented type stays hand-written and the two cannot
- * drift: a key added to one and not the other is a type error here.
+ * source of it, so the type stays hand-written and keeps the per-property JSDoc
+ * an inferred one would lose. They cannot drift either: a key added to one and
+ * not the other is a type error here.
  */
 const CONFIG_SCHEMA: GenericSchema<Config> = object({
   entry: string(),

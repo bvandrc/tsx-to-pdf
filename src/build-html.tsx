@@ -95,9 +95,23 @@ export const buildPage = async ({
 
   // A `.tsx` document needs `tsx` registered before this import. The CLI does
   // that; callers using the API directly have to do it themselves.
-  const { default: Content, title } = (await import(
+  const content = (await import(
     `${pathToFileURL(config.entryPath).href}${cacheKey ? `?v=${cacheKey}` : ''}`
-  )) as ContentModule
+  )) as Partial<ContentModule>
+
+  // Checked rather than trusted: without `title` the page renders an empty one
+  // and says nothing, and a missing component fails inside the renderer with an
+  // error that never names the file responsible.
+  if (
+    typeof content.default !== 'function' ||
+    typeof content.title !== 'string'
+  ) {
+    throw new Error(
+      `${config.entry} must default-export a component and export a \`title\` string.`
+    )
+  }
+
+  const { default: Content, title } = content
 
   const page = (
     <html lang="en">

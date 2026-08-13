@@ -52,18 +52,21 @@ const main = async (args: string[]): Promise<void> => {
 
   const config = await loadConfig(configPath)
 
-  if (command === 'build') {
-    const written = await build(config, { pdf: !values['no-pdf'] })
-    console.info(`Wrote ${written.join(', ')}`)
-    return
-  }
+  switch (command) {
+    case 'build': {
+      const written = await build(config, { pdf: !values['no-pdf'] })
+      console.info(`Wrote ${written.join(', ')}`)
+      return
+    }
 
-  if (command === 'dev') {
-    serve(values.port ? { ...config, port: Number(values.port) } : config)
-    return
-  }
+    case 'dev': {
+      serve(values.port ? { ...config, port: Number(values.port) } : config)
+      return
+    }
 
-  throw new Error(`Unknown command ${JSON.stringify(command)}.\n\n${USAGE}`)
+    default:
+      throw new Error(`Unknown command ${JSON.stringify(command)}.\n\n${USAGE}`)
+  }
 }
 
 try {

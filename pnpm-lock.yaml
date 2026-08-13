@@ -46,16 +46,16 @@ importers:
         specifier: ^10
         version: 10.29.8(preact-render-to-string@6.7.0)
       tsdown:
-        specifier: ^0.22.14
+        specifier: ^0.22
         version: 0.22.14(tsx@4.23.12)(typescript@7.0.2)
       type-fest:
-        specifier: ^5.8.0
+        specifier: ^5
         version: 5.8.0
       typescript:
         specifier: ^7
         version: 7.0.2
       valibot:
-        specifier: ^1.4.2
+        specifier: ^1
         version: 1.4.2(typescript@7.0.2)
 
 packages:

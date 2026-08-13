@@ -4,6 +4,9 @@ export {
   type Config,
   findConfig,
   loadConfig,
+  PAGE_SIZES,
+  type PageDimensions,
+  type PageSize,
   type ResolvedConfig,
 } from './config.ts'
 export { serve } from './dev-server.tsx'
