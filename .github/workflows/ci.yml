@@ -42,9 +42,18 @@ jobs:
 
       # Catches package.json problems that only surface at publish time —
       # a malformed bin path, a file missing from `files`, a bad repository URL.
+      #
+      # `--ignore-scripts` because install already ran `prepare`: letting it run
+      # again would put the build's own output through the filter below, and
+      # tsdown warns about TypeScript 7 on every run. Only npm's own lines are
+      # read, and not the one about being logged out, which a dry run always has.
       - name: Would this publish cleanly?
         run: |
-          if npm publish --dry-run 2>&1 | grep -v 'logged in' | grep -i 'warn'; then
+          warnings=$(npm publish --dry-run --ignore-scripts 2>&1 \
+            | grep '^npm warn' | grep -v 'requires you to be logged in' || true)
+
+          if [ -n "$warnings" ]; then
+            echo "$warnings"
             echo '::error::npm publish reported warnings. Run `npm pkg fix`.'
             exit 1
           fi
