@@ -26,7 +26,7 @@ CSS.
 
 ## Getting started
 
-Three files: a config, a document, a stylesheet.
+Two things are required: a document, and somewhere to put the output.
 
 ```ts
 // tsx-to-pdf.config.ts
@@ -34,10 +34,7 @@ import type { Config } from 'tsx-to-pdf'
 
 export default {
   entry: './content/document.tsx',
-  styles: './content/styles.css',
-  assets: './content/assets',
   outDir: './outputs',
-  name: 'resume',
 } satisfies Config
 ```
 
@@ -57,6 +54,23 @@ export default Document
 
 The `.page` class is provided — it is the sheet itself, sized from your config.
 Everything inside it is yours.
+
+That is already a working document: Tailwind's utilities are compiled from what
+your JSX uses, so a page of classes needs nothing else — `font-serif` there
+resolves to Tailwind's own stack until you say otherwise. Add a stylesheet when
+you want your own theme, and an assets directory when the page loads something —
+a font, a logo — at render time:
+
+```ts
+// tsx-to-pdf.config.ts — with both
+export default {
+  entry: './content/document.tsx',
+  outDir: './outputs',
+  styles: './content/styles.css',
+  assets: './content/assets',
+  name: 'resume',
+} satisfies Config
+```
 
 ```css
 /* content/styles.css */
@@ -181,9 +195,9 @@ Two things to know:
 | key | | |
 | --- | --- | --- |
 | `entry` | required | Module that default-exports the component and exports `title` |
-| `styles` | required | The document's stylesheet |
-| `assets` | required | Directory copied in beside the rendered page |
 | `outDir` | required | Where the rendered files land |
+| `styles` | — | The document's stylesheet. Tailwind and the sheet are there without one |
+| `assets` | — | Directory copied in beside the rendered page |
 | `name` | entry's basename | Their basename: `<name>.pdf`, `<name>.html`, `<name>.css` |
 | `pageSize` | `'letter'` | `letter`, `legal`, `tabloid`, `a3`, `a4`, `a5`, or `{ width, height }` as CSS lengths |
 | `maxPages` | unlimited | Building past this many pages fails. `1` for a one-pager |

@@ -85,6 +85,13 @@ export const serve = (config: ResolvedConfig): void => {
     // it has in the assets directory, and beside the page once the build copies
     // it.
     if (url !== '/') {
+      // Nothing to serve when the document configures no assets.
+      if (!assetsDir) {
+        res.writeHead(404)
+        res.end('not found')
+        return
+      }
+
       const asset = join(assetsDir, url)
 
       // `join` collapses `..`, so this is what stops a request escaping the

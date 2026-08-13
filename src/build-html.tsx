@@ -17,14 +17,17 @@ export const copyAssets = async (
   keep: string[]
 ): Promise<void> => {
   // Cleared first because `cp` only adds: a deleted asset would otherwise sit in
-  // the written output forever.
+  // the written output forever. Runs with no `assets` configured too, so
+  // dropping the directory clears what it left behind.
   for (const name of await readdir(destination)) {
     if (!keep.includes(name)) {
       await rm(join(destination, name), { recursive: true, force: true })
     }
   }
 
-  await cp(assetsDir, destination, { recursive: true })
+  if (assetsDir) {
+    await cp(assetsDir, destination, { recursive: true })
+  }
 }
 
 /** Copied beside the compiled output, so this resolves inside `dist/` too. */
@@ -45,7 +48,8 @@ export const buildStylesheet = async ({
     // below is the only input. Without it any stray file in the project can add
     // utilities to the emitted CSS, which a staleness check reads as a change.
     '@import "tailwindcss" source(none);',
-    `@import "${styles}";`,
+    // A document that only uses utility classes needs no stylesheet of its own.
+    ...(styles ? [`@import "${styles}";`] : []),
     `@source "${entry}";`,
     // Both carry the sheet: `.page` reads the variables, while `@page` needs the
     // numbers literally because Chromium rejects `var()` in `size`.

@@ -46,10 +46,17 @@ const PAGE_SIZE_NAMES = Object.keys(PAGE_SIZES) as PageSize[]
 export type Config = {
   /** A module default-exporting the component, and exporting a `title`. */
   entry: string
-  /** The document's stylesheet, imported into the page's own CSS. */
-  styles: string
-  /** Directory copied in beside the rendered page. */
-  assets: string
+  /**
+   * The document's stylesheet, imported into the page's own CSS. Optional —
+   * Tailwind's utilities and the sheet itself are there either way, so a
+   * document that only uses classes needs no stylesheet of its own.
+   */
+  styles?: string
+  /**
+   * Directory copied in beside the rendered page. Optional — omit it when the
+   * document loads nothing at render time.
+   */
+  assets?: string
   /** Where the rendered files land. */
   outDir: string
   /**
@@ -98,7 +105,7 @@ export type ResolvedConfig = SetRequired<
   root: string
   /** `entry` and `assets` resolved. `styles` is only ever needed relative. */
   entryPath: string
-  assetsDir: string
+  assetsDir?: string
   /** `pageSize` with the named sheets looked up. */
   page: PageDimensions
 }
@@ -143,8 +150,8 @@ export const findConfig = (explicit?: string, from = process.cwd()): string => {
  */
 const CONFIG_SCHEMA: GenericSchema<Config> = object({
   entry: string(),
-  styles: string(),
-  assets: string(),
+  styles: optional(string()),
+  assets: optional(string()),
   outDir: string(),
   name: optional(string()),
   pageSize: optional(
@@ -204,7 +211,7 @@ export const loadConfig = async (path: string): Promise<ResolvedConfig> => {
     entry,
     styles,
     entryPath: resolve(root, entry),
-    assetsDir: resolve(root, assets),
+    assetsDir: assets ? resolve(root, assets) : undefined,
     outDir: resolve(root, outDir),
     // `resume.tsx` gives `resume.pdf`, which is what you would have named it.
     name: name ?? basename(entry, extname(entry)),
