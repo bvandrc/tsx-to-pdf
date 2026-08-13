@@ -15,7 +15,9 @@ config points at `example/` so the package always has something to build.
   the `tsx-to-pdf` bin.
 - **`example/`** is a complete document — the README's worked example, and CI's
   end-to-end fixture. Keep it building; it is the only thing that proves the
-  package works from the outside.
+  package works from the outside. Its `outputs/` are committed, so the rendered
+  result is readable without cloning; `pnpm example` regenerates them, and
+  nothing checks whether they are current.
 - **`page.css`** holds the sheet and nothing document-specific. Its dimensions
   arrive as `--page-width` / `--page-height`, injected by `buildStylesheet`
   beside an `@page` rule carrying the same numbers literally — Chromium rejects

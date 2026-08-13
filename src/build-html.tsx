@@ -99,9 +99,6 @@ export const buildPage = async ({
     `${pathToFileURL(config.entryPath).href}${cacheKey ? `?v=${cacheKey}` : ''}`
   )) as Partial<ContentModule>
 
-  // Checked rather than trusted: without `title` the page renders an empty one
-  // and says nothing, and a missing component fails inside the renderer with an
-  // error that never names the file responsible.
   if (
     typeof content.default !== 'function' ||
     typeof content.title !== 'string'
