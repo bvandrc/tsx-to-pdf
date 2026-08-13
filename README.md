@@ -30,6 +30,8 @@ Skip Playwright and `build --no-pdf` still renders the HTML and CSS.
 ### Content
 
 Two things are required: a document, and somewhere to put the output.
+[`example/`](./example) is all of this filled in, if you would rather read a
+working one than a snippet.
 
 ```ts
 // tsx-to-pdf.config.ts
@@ -90,8 +92,8 @@ tsx-to-pdf dev      # live preview at the printed size
 tsx-to-pdf build    # writes outputs/pdf, outputs/html
 ```
 
-See [`example/`](./example) for a complete working document, rendered output
-included.
+[`example/`](./example) carries its rendered output too — the HTML, the CSS and
+the PDF that those two commands produce from it.
 
 ## Do you need to know Preact?
 
