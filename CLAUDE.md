@@ -6,7 +6,8 @@ are the same render, not two approximations of each other.
 
 Nothing here is specific to any one document. What to render comes from a config
 file in the consuming project (`tsx-to-pdf.config.ts`), and this repo's own
-config points at `example/` so the package always has something to build.
+config points at `example/` — so the package always has something to build, and
+consumers have something to copy.
 
 - **`src/`** is the package. `config.ts` owns the `Config` type, the named page
   sizes and config discovery; `build-html.tsx` renders and compiles the
@@ -45,12 +46,7 @@ renderer even though nothing here runs in a browser
 
 ## Repo conventions
 
-- **`dist/` is gitignored, and `prepare` builds it.** npm ships the built output
-  through `files`, so a consumer never runs the build; `prepare` covers publish
-  and local installs alike. It was committed for exactly as long as
-  `bvandrc-resumes` installed this from git — pnpm refuses a git dependency's
-  build scripts unless the consumer allowlists it by a URL carrying the commit,
-  which would have meant editing that entry on every release here.
+- **Package manager**: pnpm. `npm install` writes a competing lockfile CI ignores.
 - **The consuming project's tsconfig is not trusted to set JSX.** `jsxTsconfig`
   writes one into `node_modules/.tsx-to-pdf/` that extends theirs, pins
   `jsx`/`jsxImportSource`, and widens `include` to the whole project — `tsx`
@@ -58,9 +54,13 @@ renderer even though nothing here runs in a browser
   `include` matches, so both halves are needed. Their `paths` and `target`
   survive because it extends rather than replaces.
 - **tsdown builds the package**, configured in `tsdown.config.ts`. Bundling is
-  what lets es-toolkit be a devDependency — `deps.onlyBundle` names it as the one
-  thing tree-shaken in, so a new runtime dependency cannot be swallowed by
-  accident.
+  what lets es-toolkit and valibot be devDependencies rather than something every
+  consumer installs: both are small, both tree-shake to the handful of functions
+  used, and neither is likely to be in a consumer's tree already, so inlining
+  them costs less than asking for them. `deps.onlyBundle` names the two, so
+  anything heavier cannot be swallowed by accident — type-fest is a real
+  dependency for exactly that reason, since bundling it inlined 33 kB of helper
+  types into the declarations.
 - **Not tsup**, though it looks equivalent: its declaration step bundles
   `rollup-plugin-dts` against TypeScript 5 and crashes outright on this repo's
   TypeScript 7. tsdown only warns and emits correctly.
@@ -83,19 +83,15 @@ renderer even though nothing here runs in a browser
 - **The renderer is Preact, but only as a serialiser** — `preact-render-to-string`
   turns static elements into HTML. No hooks, no state, no hydration. Its value is
   that JSX escapes content, so there is no raw-HTML path.
-- **Not React, and the reason is the output.** React's `renderToStaticMarkup`
-  takes only `{ identifierPrefix }` — it cannot indent, so the committed HTML
-  would be one unbroken line. Preact also ships its own types and installs a
-  third of the size. Since `jsxImportSource` is forced at build time, none of
-  this reaches the consumer: they can typecheck against React and still render
-  here, as long as they write `className` and import no React values.
-- **Prettier formats the emitted HTML**, not the renderer's `pretty` mode, which
-  breaks lines inside inline content and turns `C<em>++</em>` into `C ++`. That
-  corrupts the PDF too, since it is printed from the written HTML. htmlfy has the
-  same defect; js-beautify is correct but pulls five transitive dependencies.
+- **Not React, but not for a reason that binds.** Preact ships its own types and
+  installs a third of the size, which is enough when the job is serialising
+  static elements. Since `jsxImportSource` is forced at build time, none of it
+  reaches the consumer: they can typecheck against React and still render here,
+  as long as they write `className` and import no React values. Letting them peer
+  install *either* runtime is a plausible future — nothing in the renderer
+  depends on which one it is.
 - **Playwright is imported lazily** inside `buildPdf`, so `--no-pdf` works with
   no browser installed at all.
 - **Point-based measurements**: sizes are in points because the output is print.
   `html { font-size: 12pt }` makes Tailwind's `0.25rem` spacing unit exactly
   `3pt`, so scale classes land on whole points.
-- **Package manager**: pnpm. `npm install` writes a competing lockfile CI ignores.
