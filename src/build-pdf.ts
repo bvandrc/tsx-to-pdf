@@ -1,9 +1,25 @@
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { PDFDict, PDFDocument, PDFHexString, PDFName } from 'pdf-lib'
 
 import type { ResolvedConfig } from './config.ts'
 
 /** Fixed instant so repeated builds of unchanged sources produce identical bytes. */
 const EPOCH = new Date(0)
+
+/** One level above both `src/` and `dist/`, so this resolves either way. */
+const { version } = JSON.parse(
+  readFileSync(join(import.meta.dirname, '..', 'package.json'), 'utf8')
+) as { version: string }
+
+/**
+ * The software that made the PDF, which is what `/Producer` and `/Creator`
+ * name — `<product> <version>` is the convention every other generator follows,
+ * from `Skia/PDF m141` to `pdfTeX-1.40.25`. Not configurable: Chromium's own
+ * values move with the browser, and the point of writing it is to have one that
+ * moves only when this package does. A person's name goes in `author`.
+ */
+const PRODUCER = `tsx-to-pdf ${version}`
 
 /**
  * Loaded on demand, so `--no-pdf` needs no browser at all. Playwright is the
@@ -45,7 +61,7 @@ const getFontSubtypes = (pdf: PDFDocument): string[] =>
  */
 export const buildPdf = async (
   pageUrl: string,
-  { maxPages, page: sheet, checkPdfFontTypes, author, producer }: ResolvedConfig
+  { maxPages, page: sheet, checkPdfFontTypes = true, author }: ResolvedConfig
 ): Promise<Uint8Array> => {
   const { chromium } = await playwright()
 
@@ -119,12 +135,10 @@ export const buildPdf = async (
     // relies on that to tell a real change from a rerun.
     pdf.setCreationDate(EPOCH)
     pdf.setModificationDate(EPOCH)
-    pdf.setProducer(producer)
-    pdf.setCreator(producer)
+    pdf.setProducer(PRODUCER)
+    pdf.setCreator(PRODUCER)
 
-    // Only when given: pdf-lib would otherwise write an empty /Author, which
-    // reads as "authored by nobody" rather than as absent.
-    if (author !== undefined) {
+    if (author) {
       pdf.setAuthor(author)
     }
 

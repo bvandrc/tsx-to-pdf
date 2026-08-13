@@ -124,7 +124,6 @@ tsx-to-pdf build    # writes outputs/pdf, outputs/html
 | `maxPages` | unlimited | Building past this many pages fails. Set to `1` for a one-pager |
 | `checkPdfFontTypes` | `true` | Fail when a font embeds as Type3, which extractors read poorly |
 | `author` | — | `/Author` in the PDF: the person who wrote the document. This is where your own name goes |
-| `producer` | `tsx-to-pdf` | `/Producer` and `/Creator` in the PDF, which name the *software* &mdash; set it if you would rather this tool not be named |
 | `port` | `4000` | For `tsx-to-pdf dev` |
 
 ```

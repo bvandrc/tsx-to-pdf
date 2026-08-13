@@ -79,18 +79,10 @@ export type Config = {
    */
   checkPdfFontTypes?: boolean
   /**
-   * `/Author` in the PDF: the person who wrote the document. Left unset when
-   * you don't give one, rather than guessed at.
+   * `/Author` in the PDF: the person who wrote the document. Left unset by
+   * default.
    */
   author?: string
-  /**
-   * `/Producer` and `/Creator` in the PDF, which name the *software* that made
-   * it — Chromium writes `Skia/PDF m141` and a browser user-agent string, both
-   * of which vary per run, so this is overwritten with something fixed. Your
-   * own name belongs in `author`, not here.
-   * @default 'tsx-to-pdf'
-   */
-  producer?: string
   /**
    * Port for `tsx-to-pdf dev`.
    * @default 4000
@@ -98,10 +90,14 @@ export type Config = {
   port?: number
 }
 
-/** Defaults filled in and paths resolved, which is what the build works from. */
+/**
+ * Paths resolved, and the defaults more than one caller needs filled in. The
+ * rest are defaulted where they are read, against the same value `Config`
+ * documents.
+ */
 export type ResolvedConfig = SetRequired<
   Omit<Config, 'assets' | 'pageSize'>,
-  'name' | 'port' | 'checkPdfFontTypes' | 'producer'
+  'name' | 'port'
 > & {
   /** The config file's directory. Relative paths resolve against it. */
   root: string
@@ -168,7 +164,6 @@ const CONFIG_SCHEMA: GenericSchema<Config> = object({
   maxPages: optional(pipe(number(), integer(), minValue(1))),
   checkPdfFontTypes: optional(boolean()),
   author: optional(string()),
-  producer: optional(string()),
   port: optional(pipe(number(), integer())),
 })
 
@@ -220,9 +215,8 @@ export const loadConfig = async (path: string): Promise<ResolvedConfig> => {
     name: name ?? basename(entry, extname(entry)),
     page: toDimensions(config.pageSize),
     maxPages: config.maxPages,
-    checkPdfFontTypes: config.checkPdfFontTypes ?? true,
+    checkPdfFontTypes: config.checkPdfFontTypes,
     author: config.author,
-    producer: config.producer ?? 'tsx-to-pdf',
     port: config.port ?? 4000,
   }
 }
