@@ -3,9 +3,9 @@
 Write a document as JSX — React style, in a `.tsx` file — style it with Tailwind,
 and print it to a page-exact PDF, with the rendered HTML alongside it.
 
-Features a dev server (`tsx-to-pdf dev`) to preview the document at its printed
-page size, which live-updates as you make changes. It serves the same HTML the
-PDF is rendered from, so the preview is not an approximation of the result.
+Features a dev server to preview the document at its printed page size, which
+live-updates as you make changes. It serves the same HTML the PDF is rendered
+from, so the preview is not an approximation of the result.
 
 Built for documents that have to fit a page: a resume, a one-pager, a leave-behind.
 The sheet is yours to choose — `pageSize` takes `letter`, `legal`, `tabloid`,
@@ -23,8 +23,8 @@ npx playwright install chromium
 
 | package | required | why it is yours |
 | --- | --- | --- |
-| `preact` | yes | The JSX runtime your document compiles against, and where its types come from (`ComponentChildren` and friends). A lightweight alternative to React, which suits a page that is static — no hooks, no providers, nothing shipped to a browser |
-| `playwright` | no | PDF output only — omit it if you only want the HTML and CSS outputs (via `--no-pdf`). Its CLI has to be on *your* `node_modules/.bin` for that second line to work; it cannot run from a nested copy |
+| `preact` | yes | The JSX runtime your document compiles against, and where its types come from (`ComponentChildren` and friends). A lightweight alternative to React, which suits a page that is static — no hooks, no providers, nothing shipped to a browser. |
+| `playwright` | no | PDF output only — omit it if you only want the HTML and CSS outputs (via `--no-pdf`). Can't be a dep of ours anyways — CLI has to be on *your* `node_modules/.bin`; it cannot run from a nested copy |
 
 ## Getting started
 
@@ -90,11 +90,11 @@ export default {
 **`"type": "module"` in `package.json`.** Without it your `.tsx` document is
 treated as CommonJS and fails with `ERR_REQUIRE_CYCLE_MODULE`.
 
-That is the whole list. **You do not need a `tsconfig.json` at all**, and if you
-have one, nothing in it has to be right: the JSX settings are layered on top at
-build time, so your `paths`, `target` and everything else still apply while
-`jsxImportSource` is taken care of. You also never compile your document — it is
-transformed as it loads.
+That's it. **You do not need a `tsconfig.json` at all**, and if you have one,
+nothing in it has to be right: the JSX settings are layered on top at build time,
+so your `paths`, `target` and everything else still apply while `jsxImportSource`
+is taken care of. You also never compile your document — it is transformed as it
+loads.
 
 A tsconfig is exported if you want your editor to match, but extending it is
 optional:
@@ -187,14 +187,15 @@ transcription.
    an assets directory — and check that `tsx-to-pdf build` runs before you
    change anything. Starting from a build that works means any later breakage is
    something you just did.
-2. **Export it as HTML.** Google Docs does this under File → Download → *Web page
-   (.html, zipped)*, and it is a much better input than a PDF: the markup carries
-   the headings, fonts, sizes and margins, so the model reads your layout rather
-   than inferring it. Upload the whole zip. A PDF or a screenshot works, but
-   every measurement is then a guess and the conversion is less accurate.
-3. **Upload your existing document** and **ask it to recreate it** as accurately
-   as possible, editing `content/*.tsx` and `content/styles.css` and leaving the
-   config alone.
+2. **Export your existing doc as HTML, if you can.** Google Docs does this under
+   File → Download → *Web page (.html, zipped)*, and it is a much better input
+   than a PDF: the markup carries the headings, fonts, sizes and margins, so the
+   model reads your layout rather than inferring it. Upload the whole zip. A PDF
+   or a screenshot works, but every measurement is then a guess and the
+   conversion is less accurate.
+3. **Upload your existing document** (the zipped HTML, PDF, image, etc.) and
+   **ask it to recreate it** as accurately as possible, editing `content/*.tsx`
+   and `content/styles.css` and leaving the config alone.
 4. **Iterate against the preview.** Run `tsx-to-pdf dev` and put it beside
    the original. Differences in spacing and type size are the usual ones, and
    they are quick to describe: "the header block is too tight", "the dates
