@@ -40,13 +40,11 @@ const DEFAULT_MARGIN = 1
 /** CSS padding order, which is also the order the sides are emitted in. */
 const MARGIN_SIDES = ['top', 'right', 'bottom', 'left'] as const
 
-/** `0.5` and `{ top: 1 }` alike become the padding the sheet is given. */
+/** A number or the four sides alike become the padding the sheet is given. */
 const toMargin = (margin: Margin = DEFAULT_MARGIN): string =>
   typeof margin === 'number'
     ? `${margin}in`
-    : MARGIN_SIDES.map((side) => `${margin[side] ?? DEFAULT_MARGIN}in`).join(
-        ' '
-      )
+    : MARGIN_SIDES.map((side) => `${margin[side]}in`).join(' ')
 
 /**
  * Compiles the page's stylesheet: Tailwind, then the document's own CSS, then

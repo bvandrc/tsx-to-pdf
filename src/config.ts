@@ -44,10 +44,10 @@ export type PageSize = keyof typeof PAGE_SIZES
 /** The names, as a value, so the schema and its message can both read them. */
 const PAGE_SIZE_NAMES = Object.keys(PAGE_SIZES) as PageSize[]
 
-/** White space around the document, in inches: one value, or per side. */
+/** White space around the document, in inches: one value, or all four sides. */
 export type Margin =
   | number
-  | { top?: number; right?: number; bottom?: number; left?: number }
+  | { top: number; right: number; bottom: number; left: number }
 
 /** Which document to render and how. Paths are relative to the config file. */
 export type Config = {
@@ -75,8 +75,8 @@ export type Config = {
   pageSize?: PageSize | PageDimensions
   /**
    * White space around the document, in inches — one number for all four
-   * sides, or per side, where an omitted side takes the default. Applied as
-   * the page's padding, so a full-width banner still sits inside it.
+   * sides, or an object giving every side. Applied as the page's padding, so a
+   * full-width banner still sits inside it.
    * @default 1
    */
   margin?: Margin
@@ -182,13 +182,14 @@ const CONFIG_SCHEMA: GenericSchema<Config> = object({
     union(
       [
         INCHES,
-        // Strict, so a misspelled side is an error rather than a silently
-        // dropped key that leaves the default in place.
+        // All four required, and strict: naming some sides but not others reads
+        // as "the rest are zero" as easily as "the rest are the default", so it
+        // is an error rather than a guess. A misspelled side fails here too.
         strictObject({
-          top: optional(INCHES),
-          right: optional(INCHES),
-          bottom: optional(INCHES),
-          left: optional(INCHES),
+          top: INCHES,
+          right: INCHES,
+          bottom: INCHES,
+          left: INCHES,
         }),
       ],
       'Expected inches as a number, or { top, right, bottom, left }'
