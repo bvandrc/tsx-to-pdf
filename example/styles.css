@@ -1,9 +1,3 @@
-/* How much white surrounds the page. Applied as padding, so the accent banner
- * sits against the same box the text does. */
-:root {
-  --page-margin: 0.5in;
-}
-
 /*
  * Committed woff2 rather than a host or CDN font, so the page lays out the same
  * on every machine.

@@ -1,9 +1,9 @@
 /*
- * The sheet, with nothing document-specific. Its dimensions arrive as
- * `--page-width` / `--page-height`, injected from the config next to an `@page`
- * rule carrying the same numbers literally — Chromium rejects `var()` in the
- * `size` descriptor, so both cannot read one variable. Resolving them together
- * in one place is what stops the PDF drifting from the preview.
+ * The sheet, with nothing document-specific. Its geometry arrives as
+ * `--page-width` / `--page-height` / `--page-margin`, injected from the config
+ * next to an `@page` rule carrying the dimensions literally — Chromium rejects
+ * `var()` in the `size` descriptor, so both cannot read one variable. Resolving
+ * them together in one place is what stops the PDF drifting from the preview.
  */
 
 @layer base {
@@ -21,8 +21,9 @@
      * page for build-pdf.ts to catch. A fixed height would crop it silently.
      */
     min-height: var(--page-height);
-    /* The margin is the document's call; its stylesheet sets it. */
-    padding: var(--page-margin, 0.5in);
+    /* Padding rather than margin, so a full-width banner sits inside the same
+     * box the text does. Always injected, hence no fallback. */
+    padding: var(--page-margin);
     background: #fff;
   }
 }

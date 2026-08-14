@@ -4,6 +4,7 @@ export {
   type Config,
   findConfig,
   loadConfig,
+  type Margin,
   PAGE_SIZES,
   type PageDimensions,
   type PageSize,

@@ -21,6 +21,7 @@ import {
   picklist,
   pipe,
   safeParse,
+  strictObject,
   string,
   union,
 } from 'valibot'
@@ -41,6 +42,11 @@ export type PageSize = keyof typeof PAGE_SIZES
 
 /** The names, as a value, so the schema and its message can both read them. */
 const PAGE_SIZE_NAMES = Object.keys(PAGE_SIZES) as PageSize[]
+
+/** White space around the document, in inches: one value, or per side. */
+export type Margin =
+  | number
+  | { top?: number; right?: number; bottom?: number; left?: number }
 
 /** Which document to render and how. Paths are relative to the config file. */
 export type Config = {
@@ -66,6 +72,13 @@ export type Config = {
    * @default 'letter'
    */
   pageSize?: PageSize | PageDimensions
+  /**
+   * White space around the document, in inches — one number for all four
+   * sides, or per side, where an omitted side takes the default. Applied as
+   * the page's padding, so a full-width banner still sits inside it.
+   * @default 1
+   */
+  margin?: Margin
   /**
    * Trigger failure if the build exceeds this many pages.
    * @default undefined — the length is not checked
@@ -140,6 +153,9 @@ export const findConfig = (explicit?: string, from = process.cwd()): string => {
   return found
 }
 
+/** A length in inches. Zero is a legitimate margin; negative is not. */
+const INCHES = pipe(number(), minValue(0))
+
 /**
  * `Config` as a runtime check. Typed as a schema *for* `Config` rather than the
  * source of it, so the type stays hand-written and keeps the per-property JSDoc
@@ -159,6 +175,22 @@ const CONFIG_SCHEMA: GenericSchema<Config> = object({
         object({ width: string(), height: string() }),
       ],
       `Expected ${PAGE_SIZE_NAMES.join(', ')}, or { width, height } as CSS lengths`
+    )
+  ),
+  margin: optional(
+    union(
+      [
+        INCHES,
+        // Strict, so a misspelled side is an error rather than a silently
+        // dropped key that leaves the default in place.
+        strictObject({
+          top: optional(INCHES),
+          right: optional(INCHES),
+          bottom: optional(INCHES),
+          left: optional(INCHES),
+        }),
+      ],
+      'Expected inches as a number, or { top, right, bottom, left }'
     )
   ),
   maxPages: optional(pipe(number(), integer(), minValue(1))),
@@ -214,6 +246,7 @@ export const loadConfig = async (path: string): Promise<ResolvedConfig> => {
     // `resume.tsx` gives `resume.pdf`, which is what you would have named it.
     name: name ?? basename(entry, extname(entry)),
     page: toDimensions(config.pageSize),
+    margin: config.margin,
     maxPages: config.maxPages,
     checkPdfFontTypes: config.checkPdfFontTypes,
     author: config.author,

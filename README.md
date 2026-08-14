@@ -76,10 +76,6 @@ export default {
 
 ```css
 /* content/styles.css */
-:root {
-  --page-margin: 0.5in;
-}
-
 @theme {
   --font-serif: "Gelasio", serif;
 }
@@ -121,6 +117,7 @@ tsx-to-pdf build    # writes outputs/pdf, outputs/html
 | `assets` | — | Directory copied in beside the rendered page |
 | `name` | `entry`'s basename | Their basename: `<name>.pdf`, `<name>.html`, `<name>.css` |
 | `pageSize` | `'letter'` | `letter`, `legal`, `tabloid`, `a3`, `a4`, `a5`, or `{ width, height }` as CSS lengths |
+| `margin` | `1` | White space around the document, **in inches**: one number, or `{ top, right, bottom, left }` where an omitted side takes the default |
 | `maxPages` | unlimited | Building past this many pages fails. Set to `1` for a one-pager |
 | `checkPdfFontTypes` | `true` | Fail when a font embeds as Type3, which extractors read poorly |
 | `author` | — | `/Author` in the PDF: the person who wrote the document. This is where your own name goes |

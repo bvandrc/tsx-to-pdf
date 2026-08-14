@@ -8,7 +8,7 @@ import type { ComponentChildren, FunctionComponent } from 'preact'
 import { render as preactRenderJsxToString } from 'preact-render-to-string/jsx'
 import { format as prettify } from 'prettier'
 
-import type { ResolvedConfig } from './config.ts'
+import type { Margin, ResolvedConfig } from './config.ts'
 
 /** Puts the assets beside a rendered page, leaving only them and `keep`. */
 export const copyAssets = async (
@@ -34,6 +34,20 @@ export const copyAssets = async (
 /** Copied beside the compiled output, so this resolves inside `dist/` too. */
 const PAGE_CSS = join(import.meta.dirname, 'page.css')
 
+/** What Word, Google Docs and Pages all give a document. */
+const DEFAULT_MARGIN = 1
+
+/** CSS padding order, which is also the order the sides are emitted in. */
+const MARGIN_SIDES = ['top', 'right', 'bottom', 'left'] as const
+
+/** `0.5` and `{ top: 1 }` alike become the padding the sheet is given. */
+const toMargin = (margin: Margin = DEFAULT_MARGIN): string =>
+  typeof margin === 'number'
+    ? `${margin}in`
+    : MARGIN_SIDES.map((side) => `${margin[side] ?? DEFAULT_MARGIN}in`).join(
+        ' '
+      )
+
 /**
  * Compiles the page's stylesheet: Tailwind, then the document's own CSS, then
  * the sheet geometry with the configured page size resolved into it.
@@ -43,6 +57,7 @@ export const buildStylesheet = async ({
   styles,
   root,
   page,
+  margin,
 }: ResolvedConfig): Promise<string> => {
   const input = [
     // `source(none)` turns off automatic content detection so the `@source`
@@ -53,8 +68,9 @@ export const buildStylesheet = async ({
     ...(styles ? [`@import "${styles}";`] : []),
     `@source "${entry}";`,
     // Both carry the sheet: `.page` reads the variables, while `@page` needs the
-    // numbers literally because Chromium rejects `var()` in `size`.
-    `:root { --page-width: ${page.width}; --page-height: ${page.height}; }`,
+    // numbers literally because Chromium rejects `var()` in `size`. Emitted
+    // after the document's import, so the config wins over a stray `:root`.
+    `:root { --page-width: ${page.width}; --page-height: ${page.height}; --page-margin: ${toMargin(margin)}; }`,
     `@page { size: ${page.width} ${page.height}; margin: 0; }`,
     await readFile(PAGE_CSS, 'utf8'),
   ].join('\n')
