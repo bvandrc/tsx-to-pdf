@@ -238,9 +238,8 @@ export const loadConfig = async (path: string): Promise<ResolvedConfig> => {
   const { entry, assets, outDir, name } = config
 
   return {
-    // Everything the build takes as given. The keys below are the ones that
-    // needed resolving, so the two halves stay easy to tell apart.
     ...pick(config, [
+      // Everything the build takes as given.
       'entry',
       'styles',
       'margin',
