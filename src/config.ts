@@ -8,6 +8,7 @@ import {
   resolve,
 } from 'node:path'
 import { pathToFileURL } from 'node:url'
+import { pick } from 'es-toolkit'
 import type { SetRequired } from 'type-fest'
 import {
   boolean,
@@ -21,6 +22,7 @@ import {
   picklist,
   pipe,
   safeParse,
+  strictObject,
   string,
   union,
 } from 'valibot'
@@ -41,6 +43,11 @@ export type PageSize = keyof typeof PAGE_SIZES
 
 /** The names, as a value, so the schema and its message can both read them. */
 const PAGE_SIZE_NAMES = Object.keys(PAGE_SIZES) as PageSize[]
+
+/** White space around the document, in inches: one value, or all four sides. */
+export type Margin =
+  | number
+  | { top: number; right: number; bottom: number; left: number }
 
 /** Which document to render and how. Paths are relative to the config file. */
 export type Config = {
@@ -66,6 +73,13 @@ export type Config = {
    * @default 'letter'
    */
   pageSize?: PageSize | PageDimensions
+  /**
+   * White space around the document, in inches — one number for all four
+   * sides, or an object giving every side. Applied as the page's padding, so a
+   * full-width banner still sits inside it.
+   * @default 1
+   */
+  margin?: Margin
   /**
    * Trigger failure if the build exceeds this many pages.
    * @default undefined — the length is not checked
@@ -140,6 +154,9 @@ export const findConfig = (explicit?: string, from = process.cwd()): string => {
   return found
 }
 
+/** A length in inches. Zero is a legitimate margin; negative is not. */
+const INCHES = pipe(number(), minValue(0))
+
 /**
  * `Config` as a runtime check. Typed as a schema *for* `Config` rather than the
  * source of it, so the type stays hand-written and keeps the per-property JSDoc
@@ -159,6 +176,23 @@ const CONFIG_SCHEMA: GenericSchema<Config> = object({
         object({ width: string(), height: string() }),
       ],
       `Expected ${PAGE_SIZE_NAMES.join(', ')}, or { width, height } as CSS lengths`
+    )
+  ),
+  margin: optional(
+    union(
+      [
+        INCHES,
+        // All four required, and strict: naming some sides but not others reads
+        // as "the rest are zero" as easily as "the rest are the default", so it
+        // is an error rather than a guess. A misspelled side fails here too.
+        strictObject({
+          top: INCHES,
+          right: INCHES,
+          bottom: INCHES,
+          left: INCHES,
+        }),
+      ],
+      'Expected inches as a number, or { top, right, bottom, left }'
     )
   ),
   maxPages: optional(pipe(number(), integer(), minValue(1))),
@@ -202,21 +236,25 @@ export const loadConfig = async (path: string): Promise<ResolvedConfig> => {
   }
 
   const config = result.output
-  const { entry, styles, assets, outDir, name } = config
+  const { entry, assets, outDir, name } = config
 
   return {
+    ...pick(config, [
+      // Everything the build takes as given.
+      'entry',
+      'styles',
+      'margin',
+      'maxPages',
+      'checkPdfFontTypes',
+      'author',
+    ]),
     root,
-    entry,
-    styles,
     entryPath: resolve(root, entry),
     assetsDir: assets ? resolve(root, assets) : undefined,
     outDir: resolve(root, outDir),
     // `resume.tsx` gives `resume.pdf`, which is what you would have named it.
     name: name ?? basename(entry, extname(entry)),
     page: toDimensions(config.pageSize),
-    maxPages: config.maxPages,
-    checkPdfFontTypes: config.checkPdfFontTypes,
-    author: config.author,
     port: config.port ?? 4000,
   }
 }

@@ -265,9 +265,6 @@
     padding-bottom: var(--spacing);
   }
 }
-:root {
-  --page-margin: 0.5in;
-}
 @font-face {
   font-family: "Gelasio";
   font-style: normal;
@@ -308,6 +305,7 @@
 :root {
   --page-width: 8.5in;
   --page-height: 11in;
+  --page-margin: 0.5in;
 }
 @page {
   size: 8.5in 11in;
@@ -322,7 +320,7 @@
   .page {
     width: var(--page-width);
     min-height: var(--page-height);
-    padding: var(--page-margin, 0.5in);
+    padding: var(--page-margin);
     background: #fff;
   }
 }
