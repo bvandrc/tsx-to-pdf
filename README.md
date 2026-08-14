@@ -235,9 +235,10 @@ the equivalent of `--no-pdf`.
 ## Notes
 
 - Chromium is installed separately (`playwright install chromium`), since the
-  browser is large and yours to manage. Full Chromium, deliberately — the smaller
-  `chromium-headless-shell` measures text slightly differently, and the PDF would
-  stop matching the preview.
+  browser is large and yours to manage. The full browser is pinned rather than
+  the `chromium-headless-shell` a headless launch would otherwise pick: the shell
+  lays text out about 1.7% taller, which is enough to push a full page onto a
+  second one on one machine and not the next. Don't install with `--only-shell`.
 - `CHROMIUM_EXECUTABLE_PATH` overrides which browser is launched.
 - JSX escapes content by construction, so there is no raw-HTML path into the
   document. See [Do you need to know React or
