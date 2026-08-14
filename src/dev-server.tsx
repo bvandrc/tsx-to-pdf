@@ -120,12 +120,34 @@ export const serve = (config: ResolvedConfig): void => {
           config,
           cacheKey: revision,
           stylesheet,
-          // Shows the page boundary against a backdrop, and reloads on rebuild.
+          // Shows the sheet against a backdrop, marks where it ends, and
+          // reloads on rebuild.
           head: (
             <>
               <style>{`
                 body { background: #525659; padding: 24px 0; }
-                .page { margin: 0 auto; box-shadow: 0 2px 12px rgb(0 0 0 / 0.5); }
+                .page { margin: 0 auto; box-shadow: 0 2px 12px rgb(0 0 0 / 0.5); position: relative; }
+                /*
+                 * Where the printer will break. \`.page\` is one tall box that
+                 * grows past the sheet — that is what puts the overflow onto a
+                 * second PDF page — so without this the preview shows a long
+                 * first page rather than two. Reads \`--page-height\`, the same
+                 * value the \`@page\` rule takes literally, so the rule sits
+                 * exactly on the break and repeats for however many pages.
+                 */
+                .page::after {
+                  content: '';
+                  position: absolute;
+                  inset: 0;
+                  pointer-events: none;
+                  background: repeating-linear-gradient(
+                    to bottom,
+                    transparent 0,
+                    transparent calc(var(--page-height) - 1px),
+                    rgb(220 38 38 / 0.7) calc(var(--page-height) - 1px),
+                    rgb(220 38 38 / 0.7) var(--page-height)
+                  );
+                }
               `}</style>
               <script>{`new EventSource('${LIVERELOAD}').onmessage = () => location.reload()`}</script>
             </>
