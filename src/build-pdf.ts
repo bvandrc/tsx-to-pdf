@@ -1,5 +1,6 @@
 import { readFile } from 'node:fs/promises'
 import { PDFDict, PDFDocument, PDFHexString, PDFName } from 'pdf-lib'
+import type { Browser } from 'playwright'
 
 import { version } from '../package.json' with { type: 'json' }
 import type { ResolvedConfig } from './config.ts'
@@ -50,6 +51,35 @@ export const loadPreviousPdf = async (
   }
 }
 
+/**
+ * Chromium, configured as the build prints with. Exported so the dev server can
+ * measure in the same browser: a different build lays text out differently, and
+ * the point of the preview is that it agrees with the PDF.
+ */
+export const launchBrowser = async (): Promise<Browser> => {
+  const { chromium } = await playwright()
+
+  /**
+   * Escape hatch for environments whose Chromium build predates the one
+   * Playwright expects. Unset everywhere `playwright install` has run.
+   */
+  const executablePath = process.env.CHROMIUM_EXECUTABLE_PATH
+
+  return chromium.launch(
+    /**
+     * Full Chromium, not the smaller `chromium-headless-shell`. Since Playwright
+     * 1.49 a plain headless launch resolves to the shell, and it lays text out
+     * around 1.7% taller — enough to push a full page onto a second one, on the
+     * machine that happens to have the shell installed and not the one beside
+     * it. `channel` is what pins the real browser, and it is also the one the
+     * dev server previews in.
+     *
+     * The two are mutually exclusive: an explicit path names the binary itself.
+     */
+    executablePath ? { executablePath } : { channel: 'chromium' }
+  )
+}
+
 /** Every font resource across the document, as `/Type0`, `/Type3` and friends. */
 const getFontSubtypes = (pdf: PDFDocument): string[] =>
   pdf.getPages().flatMap((page) => {
@@ -79,27 +109,7 @@ export const buildPdf = async (
     setDate,
   }: ResolvedConfig
 ): Promise<Uint8Array> => {
-  const { chromium } = await playwright()
-
-  /**
-   * Escape hatch for environments whose Chromium build predates the one
-   * Playwright expects. Unset everywhere `playwright install` has run.
-   */
-  const executablePath = process.env.CHROMIUM_EXECUTABLE_PATH
-
-  const browser = await chromium.launch(
-    /**
-     * Full Chromium, not the smaller `chromium-headless-shell`. Since Playwright
-     * 1.49 a plain headless launch resolves to the shell, and it lays text out
-     * around 1.7% taller — enough to push a full page onto a second one, on the
-     * machine that happens to have the shell installed and not the one beside
-     * it. `channel` is what pins the real browser, and it is also the one the
-     * dev server previews in.
-     *
-     * The two are mutually exclusive: an explicit path names the binary itself.
-     */
-    executablePath ? { executablePath } : { channel: 'chromium' }
-  )
+  const browser = await launchBrowser()
 
   try {
     const page = await browser.newPage()

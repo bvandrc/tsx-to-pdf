@@ -2,7 +2,7 @@
 
 Write a document as JSX — React style, in a `.tsx` file — style it with Tailwind, and print it to a page-exact PDF, with the rendered HTML alongside it.
 
-Features a dev server to preview the document at its printed page size, which live-updates as you make changes. It serves the same HTML the PDF is rendered from, so the preview is not an approximation of the result.
+Features a dev server to preview the document at its printed page size, which live-updates as you make changes. It serves the same HTML the PDF is rendered from, so the preview is not an approximation of the result. With `maxPages` set, every rebuild also prints the document in the background and reports how it paginates — pages used, and the height left or over, in pixels and points.
 
 Built for documents that have to fit a page: a resume, a one-pager, a leave-behind. The sheet is yours to choose — `pageSize` takes `letter`, `legal`, `tabloid`, `a3`, `a4`, `a5`, or explicit dimensions — and setting `maxPages` fails the build when the layout overflows, so "it still fits" is enforced rather than remembered.
 
@@ -18,7 +18,7 @@ npx playwright install chromium
 | package | required | why it is yours |
 | --- | --- | --- |
 | `preact` | yes | The JSX runtime your document compiles against, and where its types come from (`ComponentChildren` and friends). A lightweight alternative to React, which suits a page that is static — no hooks, no providers, nothing shipped to a browser. |
-| `playwright` | no | PDF output only — omit it if you only want the HTML and CSS outputs (via `--no-pdf`). Can't be a dep of ours anyways — CLI has to be on *your* `node_modules/.bin`; it cannot run from a nested copy |
+| `playwright` | no | Printing — the PDF, and the dev server's `maxPages` reporting. Omit it if you only want the HTML and CSS outputs (via `--no-pdf`). Can't be a dep of ours anyways — CLI has to be on *your* `node_modules/.bin`; it cannot run from a nested copy |
 | `node-html-markdown` | no | Markdown output only (`--md`) — omit it unless you want the `.md`. Kept optional so a build that never asks for it never installs it, even though the package itself is small |
 
 ## Getting started
@@ -102,7 +102,7 @@ tsx-to-pdf build    # writes outputs/html/, outputs/{name}.pdf (and outputs/{nam
 | `name` | `entry`'s basename | Their basename: `<name>.pdf`, `<name>.html`, `<name>.css` |
 | `pageSize` | `'letter'` | `letter`, `legal`, `tabloid`, `a3`, `a4`, `a5`, or `{ width, height }` as CSS lengths |
 | `margin` | `1` | White space around the document, **in inches**: one number, or `{ top, right, bottom, left }` with every side given |
-| `maxPages` | unlimited | Building past this many pages fails. Set to `1` for a one-pager |
+| `maxPages` | unlimited | Building past this many pages fails. Set to `1` for a one-pager. `tsx-to-pdf dev` reports the page count and the height to spare or to trim after every rebuild, so the length is visible before the build enforces it (needs Playwright; skipped with a note if it is missing) |
 | `checkPdfFontTypes` | `true` | Fail when a font embeds as Type3, which extractors read poorly |
 | `author` | — | `/Author` in the PDF: the person who wrote the document. This is where your own name goes |
 | `setDate` | `true` | Stamp `/CreationDate` and `/ModDate` with the build time, a given `Date`, or `false` to omit them for a reproducible build. A rebuild that renders identical HTML and CSS skips printing altogether — no browser launch — and leaves the existing PDF as it is |
