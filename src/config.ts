@@ -8,6 +8,7 @@ import {
   resolve,
 } from 'node:path'
 import { pathToFileURL } from 'node:url'
+import { pick } from 'es-toolkit'
 import type { SetRequired } from 'type-fest'
 import {
   boolean,
@@ -234,22 +235,26 @@ export const loadConfig = async (path: string): Promise<ResolvedConfig> => {
   }
 
   const config = result.output
-  const { entry, styles, assets, outDir, name } = config
+  const { entry, assets, outDir, name } = config
 
   return {
+    // Everything the build takes as given. The keys below are the ones that
+    // needed resolving, so the two halves stay easy to tell apart.
+    ...pick(config, [
+      'entry',
+      'styles',
+      'margin',
+      'maxPages',
+      'checkPdfFontTypes',
+      'author',
+    ]),
     root,
-    entry,
-    styles,
     entryPath: resolve(root, entry),
     assetsDir: assets ? resolve(root, assets) : undefined,
     outDir: resolve(root, outDir),
     // `resume.tsx` gives `resume.pdf`, which is what you would have named it.
     name: name ?? basename(entry, extname(entry)),
     page: toDimensions(config.pageSize),
-    margin: config.margin,
-    maxPages: config.maxPages,
-    checkPdfFontTypes: config.checkPdfFontTypes,
-    author: config.author,
     port: config.port ?? 4000,
   }
 }
