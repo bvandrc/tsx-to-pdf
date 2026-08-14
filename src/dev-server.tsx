@@ -26,6 +26,65 @@ const getContentType = (file: string): string =>
   (CONTENT_TYPES as Record<string, string>)[extname(file)] ??
   'application/octet-stream'
 
+/** CSS defines a pixel as 1/96in and a point as 1/72in, so this is exact. */
+const PT_PER_PX = 72 / 96
+
+/** Shared by the rule that styles the badge and the script that adds it. */
+const OVERFLOW_BADGE = 'tsx-to-pdf-overflow'
+
+/**
+ * Preview styling and script that call out a document running past `maxPages`,
+ * as the height there is to trim, so an overflow shows while you are editing
+ * rather than once the build has refused to generate it.
+ *
+ * Only ever added where the config sets `maxPages`.
+ */
+const overflowBadge = (maxPages: number) => (
+  <>
+    <style>{`
+      #${OVERFLOW_BADGE} {
+        position: fixed;
+        right: 16px;
+        bottom: 16px;
+        padding: 6px 10px;
+        border-radius: 6px;
+        background: rgb(220 38 38 / 0.9);
+        color: #fff;
+        font: 500 12px/1 ui-monospace, monospace;
+        pointer-events: none;
+      }
+    `}</style>
+    {/*
+     * Measured in the page because only a browser knows the laid-out height.
+     * `.page` takes the sheet as its \`min-height\`, so a sheet is taller than
+     * that only when its content overflows — which is the whole measurement.
+     *
+     * Written without `<` or `&`: this is JSX text, so the renderer escapes
+     * those into entities the browser then refuses to parse as script.
+     */}
+    <script>{`
+      const report = () => {
+        const pages = document.querySelectorAll('.page')
+        if (pages.length === 0) return
+
+        const sheet = Number.parseFloat(getComputedStyle(pages[0]).minHeight)
+        const over = [...pages].reduce((total, page) => total + page.offsetHeight, 0) - sheet * ${maxPages}
+        if (!(over > 0)) return
+
+        const badge = document.body.appendChild(document.createElement('div'))
+        badge.id = '${OVERFLOW_BADGE}'
+        badge.textContent =
+          \`\${(over * ${PT_PER_PX}).toFixed(1)}pt / \${over.toFixed(1)}px past ${maxPages === 1 ? '1 page' : `${maxPages} pages`}\`
+      }
+
+      // On \`load\` so there is a document to measure: queried from the head,
+      // \`fonts.ready\` resolves before the body is even parsed. Layout is only
+      // final once the fonts are, as in getBrowser.
+      addEventListener('load', () => document.fonts.ready.then(report))
+    `}</script>
+  </>
+)
+
 /**
  * Serves the document at its exact page dimensions on a page-like backdrop, so
  * the preview is the PDF rather than an approximation of it.
@@ -34,7 +93,7 @@ const getContentType = (file: string): string =>
  * a stale page or stale CSS.
  */
 export const serve = (config: ResolvedConfig): void => {
-  const { assetsDir, entryPath, name, port } = config
+  const { assetsDir, entryPath, maxPages, name, port } = config
   const contentDir = dirname(entryPath)
   const stylesheet = `/${name}.css`
 
@@ -142,8 +201,8 @@ export const serve = (config: ResolvedConfig): void => {
       config,
       importDocument,
       stylesheet,
-      // Shows the sheet against a backdrop, marks where it ends, and
-      // reloads on rebuild.
+      // Shows the sheet against a backdrop, marks where it ends, calls out an
+      // overflow, and reloads on rebuild.
       head: (
         <>
           <style>{`
@@ -172,6 +231,7 @@ export const serve = (config: ResolvedConfig): void => {
                 }
               `}</style>
           <script>{`new EventSource('${LIVERELOAD}').onmessage = () => location.reload()`}</script>
+          {maxPages !== undefined && overflowBadge(maxPages)}
         </>
       ),
     })

@@ -2,7 +2,7 @@
 
 Write a document as JSX — React style, in a `.tsx` file — style it with Tailwind, and generate a page-exact PDF, with the rendered HTML alongside it and optional Markdown, PNG, and JPG output.
 
-Features a dev server to preview the document at its exact page size, which live-updates as you make changes. It serves the same HTML the PDF is rendered from, so the preview is not an approximation of the result.
+Features a dev server to preview the document at its exact page size, which live-updates as you make changes. It serves the same HTML the PDF is rendered from, so the preview is not an approximation of the result. With `maxPages` set, a document running past it carries a badge of how much there is to trim, in points and pixels.
 
 Built for documents that have to fit a page: a resume, a one-pager, a leave-behind. The sheet is yours to choose — `pageSize` takes `letter`, `legal`, `tabloid`, `a3`, `a4`, `a5`, or explicit dimensions — and setting `maxPages` fails the build when the layout overflows, so "it still fits" is enforced rather than remembered.
 
@@ -101,7 +101,7 @@ tsx-to-pdf build    # writes outputs/html/, outputs/{name}.pdf (and .md/.png/.jp
 | `name` | `entry`'s basename | Their basename: `<name>.pdf`, `<name>.html`, `<name>.css` |
 | `pageSize` | `'letter'` | `letter`, `legal`, `tabloid`, `a3`, `a4`, `a5`, or `{ width, height }` as CSS lengths |
 | `margin` | `1` | White space around the document, **in inches**: one number, or `{ top, right, bottom, left }` with every side given |
-| `maxPages` | unlimited | Building past this many pages fails. Set to `1` for a one-pager |
+| `maxPages` | unlimited | Building past this many pages fails. Set to `1` for a one-pager. `tsx-to-pdf dev` badges an overflowing preview with the height to trim, so it is visible before the build enforces it |
 | `checkPdfFontTypes` | `true` | Fail when a font embeds as Type3, which extractors read poorly |
 | `author` | — | `/Author` in the PDF: the person who wrote the document. This is where your own name goes |
 | `setDate` | `true` | Stamp `/CreationDate` and `/ModDate` with the build time, a given `Date`, or `false` to omit them for a reproducible build. A rebuild that renders identical HTML and CSS skips printing altogether — no browser launch — and leaves the existing PDF as it is |
