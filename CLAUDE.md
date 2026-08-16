@@ -42,7 +42,7 @@ Synced from https://github.com/bvandrc/bvandrc-conventions — follow all of the
 @conventions/typescript.md — language-level TypeScript/JavaScript rules
 @conventions/react.md — component and JSX rules; they apply to the Preact
 renderer even though nothing here runs in a browser
-@conventions/git.md — branch naming, formatting, and PR review practice
+@conventions/all.md — practice for every repo: branches, formatting, markdown, PR reviews
 
 `conventions/` is overwritten on every sync. Edit a rule upstream, never here.
 
