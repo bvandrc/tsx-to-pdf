@@ -1,16 +1,10 @@
 # tsx-to-pdf
 
-Write a document as JSX — React style, in a `.tsx` file — style it with Tailwind,
-and print it to a page-exact PDF, with the rendered HTML alongside it.
+Write a document as JSX — React style, in a `.tsx` file — style it with Tailwind, and print it to a page-exact PDF, with the rendered HTML alongside it.
 
-Features a dev server to preview the document at its printed page size, which
-live-updates as you make changes. It serves the same HTML the PDF is rendered
-from, so the preview is not an approximation of the result.
+Features a dev server to preview the document at its printed page size, which live-updates as you make changes. It serves the same HTML the PDF is rendered from, so the preview is not an approximation of the result.
 
-Built for documents that have to fit a page: a resume, a one-pager, a leave-behind.
-The sheet is yours to choose — `pageSize` takes `letter`, `legal`, `tabloid`,
-`a3`, `a4`, `a5`, or explicit dimensions — and setting `maxPages` fails the build
-when the layout overflows, so "it still fits" is enforced rather than remembered.
+Built for documents that have to fit a page: a resume, a one-pager, a leave-behind. The sheet is yours to choose — `pageSize` takes `letter`, `legal`, `tabloid`, `a3`, `a4`, `a5`, or explicit dimensions — and setting `maxPages` fails the build when the layout overflows, so "it still fits" is enforced rather than remembered.
 
 ## Installation
 
@@ -30,8 +24,7 @@ npx playwright install chromium
 
 ### Content
 
-Two things are required: a document, and a config file. [`example/`](./example)
-is all of this filled in, if you would rather read a working one than a snippet.
+Two things are required: a document, and a config file. [`example/`](./example) is all of this filled in, if you would rather read a working one than a snippet.
 
 ```tsx
 // content/document.tsx
@@ -57,11 +50,7 @@ export default {
 } satisfies Config
 ```
 
-**Add a stylesheet when you want your own theme, and an assets directory when the
-page loads something at render time** — a font, a logo, etc. Neither is required:
-the `.page` class is the sheet itself, sized from your config, and Tailwind's
-utilities are compiled from whatever your JSX uses (for example, `font-serif`
-above resolves to Tailwind's own stack until you theme it).
+**Add a stylesheet when you want your own theme, and an assets directory when the page loads something at render time** — a font, a logo, etc. Neither is required: the `.page` class is the sheet itself, sized from your config, and Tailwind's utilities are compiled from whatever your JSX uses (for example, `font-serif` above resolves to Tailwind's own stack until you theme it).
 
 ```ts
 // tsx-to-pdf.config.ts — with both
@@ -83,17 +72,11 @@ export default {
 
 ### Project config
 
-**`"type": "module"` in `package.json`.** Without it your `.tsx` document is
-treated as CommonJS and fails with `ERR_REQUIRE_CYCLE_MODULE`.
+**`"type": "module"` in `package.json`.** Without it your `.tsx` document is treated as CommonJS and fails with `ERR_REQUIRE_CYCLE_MODULE`.
 
-That's it. **You do not need a `tsconfig.json` at all**, and if you have one,
-nothing in it has to be right: the JSX settings are layered on top at build time,
-so your `paths`, `target` and everything else still apply while `jsxImportSource`
-is taken care of. You also never compile your document — it is transformed as it
-loads.
+That's it. **You do not need a `tsconfig.json` at all**, and if you have one, nothing in it has to be right: the JSX settings are layered on top at build time, so your `paths`, `target` and everything else still apply while `jsxImportSource` is taken care of. You also never compile your document — it is transformed as it loads.
 
-A tsconfig is exported if you want your editor to match, but extending it is
-optional:
+A tsconfig is exported if you want your editor to match, but extending it is optional:
 
 ```jsonc
 // tsconfig.json — optional
@@ -128,27 +111,17 @@ tsx-to-pdf build [--no-pdf] [--config <path>]
 tsx-to-pdf dev   [--port <n>] [--config <path>]
 ```
 
-`--no-pdf` writes only the HTML and CSS and never launches a browser. Those two
-are a pure function of your sources, so rebuilding them is a fast, browserless
-way for CI to ask whether the document actually changed.
+`--no-pdf` writes only the HTML and CSS and never launches a browser. Those two are a pure function of your sources, so rebuilding them is a fast, browserless way for CI to ask whether the document actually changed.
 
 ## Do you need to know React or Preact?
 
-No. **You are writing JSX — `.tsx` files — which is not React-specific.** It is a
-syntax, consumed by React, Preact, Solid, Qwik and other JSX runtimes alike;
-which one compiles it is decided by `jsxImportSource`, and here that is settled
-for you. If you know React, you know how to write these documents.
+No. **You are writing JSX — `.tsx` files — which is not React-specific.** It is a syntax, consumed by React, Preact, Solid, Qwik and other JSX runtimes alike; which one compiles it is decided by `jsxImportSource`, and here that is settled for you. If you know React, you know how to write these documents.
 
-Preact is the *serializer*: it turns your elements into an HTML string at build
-time. There are no hooks, no state, no hydration, and nothing ships to a browser
-— which is also why the runtime is an implementation detail rather than something
-you build against.
+Preact is the *serializer*: it turns your elements into an HTML string at build time. There are no hooks, no state, no hydration, and nothing ships to a browser — which is also why the runtime is an implementation detail rather than something you build against.
 
 ## Using React types
 
-You can typecheck your document against React while this still renders it. The
-JSX runtime is pinned at build time, so your own tsconfig can say whatever it
-likes:
+You can typecheck your document against React while this still renders it. The JSX runtime is pinned at build time, so your own tsconfig can say whatever it likes:
 
 ```jsonc
 // your tsconfig.json — this is fine
@@ -165,56 +138,28 @@ const Section = ({ children }: { children: ReactNode }) => (
 
 Two things to know:
 
-- **Use `className`, not `class`.** React's types reject `class`; Preact accepts
-  both, so `className` is the spelling that satisfies React's typechecker and
-  still emits `class="…"` in the HTML.
-- **Don't import React *values*** — a component from a React package produces
-  React elements, which this cannot render. Type-only imports are erased before
-  runtime and are always fine. If you need a React component library, alias it
-  with [`preact/compat`](https://preactjs.com/guide/v10/switching-to-preact).
+- **Use `className`, not `class`.** React's types reject `class`; Preact accepts both, so `className` is the spelling that satisfies React's typechecker and still emits `class="…"` in the HTML.
+- **Don't import React *values*** — a component from a React package produces React elements, which this cannot render. Type-only imports are erased before runtime and are always fine. If you need a React component library, alias it with [`preact/compat`](https://preactjs.com/guide/v10/switching-to-preact).
 
 ## Converting a document you already have
 
-You almost certainly don't want to retype an existing document as JSX. Hand it to
-an LLM — [Claude](https://claude.ai) works well for this — and have it do the
-transcription.
+You almost certainly don't want to retype an existing document as JSX. Hand it to an LLM — [Claude](https://claude.ai) works well for this — and have it do the transcription.
 
-1. **Scaffold the repo first**, so there is somewhere for the document to land.
-   Copy [`example/`](./example) — a config, a `.tsx` document, a stylesheet, and
-   an assets directory — and check that `tsx-to-pdf build` runs before you
-   change anything. Starting from a build that works means any later breakage is
-   something you just did.
-2. **Export your existing doc as HTML, if you can.** Google Docs does this under
-   File → Download → *Web page (.html, zipped)*, and it is a much better input
-   than a PDF: the markup carries the headings, fonts, sizes and margins, so the
-   model reads your layout rather than inferring it. Upload the whole zip. A PDF
-   or a screenshot works, but every measurement is then a guess and the
-   conversion is less accurate.
-3. **Upload your existing document** (the zipped HTML, PDF, image, etc.) and
-   **ask it to recreate it** as accurately as possible, editing `content/*.tsx`
-   and `content/styles.css` and leaving the config alone.
-4. **Iterate against the preview.** Run `tsx-to-pdf dev` and put it beside
-   the original. Differences in spacing and type size are the usual ones, and
-   they are quick to describe: "the header block is too tight", "the dates
-   should be right-aligned with the bullets".
+1. **Scaffold the repo first**, so there is somewhere for the document to land. Copy [`example/`](./example) — a config, a `.tsx` document, a stylesheet, and an assets directory — and check that `tsx-to-pdf build` runs before you change anything. Starting from a build that works means any later breakage is something you just did.
+2. **Export your existing doc as HTML, if you can.** Google Docs does this under File → Download → *Web page (.html, zipped)*, and it is a much better input than a PDF: the markup carries the headings, fonts, sizes and margins, so the model reads your layout rather than inferring it. Upload the whole zip. A PDF or a screenshot works, but every measurement is then a guess and the conversion is less accurate.
+3. **Upload your existing document** (the zipped HTML, PDF, image, etc.) and **ask it to recreate it** as accurately as possible, editing `content/*.tsx` and `content/styles.css` and leaving the config alone.
+4. **Iterate against the preview.** Run `tsx-to-pdf dev` and put it beside the original. Differences in spacing and type size are the usual ones, and they are quick to describe: "the header block is too tight", "the dates should be right-aligned with the bullets".
 
-Two things worth doing yourself afterwards, since they are easy to get subtly
-wrong and the build will not catch them:
+Two things worth doing yourself afterwards, since they are easy to get subtly wrong and the build will not catch them:
 
-- **Fonts.** Put real `.woff2` files in `content/assets/` and reference them from
-  your stylesheet, rather than naming a font and hoping it resolves. Use **static
-  instances, not variable fonts** — Chromium cannot embed a variable font in a
-  PDF and silently falls back to Type3, which the build rejects. Generate them
-  with fontTools:
+- **Fonts.** Put real `.woff2` files in `content/assets/` and reference them from your stylesheet, rather than naming a font and hoping it resolves. Use **static instances, not variable fonts** — Chromium cannot embed a variable font in a PDF and silently falls back to Type3, which the build rejects. Generate them with fontTools:
 
   ```sh
   fonttools varLib.instancer Family[wght].ttf wght=400 \
     --output=family-regular.woff2 --flavor=woff2
   ```
 
-- **Read the rendered text.** Transcription errors land in dates, phone numbers
-  and company names, which look plausible and are exactly the things a reader
-  checks.
+- **Read the rendered text.** Transcription errors land in dates, phone numbers and company names, which look plausible and are exactly the things a reader checks.
 
 ## Programmatic use
 
@@ -228,22 +173,13 @@ register() // needed only if your config or document is TypeScript
 await build(await loadConfig(findConfig()))
 ```
 
-`findConfig` looks for `tsx-to-pdf.config.{ts,mts,js,mjs}` in the cwd, or
-takes an explicit path. `build` accepts `{ pdf: false }` as a second argument,
-the equivalent of `--no-pdf`.
+`findConfig` looks for `tsx-to-pdf.config.{ts,mts,js,mjs}` in the cwd, or takes an explicit path. `build` accepts `{ pdf: false }` as a second argument, the equivalent of `--no-pdf`.
 
 ## Notes
 
-- Chromium is installed separately (`playwright install chromium`), since the
-  browser is large and yours to manage. The full browser is pinned rather than
-  the `chromium-headless-shell` a headless launch would otherwise pick: the shell
-  lays text out about 1.7% taller, which is enough to push a full page onto a
-  second one on one machine and not the next. Don't install with `--only-shell`.
+- Chromium is installed separately (`playwright install chromium`), since the browser is large and yours to manage. The full browser is pinned rather than the `chromium-headless-shell` a headless launch would otherwise pick: the shell lays text out about 1.7% taller, which is enough to push a full page onto a second one on one machine and not the next. Don't install with `--only-shell`.
 - `CHROMIUM_EXECUTABLE_PATH` overrides which browser is launched.
-- JSX escapes content by construction, so there is no raw-HTML path into the
-  document. See [Do you need to know React or
-  Preact?](#do-you-need-to-know-react-or-preact) for what the renderer is and
-  isn't.
+- JSX escapes content by construction, so there is no raw-HTML path into the document. See [Do you need to know React or Preact?](#do-you-need-to-know-react-or-preact) for what the renderer is and isn't.
 
 ## License
 
