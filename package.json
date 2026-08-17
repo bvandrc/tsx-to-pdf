@@ -78,6 +78,7 @@
     "prettier": "^3",
     "tailwindcss": "^4",
     "tsx": "^4",
+    "turndown": "^7.2.4",
     "type-fest": ">=3"
   },
   "peerDependencies": {
@@ -93,6 +94,7 @@
   "devDependencies": {
     "@biomejs/biome": "^2",
     "@types/node": "^24",
+    "@types/turndown": "^5.0.6",
     "es-toolkit": "^1",
     "playwright": "^1",
     "preact": "^10",

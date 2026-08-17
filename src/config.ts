@@ -81,6 +81,12 @@ export type Config = {
    */
   margin?: Margin
   /**
+   * Also write the document's text as Markdown. Content only — the layout the
+   * classes describe has no equivalent and is dropped.
+   * @default false
+   */
+  markdown?: boolean
+  /**
    * Trigger failure if the build exceeds this many pages.
    * @default undefined — the length is not checked
    */
@@ -169,6 +175,7 @@ const CONFIG_SCHEMA: GenericSchema<Config> = object({
   assets: optional(string()),
   outDir: string(),
   name: optional(string()),
+  markdown: optional(boolean()),
   pageSize: optional(
     union(
       [
@@ -243,6 +250,7 @@ export const loadConfig = async (path: string): Promise<ResolvedConfig> => {
       // Everything the build takes as given.
       'entry',
       'styles',
+      'markdown',
       'margin',
       'maxPages',
       'checkPdfFontTypes',

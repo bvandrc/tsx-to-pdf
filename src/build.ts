@@ -1,18 +1,19 @@
 import { mkdir, writeFile } from 'node:fs/promises'
 import { basename, dirname, join } from 'node:path'
 import { pathToFileURL } from 'node:url'
-import { mapValues, omit } from 'es-toolkit'
+import { mapValues } from 'es-toolkit'
 
 import { buildPage, copyAssets } from './build-html.tsx'
+import { buildMarkdown } from './build-markdown.ts'
 import { buildPdf } from './build-pdf.ts'
 import type { ResolvedConfig } from './config.ts'
 
 const outputFiles = ({ outDir, name }: ResolvedConfig) =>
-  mapValues({ PDF: 'pdf', HTML: 'html', CSS: 'css' }, (extension) =>
+  mapValues({ PDF: 'pdf', HTML: 'html', CSS: 'css', MD: 'md' }, (extension) =>
     join(
       outDir,
-      // The stylesheet sits in html/ beside the page it styles; the other two
-      // are named after the directory they land in.
+      // The stylesheet sits in html/ beside the page it styles; the rest are
+      // named after the directory they land in.
       extension === 'css' ? 'html' : extension,
       `${name}.${extension}`
     )
@@ -29,15 +30,22 @@ export const build = async (
 ): Promise<string[]> => {
   const paths = outputFiles(config)
 
+  // The page and its stylesheet always; the other two only when asked for, so
+  // neither leaves an empty directory behind when it is off.
+  const written = [
+    ...(pdf ? [paths.PDF] : []),
+    paths.HTML,
+    paths.CSS,
+    ...(config.markdown ? [paths.MD] : []),
+  ]
+
   const { html, css } = await buildPage({
     config,
     stylesheet: `./${config.name}.css`,
   })
 
   await Promise.all(
-    Object.values(paths).map((path) =>
-      mkdir(dirname(path), { recursive: true })
-    )
+    written.map((path) => mkdir(dirname(path), { recursive: true }))
   )
 
   await writeFile(paths.HTML, html)
@@ -50,6 +58,10 @@ export const build = async (
     basename(paths.CSS),
   ])
 
+  if (config.markdown) {
+    await writeFile(paths.MD, await buildMarkdown(html))
+  }
+
   if (pdf) {
     await writeFile(
       paths.PDF,
@@ -57,5 +69,5 @@ export const build = async (
     )
   }
 
-  return Object.values(pdf ? paths : omit(paths, ['PDF']))
+  return written
 }
