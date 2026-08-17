@@ -33,10 +33,10 @@ export const build = async (
   // The page and its stylesheet always; the other two only when asked for, so
   // neither leaves an empty directory behind when it is off.
   const written = [
-    ...(pdf ? [paths.PDF] : []),
     paths.HTML,
     paths.CSS,
     ...(config.markdown ? [paths.MD] : []),
+    ...(pdf ? [paths.PDF] : []),
   ]
 
   const { html, css } = await buildPage({

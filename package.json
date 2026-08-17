@@ -78,27 +78,32 @@
     "prettier": "^3",
     "tailwindcss": "^4",
     "tsx": "^4",
-    "turndown": "^7.2.4",
     "type-fest": ">=3"
   },
   "peerDependencies": {
     "playwright": "^1",
-    "preact": "^10"
+    "preact": "^10",
+    "turndown": "^7"
   },
   "peerDependenciesMeta": {
     "playwright": {
       "optional": true,
       "reason": "`build --no-pdf` renders the HTML and CSS without a browser."
+    },
+    "turndown": {
+      "optional": true,
+      "reason": "Only the optional `markdown` output converts the page, and its DOM parser is 9 MB installed."
     }
   },
   "devDependencies": {
     "@biomejs/biome": "^2",
     "@types/node": "^24",
-    "@types/turndown": "^5.0.6",
+    "@types/turndown": "^5",
     "es-toolkit": "^1",
     "playwright": "^1",
     "preact": "^10",
     "tsdown": "^0.22",
+    "turndown": "^7",
     "typescript": "^7",
     "valibot": "^1"
   }

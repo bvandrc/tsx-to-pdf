@@ -18,6 +18,7 @@ npx playwright install chromium
 | package | required | why it is yours |
 | --- | --- | --- |
 | `preact` | yes | The JSX runtime your document compiles against, and where its types come from (`ComponentChildren` and friends). A lightweight alternative to React, which suits a page that is static — no hooks, no providers, nothing shipped to a browser. |
+| `turndown` | no | Markdown output only (`markdown: true`) — omit it unless you want the `.md`. It parses with a full DOM implementation, 9 MB installed, which is a lot to hand everyone for an output that is off by default |
 | `playwright` | no | PDF output only — omit it if you only want the HTML and CSS outputs (via `--no-pdf`). Can't be a dep of ours anyways — CLI has to be on *your* `node_modules/.bin`; it cannot run from a nested copy |
 
 ## Getting started
@@ -116,7 +117,7 @@ tsx-to-pdf dev   [--port <n>] [--config <path>]
 
 ## Markdown output
 
-`markdown: true` writes `<name>.md` beside the rest, converted from the same HTML the PDF is printed from. **It is the document's text, not the document.** Headings, lists, links and emphasis survive because they are elements; everything this package exists to control does not, because it lives in classes Markdown cannot express — the sheet, the margins, columns, alignment, spacing, colour. A row that puts a job title on the left and its dates on the right comes out as two stacked blocks.
+`markdown: true` writes `<name>.md` beside the rest, converted from the same HTML the PDF is printed from. It needs Turndown, which is yours to install (`npm i -D turndown`) — the build says so if it is missing. **It is the document's text, not the document.** Headings, lists, links and emphasis survive because they are elements; everything this package exists to control does not, because it lives in classes Markdown cannot express — the sheet, the margins, columns, alignment, spacing, colour. A row that puts a job title on the left and its dates on the right comes out as two stacked blocks.
 
 That makes it useful for the things that read text and ignore layout — a diff that shows what changed in the wording, an ATS or an LLM being handed a resume, a `grep` — and not for anything that has to look right. The PDF and the preview are the same render; the Markdown is a derivative of it.
 
