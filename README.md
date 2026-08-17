@@ -109,15 +109,17 @@ tsx-to-pdf build    # writes outputs/pdf, outputs/html (and outputs/md, with `ma
 | `port` | `4000` | For `tsx-to-pdf dev` |
 
 ```
-tsx-to-pdf build [--no-pdf] [--config <path>]
+tsx-to-pdf build [--no-pdf] [--md|--no-md] [--config <path>]
 tsx-to-pdf dev   [--port <n>] [--config <path>]
 ```
+
+`--md` and `--no-md` turn the Markdown output on or off for one build, overriding `markdown` in your config.
 
 `--no-pdf` never launches a browser: it writes the HTML and CSS, and the Markdown if you asked for it. Those are a pure function of your sources, so rebuilding them is a fast, browserless way for CI to ask whether the document actually changed.
 
 ## Markdown output
 
-`markdown: true` writes `<name>.md` beside the rest, converted from the same HTML the PDF is printed from. It needs Turndown, which is yours to install (`npm i -D turndown`) — the build says so if it is missing. **It is the document's text, not the document.** Headings, lists, links and emphasis survive because they are elements; everything this package exists to control does not, because it lives in classes Markdown cannot express — the sheet, the margins, columns, alignment, spacing, colour. A row that puts a job title on the left and its dates on the right comes out as two stacked blocks.
+`markdown: true` — or `--md` for a single build — writes `<name>.md` beside the rest, converted from the same HTML the PDF is printed from. It needs Turndown, which is yours to install (`npm i -D turndown`) — the build says so if it is missing. **It is the document's text, not the document.** Headings, lists, links and emphasis survive because they are elements; everything this package exists to control does not, because it lives in classes Markdown cannot express — the sheet, the margins, columns, alignment, spacing, colour. A row that puts a job title on the left and its dates on the right comes out as two stacked blocks.
 
 That makes it useful for the things that read text and ignore layout — a diff that shows what changed in the wording, an ATS or an LLM being handed a resume, a `grep` — and not for anything that has to look right. The PDF and the preview are the same render; the Markdown is a derivative of it.
 
