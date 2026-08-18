@@ -3,9 +3,6 @@ import { PDFDict, PDFDocument, PDFHexString, PDFName } from 'pdf-lib'
 import { version } from '../package.json' with { type: 'json' }
 import type { ResolvedConfig } from './config.ts'
 
-/** Fixed instant so repeated builds of unchanged sources produce identical bytes. */
-const EPOCH = new Date(0)
-
 /**
  * The software that made the PDF, which is what `/Producer` and `/Creator`
  * name — `<product> <version>` is the convention every other generator follows,
@@ -130,11 +127,16 @@ export const buildPdf = async (
       )
     }
 
-    // Strip what Chromium varies per run — timestamps and the document ID — so
-    // an unchanged document rebuilds to identical bytes. A staleness check in CI
-    // relies on that to tell a real change from a rerun.
-    pdf.setCreationDate(EPOCH)
-    pdf.setModificationDate(EPOCH)
+    // Strip what Chromium and pdf-lib vary per run — timestamps and the
+    // document ID — so an unchanged document rebuilds to identical bytes. A
+    // staleness check in CI relies on that to tell a real change from a
+    // rerun. The dates are omitted rather than pinned to an arbitrary
+    // instant: a build date can't be true on every run without breaking that
+    // reproducibility, and a fixed placeholder (e.g. the Unix epoch) just
+    // trades one wrong date for another.
+    const info = pdf.context.lookup(pdf.context.trailerInfo.Info, PDFDict)
+    info?.delete(PDFName.of('CreationDate'))
+    info?.delete(PDFName.of('ModDate'))
     pdf.setProducer(PRODUCER)
     pdf.setCreator(PRODUCER)
 
