@@ -1,9 +1,6 @@
 import type { NodeHtmlMarkdown as NodeHtmlMarkdownType } from 'node-html-markdown'
 import { format as prettify } from 'prettier'
 
-/** Chrome rather than content: the page is a whole document, `<head>` and all. */
-const NON_CONTENT = ['head', 'title', 'style', 'script'] as const
-
 /**
  * Loaded on demand, so a build without `markdown` needs none of it.
  */
@@ -30,9 +27,10 @@ export const buildMarkdown = async (html: string): Promise<string> => {
 
   const markdown = NodeHtmlMarkdown.translate(html, {
     codeBlockStyle: 'fenced',
-    // Dropped by name, because a fragment parser keeps the text of the elements
-    // it does not recognise as belonging to the head.
-    ignore: [...NON_CONTENT],
+    // Chrome rather than content: the page is a whole document, `<head>` and
+    // all. Dropped by name, because a fragment parser keeps the text of the
+    // elements it does not recognise as belonging to the head.
+    ignore: ['head', 'title', 'style', 'script'],
   })
 
   // Prettier as with the HTML, so the output is normalised the same way rather
