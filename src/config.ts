@@ -45,10 +45,13 @@ export type PageSize = keyof typeof PAGE_SIZES
 /** The names, as a value, so the schema and its message can both read them. */
 const PAGE_SIZE_NAMES = Object.keys(PAGE_SIZES) as PageSize[]
 
-/** Which driver prints the PDF. Both are lazy-loaded, so only one need be installed. */
-export type PdfBrowser = 'playwright' | 'puppeteer'
+/**
+ * Which driver prints the PDF, as a value so the schema and its message can
+ * both read the choices. Both are lazy-loaded, so only one need be installed.
+ */
+const PDF_BROWSERS = ['playwright', 'puppeteer'] as const
 
-const PDF_BROWSERS = ['playwright', 'puppeteer'] as const satisfies PdfBrowser[]
+export type PdfBrowser = (typeof PDF_BROWSERS)[number]
 
 /** White space around the document, in inches: one value, or all four sides. */
 export type Margin =
