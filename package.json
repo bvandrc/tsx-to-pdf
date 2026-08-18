@@ -1,6 +1,6 @@
 {
   "name": "tsx-to-pdf",
-  "version": "1.2.1",
+  "version": "1.3.0",
   "description": "Generate a page-exact PDF from a document written in TSX and Tailwind. Live preview at the printed size, diffable HTML alongside, and a build that can be configured to fail when the layout overflows.",
   "keywords": [
     "pdf",
@@ -62,8 +62,8 @@
     "prepare": "pnpm build",
     "build": "tsdown",
     "__c1": "====================[ The example document ]=====================",
-    "example": "node bin/tsx-to-pdf.mjs build",
-    "example:html": "node bin/tsx-to-pdf.mjs build --no-pdf",
+    "example": "node bin/tsx-to-pdf.mjs build --md",
+    "example:html": "node bin/tsx-to-pdf.mjs build --no-pdf --md",
     "dev": "node bin/tsx-to-pdf.mjs dev",
     "__c2": "====================[ Linting & Type Checking ]==================",
     "check": "npx biome check . && pnpm ts:check",
@@ -81,10 +81,15 @@
     "type-fest": ">=3"
   },
   "peerDependencies": {
+    "node-html-markdown": "^2",
     "playwright": "^1",
     "preact": "^10"
   },
   "peerDependenciesMeta": {
+    "node-html-markdown": {
+      "optional": true,
+      "reason": "If wanting to output a .md Markdown file via the `--md` build flag, it needs a parser to convert the page."
+    },
     "playwright": {
       "optional": true,
       "reason": "`build --no-pdf` renders the HTML and CSS without a browser."
@@ -94,6 +99,7 @@
     "@biomejs/biome": "^2",
     "@types/node": "^24",
     "es-toolkit": "^1",
+    "node-html-markdown": "^2",
     "playwright": "^1",
     "preact": "^10",
     "tsdown": "^0.22",

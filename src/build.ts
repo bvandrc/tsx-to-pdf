@@ -1,33 +1,58 @@
 import { mkdir, writeFile } from 'node:fs/promises'
 import { basename, dirname, join } from 'node:path'
 import { pathToFileURL } from 'node:url'
-import { mapValues, omit } from 'es-toolkit'
+import { mapValues } from 'es-toolkit'
 
 import { buildPage, copyAssets } from './build-html.tsx'
+import { buildMarkdown } from './build-markdown.ts'
 import { buildPdf } from './build-pdf.ts'
 import type { ResolvedConfig } from './config.ts'
 
 const outputFiles = ({ outDir, name }: ResolvedConfig) =>
-  mapValues({ PDF: 'pdf', HTML: 'html', CSS: 'css' }, (extension) =>
+  mapValues({ PDF: 'pdf', HTML: 'html', CSS: 'css', MD: 'md' }, (extension) =>
     join(
       outDir,
-      // The stylesheet sits in html/ beside the page it styles; the other two
-      // are named after the directory they land in.
-      extension === 'css' ? 'html' : extension,
+      // HTML and CSS share html/ — the stylesheet's relative URL depends on
+      // sitting beside the page it styles. PDF and Markdown are each a single
+      // file, so they land in outDir directly rather than a folder of their own.
+      extension === 'html' || extension === 'css' ? 'html' : '',
       `${name}.${extension}`
     )
   )
 
+/** Which optional outputs to also write, beyond the page and its stylesheet. */
+type BuildOptions = {
+  /**
+   * Print to PDF. Needs a browser — turn it off to skip that, which is enough
+   * to tell whether the source changed.
+   * @default true
+   */
+  pdf?: boolean
+  /**
+   * Also write the document's text as Markdown. Content only — the layout the
+   * classes describe has no equivalent and is dropped.
+   * @default false
+   */
+  markdown?: boolean
+}
+
 /**
  * Renders the configured document to `outDir`, and returns what it wrote.
- * With `pdf: false` it skips the browser, which is enough to tell whether the
- * source changed.
  */
 export const build = async (
   config: ResolvedConfig,
-  { pdf = true }: { pdf?: boolean } = {}
+  { pdf = true, markdown = false }: BuildOptions = {}
 ): Promise<string[]> => {
   const paths = outputFiles(config)
+
+  // The page and its stylesheet always; the other two only when asked for, so
+  // neither leaves an empty directory behind when it is off.
+  const written = [
+    paths.HTML,
+    paths.CSS,
+    ...(markdown ? [paths.MD] : []),
+    ...(pdf ? [paths.PDF] : []),
+  ]
 
   const { html, css } = await buildPage({
     config,
@@ -35,9 +60,7 @@ export const build = async (
   })
 
   await Promise.all(
-    Object.values(paths).map((path) =>
-      mkdir(dirname(path), { recursive: true })
-    )
+    written.map((path) => mkdir(dirname(path), { recursive: true }))
   )
 
   await writeFile(paths.HTML, html)
@@ -50,6 +73,10 @@ export const build = async (
     basename(paths.CSS),
   ])
 
+  if (markdown) {
+    await writeFile(paths.MD, await buildMarkdown(html))
+  }
+
   if (pdf) {
     await writeFile(
       paths.PDF,
@@ -57,5 +84,5 @@ export const build = async (
     )
   }
 
-  return Object.values(pdf ? paths : omit(paths, ['PDF']))
+  return written
 }

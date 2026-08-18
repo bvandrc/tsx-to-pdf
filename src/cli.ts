@@ -16,6 +16,7 @@ Commands:
 Options:
   --config <path>  Config file. Defaults to tsx-to-pdf.config.ts in the cwd
   --no-pdf         build only: skip the PDF, so no browser is needed
+  --md             build only: also write the Markdown
   --port <n>       dev only: overrides the configured port
 `
 
@@ -26,6 +27,7 @@ const main = async (args: string[]): Promise<void> => {
     options: {
       config: { type: 'string' },
       'no-pdf': { type: 'boolean' },
+      md: { type: 'boolean' },
       port: { type: 'string' },
       help: { type: 'boolean', short: 'h' },
     },
@@ -54,7 +56,10 @@ const main = async (args: string[]): Promise<void> => {
 
   switch (command) {
     case 'build': {
-      const written = await build(config, { pdf: !values['no-pdf'] })
+      const written = await build(config, {
+        pdf: !values['no-pdf'],
+        markdown: values.md,
+      })
       console.info(`Wrote ${written.join(', ')}`)
       return
     }
