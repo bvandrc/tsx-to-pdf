@@ -14,6 +14,7 @@ import {
   boolean,
   type GenericSchema,
   getDotPath,
+  instance,
   integer,
   minValue,
   number,
@@ -98,12 +99,13 @@ export type Config = {
    */
   author?: string
   /**
-   * Stamp `/CreationDate` and `/ModDate` with the time of the build. Turn it
-   * off for a build that has to be reproducible — a byte-identical rebuild
-   * of unchanged source, which a live date can never be twice.
+   * Stamp `/CreationDate` and `/ModDate`: `true` for the time of the build,
+   * a `Date` to set them to that instant instead, or `false` to omit them —
+   * for a build that has to be reproducible, a byte-identical rebuild of
+   * unchanged source, which a live date can never be twice.
    * @default true
    */
-  setDate?: boolean
+  setDate?: boolean | Date
   /**
    * Port for `tsx-to-pdf dev`.
    * @default 4000
@@ -205,7 +207,12 @@ const CONFIG_SCHEMA: GenericSchema<Config> = object({
   maxPages: optional(pipe(number(), integer(), minValue(1))),
   checkPdfFontTypes: optional(boolean()),
   author: optional(string()),
-  setDate: optional(boolean()),
+  setDate: optional(
+    union(
+      [boolean(), instance(Date)],
+      'Expected a boolean, or a Date to set it to'
+    )
+  ),
   port: optional(pipe(number(), integer())),
 })
 

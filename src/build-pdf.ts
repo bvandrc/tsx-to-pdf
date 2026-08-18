@@ -136,15 +136,16 @@ export const buildPdf = async (
     // Chromium and pdf-lib both stamp a date here on their own — Chromium's
     // print and pdf-lib's load each set it to the moment they ran, so left
     // alone the file would carry two different "now"s that are really just
-    // build noise. `setDate` decides what replaces them: a single real
-    // build time, or nothing, for a build that has to be reproducible — a
-    // byte-identical rebuild of unchanged source, which a live date can
-    // never be twice. A fixed placeholder (e.g. the Unix epoch) was tried
-    // and rejected: it is no less wrong than the date it replaces.
+    // build noise. `setDate` decides what replaces them: the actual build
+    // time, a given instant, or nothing, for a build that has to be
+    // reproducible — a byte-identical rebuild of unchanged source, which a
+    // live date can never be twice. A fixed placeholder (e.g. the Unix
+    // epoch) was tried and rejected: it is no less wrong than the date it
+    // replaces.
     if (setDate) {
-      const now = new Date()
-      pdf.setCreationDate(now)
-      pdf.setModificationDate(now)
+      const date = setDate === true ? new Date() : setDate
+      pdf.setCreationDate(date)
+      pdf.setModificationDate(date)
     } else {
       const info = pdf.context.lookup(pdf.context.trailerInfo.Info, PDFDict)
       info?.delete(PDFName.of('CreationDate'))
