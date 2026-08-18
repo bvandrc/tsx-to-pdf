@@ -23,11 +23,12 @@ const outputFiles = ({ outDir, name }: ResolvedConfig) =>
 /**
  * Renders the configured document to `outDir`, and returns what it wrote.
  * With `pdf: false` it skips the browser, which is enough to tell whether the
- * source changed.
+ * source changed. `markdown` is off by default, the opposite of `pdf` — most
+ * documents never want it.
  */
 export const build = async (
   config: ResolvedConfig,
-  { pdf = true }: { pdf?: boolean } = {}
+  { pdf = true, markdown = false }: { pdf?: boolean; markdown?: boolean } = {}
 ): Promise<string[]> => {
   const paths = outputFiles(config)
 
@@ -36,7 +37,7 @@ export const build = async (
   const written = [
     paths.HTML,
     paths.CSS,
-    ...(config.markdown ? [paths.MD] : []),
+    ...(markdown ? [paths.MD] : []),
     ...(pdf ? [paths.PDF] : []),
   ]
 
@@ -59,7 +60,7 @@ export const build = async (
     basename(paths.CSS),
   ])
 
-  if (config.markdown) {
+  if (markdown) {
     await writeFile(paths.MD, await buildMarkdown(html))
   }
 

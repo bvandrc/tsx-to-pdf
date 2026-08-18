@@ -88,7 +88,7 @@ A tsconfig is exported if you want your editor to match, but extending it is opt
 
 ```sh
 tsx-to-pdf dev      # live preview at the printed size
-tsx-to-pdf build    # writes outputs/html/, outputs/{name}.pdf (and outputs/{name}.md, with `markdown`)
+tsx-to-pdf build    # writes outputs/html/, outputs/{name}.pdf (and outputs/{name}.md, with `--md`)
 ```
 
 ## Config
@@ -100,7 +100,6 @@ tsx-to-pdf build    # writes outputs/html/, outputs/{name}.pdf (and outputs/{nam
 | `styles` | — | The document's stylesheet. Tailwind and the sheet are there without one |
 | `assets` | — | Directory copied in beside the rendered page |
 | `name` | `entry`'s basename | Their basename: `<name>.pdf`, `<name>.html`, `<name>.css` |
-| `markdown` | `false` | Also write `<name>.md`: the document's text, without any of its layout. See [Markdown output](#markdown-output) |
 | `pageSize` | `'letter'` | `letter`, `legal`, `tabloid`, `a3`, `a4`, `a5`, or `{ width, height }` as CSS lengths |
 | `margin` | `1` | White space around the document, **in inches**: one number, or `{ top, right, bottom, left }` with every side given |
 | `maxPages` | unlimited | Building past this many pages fails. Set to `1` for a one-pager |
@@ -109,17 +108,17 @@ tsx-to-pdf build    # writes outputs/html/, outputs/{name}.pdf (and outputs/{nam
 | `port` | `4000` | For `tsx-to-pdf dev` |
 
 ```
-tsx-to-pdf build [--no-pdf] [--md|--no-md] [--config <path>]
+tsx-to-pdf build [--no-pdf] [--md] [--config <path>]
 tsx-to-pdf dev   [--port <n>] [--config <path>]
 ```
 
-`--md` and `--no-md` turn the Markdown output on or off for one build, overriding `markdown` in your config.
+`--md` writes the Markdown output alongside the rest for that build. It has no config equivalent — like `pdf`, whether to write it is a per-build choice, not a property of the document, so it lives only here (and as `{ markdown: true }` to `build()` — see [Programmatic use](#programmatic-use)).
 
-`--no-pdf` never launches a browser: it writes the HTML and CSS, and the Markdown if you asked for it. Those are a pure function of your sources, so rebuilding them is a fast, browserless way for CI to ask whether the document actually changed.
+`--no-pdf` never launches a browser: it writes the HTML and CSS, and the Markdown too if `--md` is also given. Those are a pure function of your sources, so rebuilding them is a fast, browserless way for CI to ask whether the document actually changed.
 
 ## Markdown output
 
-`markdown: true` — or `--md` for a single build — writes `<name>.md` beside the rest, converted from the same HTML the PDF is printed from. It needs node-html-markdown, which is yours to install (`npm i -D node-html-markdown`) — the build says so if it is missing. **It is the document's text, not the document.** Headings, lists, links and emphasis survive because they are elements; everything this package exists to control does not, because it lives in classes Markdown cannot express — the sheet, the margins, columns, alignment, spacing, colour. A row that puts a job title on the left and its dates on the right comes out as two stacked blocks.
+`--md` — or `{ markdown: true }` to `build()` — writes `<name>.md` beside the rest, converted from the same HTML the PDF is printed from. It needs node-html-markdown, which is yours to install (`npm i -D node-html-markdown`) — the build says so if it is missing. **It is the document's text, not the document.** Headings, lists, links and emphasis survive because they are elements; everything this package exists to control does not, because it lives in classes Markdown cannot express — the sheet, the margins, columns, alignment, spacing, colour. A row that puts a job title on the left and its dates on the right comes out as two stacked blocks.
 
 That makes it useful for the things that read text and ignore layout — a diff that shows what changed in the wording, an ATS or an LLM being handed a resume, a `grep` — and not for anything that has to look right. The PDF and the preview are the same render; the Markdown is a derivative of it.
 
@@ -183,7 +182,7 @@ register() // needed only if your config or document is TypeScript
 await build(await loadConfig(findConfig()))
 ```
 
-`findConfig` looks for `tsx-to-pdf.config.{ts,mts,js,mjs}` in the cwd, or takes an explicit path. `build` accepts `{ pdf: false }` as a second argument, the equivalent of `--no-pdf`.
+`findConfig` looks for `tsx-to-pdf.config.{ts,mts,js,mjs}` in the cwd, or takes an explicit path. `build` accepts `{ pdf, markdown }` as a second argument — `pdf: false` is the equivalent of `--no-pdf`, `markdown: true` of `--md`.
 
 ## Notes
 

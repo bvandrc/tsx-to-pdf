@@ -6,7 +6,6 @@ export default {
   assets: './example/assets',
   outDir: './example/outputs',
   name: 'example',
-  markdown: true,
   margin: 0.5,
   // A resume is a one-pager, so the build should say so when it stops being one.
   maxPages: 1,

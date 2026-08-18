@@ -2,7 +2,7 @@ import type { NodeHtmlMarkdown as NodeHtmlMarkdownType } from 'node-html-markdow
 import { format as prettify } from 'prettier'
 
 /**
- * Loaded on demand, so a build without `markdown` needs none of it.
+ * Loaded on demand, so a build that never passes `markdown` needs none of it.
  */
 const nodeHtmlMarkdown = async (): Promise<typeof NodeHtmlMarkdownType> => {
   try {
@@ -11,7 +11,7 @@ const nodeHtmlMarkdown = async (): Promise<typeof NodeHtmlMarkdownType> => {
     throw new Error(
       'Markdown output needs node-html-markdown, which is yours to install:\n' +
         '  pnpm add -D node-html-markdown\n' +
-        'Or drop `markdown` from your config.',
+        'Or drop `--md` (or `{ markdown: true }`) from the build.',
       { cause: error }
     )
   }
