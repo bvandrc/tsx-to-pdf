@@ -5,3 +5,6 @@ allowBuilds:
   '@tailwindcss/oxide': true
   # Backs tsx, which loads the project's config and document.
   esbuild: true
+  # Its postinstall downloads a browser, same as Playwright's — large and yours
+  # to manage, so it stays a deliberate `puppeteer browsers install chrome`.
+  puppeteer: false

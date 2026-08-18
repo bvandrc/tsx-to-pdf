@@ -8,6 +8,7 @@ export {
   PAGE_SIZES,
   type PageDimensions,
   type PageSize,
+  type PdfBrowser,
   type ResolvedConfig,
 } from './config.ts'
 export { serve } from './dev-server.tsx'
