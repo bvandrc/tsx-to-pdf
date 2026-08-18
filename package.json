@@ -15,6 +15,7 @@
     "resume",
     "typesetting",
     "playwright",
+    "puppeteer",
     "react-to-pdf",
     "tsx-to-pdf",
     "react-to-html",
@@ -83,12 +84,17 @@
   },
   "peerDependencies": {
     "playwright": "^1",
+    "puppeteer": "^23 || ^24",
     "preact": "^10"
   },
   "peerDependenciesMeta": {
     "playwright": {
       "optional": true,
-      "reason": "Needed for PDF, PNG and JPG output — `build --no-pdf` renders the HTML and CSS without a browser."
+      "reason": "Needed for PDF, PNG and JPG output — either this or puppeteer generates it. `build --no-pdf` renders the HTML and CSS without a browser at all."
+    },
+    "puppeteer": {
+      "optional": true,
+      "reason": "Needed for PDF, PNG and JPG output — either this or playwright generates it. `build --no-pdf` renders the HTML and CSS without a browser at all."
     }
   },
   "devDependencies": {
@@ -97,6 +103,7 @@
     "es-toolkit": "^1",
     "playwright": "^1",
     "preact": "^10",
+    "puppeteer": "^24",
     "tsdown": "^0.22",
     "typescript": "^7",
     "valibot": "^1"

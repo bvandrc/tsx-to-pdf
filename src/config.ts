@@ -45,6 +45,11 @@ export type PageSize = keyof typeof PAGE_SIZES
 /** The names, as a value, so the schema and its message can both read them. */
 const PAGE_SIZE_NAMES = Object.keys(PAGE_SIZES) as PageSize[]
 
+/** Which driver prints the PDF. Both are lazy-loaded, so only one need be installed. */
+export type PdfBrowser = 'playwright' | 'puppeteer'
+
+const PDF_BROWSERS = ['playwright', 'puppeteer'] as const satisfies PdfBrowser[]
+
 /** White space around the document, in inches: one value, or all four sides. */
 export type Margin =
   | number
@@ -108,6 +113,12 @@ export type Config = {
    * @default true
    */
   setDate?: boolean | Date
+  /**
+   * Which driver prints the PDF: `playwright` or `puppeteer`, either lazy-
+   * loaded from your own `node_modules` so neither is a dependency of ours.
+   * @default whichever of the two is installed, preferring playwright if both are
+   */
+  browser?: PdfBrowser
   /**
    * Port for `tsx-to-pdf dev`.
    * @default 4000
@@ -215,6 +226,9 @@ const CONFIG_SCHEMA: GenericSchema<Config> = object({
       'Expected a boolean, or a Date to set it to'
     )
   ),
+  browser: optional(
+    picklist(PDF_BROWSERS, `Expected ${PDF_BROWSERS.join(' or ')}`)
+  ),
   port: optional(pipe(number(), integer())),
 })
 
@@ -264,6 +278,7 @@ export const loadConfig = async (path: string): Promise<ResolvedConfig> => {
       'maxPages',
       'checkPdfFontTypes',
       'author',
+      'browser',
     ]),
     root,
     entryPath: resolve(root, entry),

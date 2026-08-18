@@ -1,9 +1,9 @@
 import { readFile } from 'node:fs/promises'
 import { PDFDict, PDFDocument, PDFHexString, PDFName } from 'pdf-lib'
-import type { Page } from 'playwright'
 
 import { version } from '../package.json' with { type: 'json' }
 import type { ResolvedConfig } from './config.ts'
+import type { Page } from './get-browser.ts'
 
 /**
  * The software that made the PDF, which is what `/Producer` and `/Creator`

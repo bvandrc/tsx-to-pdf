@@ -13,12 +13,19 @@ npm i -D tsx-to-pdf preact playwright
 npx playwright install chromium
 ```
 
+PDF, PNG and JPG output need a browser, and either Playwright or Puppeteer will do — install whichever you already have, or prefer. With both installed, Playwright is tried first; set `browser: 'puppeteer'` in your config to prefer the other instead.
+
+```sh
+npm i -D tsx-to-pdf preact puppeteer
+```
+
 ### Peer dependencies
 
 | package | required | why it is yours |
 | --- | --- | --- |
 | `preact` | yes | The JSX runtime your document compiles against, and where its types come from (`ComponentChildren` and friends). A lightweight alternative to React, which suits a page that is static — no hooks, no providers, nothing shipped to a browser. |
-| `playwright` | no | PDF, PNG and JPG output — omit it if you only want the HTML and CSS outputs (via `--no-pdf`). Can't be a dep of ours anyways — CLI has to be on *your* `node_modules/.bin`; it cannot run from a nested copy |
+| `playwright` | one of these two | PDF, PNG and JPG output — omit both if you only want the HTML and CSS outputs (via `--no-pdf`). Can't be a dep of ours anyways — CLI has to be on *your* `node_modules/.bin`; it cannot run from a nested copy |
+| `puppeteer` | one of these two | The other driver PDF, PNG and JPG output can use — same reasoning as `playwright`, and picked the same way: whichever is installed |
 
 ## Getting started
 
@@ -105,6 +112,7 @@ tsx-to-pdf build    # writes outputs/html/, outputs/{name}.pdf (and .md/.png/.jp
 | `checkPdfFontTypes` | `true` | Fail when a font embeds as Type3, which extractors read poorly |
 | `author` | — | `/Author` in the PDF: the person who wrote the document. This is where your own name goes |
 | `setDate` | `true` | Stamp `/CreationDate` and `/ModDate` with the build time, a given `Date`, or `false` to omit them for a reproducible build. A rebuild that renders identical HTML and CSS skips printing altogether — no browser launch — and leaves the existing PDF as it is |
+| `browser` | whichever is installed | `'playwright'` or `'puppeteer'` — which one generates the PDF, PNG and JPG. Only needed to force a choice when both are installed |
 | `port` | `4000` | For `tsx-to-pdf dev` |
 
 ```
@@ -124,7 +132,7 @@ That makes it useful for the things that read text and ignore layout — a diff 
 
 ## Image output
 
-`--png`/`--jpg` — or `{ png: true, jpg: true }` to `build()` — write `<name>.png`/`<name>.jpg` beside the rest, a screenshot of the `.page` element from the same render the PDF is generated from, so it is pixel-for-pixel the page, not an approximation. A multi-page document — anything past `maxPages: 1` — comes out as one tall image, the same way `--md` writes one file regardless of page count. It needs Playwright, same as `pdf` — no separate install.
+`--png`/`--jpg` — or `{ png: true, jpg: true }` to `build()` — write `<name>.png`/`<name>.jpg` beside the rest, a screenshot of the `.page` element from the same render the PDF is generated from, so it is pixel-for-pixel the page, not an approximation. A multi-page document — anything past `maxPages: 1` — comes out as one tall image, the same way `--md` writes one file regardless of page count. It needs the same browser as `pdf` — Playwright or Puppeteer, whichever resolves — and shares its launch when both are asked for, so asking for all three is still one browser.
 
 ## Do you need to know React or Preact?
 
@@ -190,8 +198,9 @@ await build(await loadConfig(findConfig()))
 
 ## Notes
 
-- Chromium is installed separately (`playwright install chromium`), since the browser is large and yours to manage. The full browser is pinned rather than the `chromium-headless-shell` a headless launch would otherwise pick: the shell lays text out about 1.7% taller, which is enough to push a full page onto a second one on one machine and not the next. Don't install with `--only-shell`.
-- `CHROMIUM_EXECUTABLE_PATH` overrides which browser is launched.
+- Chromium is installed separately (`playwright install chromium`, or Puppeteer's own postinstall), since the browser is large and yours to manage. Under Playwright, the full browser is pinned rather than the `chromium-headless-shell` a headless launch would otherwise pick: the shell lays text out about 1.7% taller, which is enough to push a full page onto a second one on one machine and not the next. Don't install with `--only-shell`. Puppeteer's own download is already the full browser, so no equivalent flag applies there.
+- `CHROMIUM_EXECUTABLE_PATH` overrides which browser binary is launched, for either driver.
+- With neither `browser` set nor only one of the two installed, Playwright is tried first and Puppeteer second — whichever package resolves is the one that launches. A package that resolves but fails to launch (no browser downloaded, a bad `CHROMIUM_EXECUTABLE_PATH`) throws its own error immediately rather than silently falling through to the other driver.
 - Tailwind scans every `.tsx`/`.ts`/`.jsx`/`.js` file in the entry's directory (recursively), not just the entry itself, so that a component split into its own file is still picked up. This also means that unrelated file in the dir gets scanned too— harmless to the PDF or HTML, since an unused class is just dead weight in the stylesheet, but worth knowing if looking at the output CSS file.
 - JSX escapes content by construction, so there is no raw-HTML path into the document. See [Do you need to know React or Preact?](#do-you-need-to-know-react-or-preact) for what the renderer is and isn't.
 
