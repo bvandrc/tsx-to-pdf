@@ -105,6 +105,7 @@ tsx-to-pdf build    # writes outputs/html/, outputs/{name}.pdf (and outputs/{nam
 | `maxPages` | unlimited | Building past this many pages fails. Set to `1` for a one-pager |
 | `checkPdfFontTypes` | `true` | Fail when a font embeds as Type3, which extractors read poorly |
 | `author` | — | `/Author` in the PDF: the person who wrote the document. This is where your own name goes |
+| `setDate` | `true` | Stamp `/CreationDate` and `/ModDate` with the build time, a given `Date`, or `false` to omit them for a reproducible build |
 | `port` | `4000` | For `tsx-to-pdf dev` |
 
 ```

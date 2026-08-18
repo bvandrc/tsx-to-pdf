@@ -3,9 +3,6 @@ import { PDFDict, PDFDocument, PDFHexString, PDFName } from 'pdf-lib'
 import { version } from '../package.json' with { type: 'json' }
 import type { ResolvedConfig } from './config.ts'
 
-/** Fixed instant so repeated builds of unchanged sources produce identical bytes. */
-const EPOCH = new Date(0)
-
 /**
  * The software that made the PDF, which is what `/Producer` and `/Creator`
  * name — `<product> <version>` is the convention every other generator follows,
@@ -53,7 +50,13 @@ const getFontSubtypes = (pdf: PDFDocument): string[] =>
  */
 export const buildPdf = async (
   pageUrl: string,
-  { maxPages, page: sheet, checkPdfFontTypes = true, author }: ResolvedConfig
+  {
+    maxPages,
+    page: sheet,
+    checkPdfFontTypes = true,
+    author,
+    setDate = true,
+  }: ResolvedConfig
 ): Promise<Uint8Array> => {
   const { chromium } = await playwright()
 
@@ -130,11 +133,22 @@ export const buildPdf = async (
       )
     }
 
-    // Strip what Chromium varies per run — timestamps and the document ID — so
-    // an unchanged document rebuilds to identical bytes. A staleness check in CI
-    // relies on that to tell a real change from a rerun.
-    pdf.setCreationDate(EPOCH)
-    pdf.setModificationDate(EPOCH)
+    // Chromium and pdf-lib both stamp a date here on their own — Chromium's
+    // print and pdf-lib's load each set it to the moment they ran, so left
+    // alone the file would carry two different "now"s that are really just
+    // build noise. `setDate` decides what replaces them: the actual build
+    // time, a given instant, or nothing, for a build that has to be
+    // reproducible — a byte-identical rebuild of unchanged source, which a
+    // live date can never be twice.
+    if (setDate) {
+      const date = setDate === true ? new Date() : setDate
+      pdf.setCreationDate(date)
+      pdf.setModificationDate(date)
+    } else {
+      const info = pdf.context.lookup(pdf.context.trailerInfo.Info, PDFDict)
+      info?.delete(PDFName.of('CreationDate'))
+      info?.delete(PDFName.of('ModDate'))
+    }
     pdf.setProducer(PRODUCER)
     pdf.setCreator(PRODUCER)
 

@@ -14,6 +14,7 @@ import {
   boolean,
   type GenericSchema,
   getDotPath,
+  instance,
   integer,
   minValue,
   number,
@@ -97,6 +98,16 @@ export type Config = {
    * default.
    */
   author?: string
+  /**
+   * Stamp `/CreationDate` and `/ModDate`:
+   * - `true` — the time of the build
+   * - a `Date` — that instant instead
+   * - `false` — omit them, for a build that has to be reproducible — a
+   *   byte-identical rebuild of unchanged source, which a live date can
+   *   never be twice
+   * @default true
+   */
+  setDate?: boolean | Date
   /**
    * Port for `tsx-to-pdf dev`.
    * @default 4000
@@ -198,6 +209,12 @@ const CONFIG_SCHEMA: GenericSchema<Config> = object({
   maxPages: optional(pipe(number(), integer(), minValue(1))),
   checkPdfFontTypes: optional(boolean()),
   author: optional(string()),
+  setDate: optional(
+    union(
+      [boolean(), instance(Date)],
+      'Expected a boolean, or a Date to set it to'
+    )
+  ),
   port: optional(pipe(number(), integer())),
 })
 
@@ -247,6 +264,7 @@ export const loadConfig = async (path: string): Promise<ResolvedConfig> => {
       'maxPages',
       'checkPdfFontTypes',
       'author',
+      'setDate',
     ]),
     root,
     entryPath: resolve(root, entry),
