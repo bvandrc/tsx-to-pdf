@@ -9,15 +9,21 @@ Built for documents that have to fit a page: a resume, a one-pager, a leave-behi
 ## Installation
 
 ```sh
-npm i -D tsx-to-pdf preact playwright
+npm i -D tsx-to-pdf preact
+```
+
+PDF, PNG and JPG output need a browser, and either Playwright or Puppeteer will do — install whichever you already have, or prefer:
+
+```sh
+npm i -D playwright
 npx playwright install chromium
 ```
 
-PDF, PNG and JPG output need a browser, and either Playwright or Puppeteer will do — install whichever you already have, or prefer. With both installed, Playwright is tried first; set `browser: 'puppeteer'` in your config to prefer the other instead.
-
 ```sh
-npm i -D tsx-to-pdf preact puppeteer
+npm i -D puppeteer
 ```
+
+With both installed, Playwright is tried first; set `browser: 'puppeteer'` in your config to prefer the other instead.
 
 ### Peer dependencies
 
