@@ -19,7 +19,7 @@ npx playwright install chromium
 | --- | --- | --- |
 | `preact` | yes | The JSX runtime your document compiles against, and where its types come from (`ComponentChildren` and friends). A lightweight alternative to React, which suits a page that is static — no hooks, no providers, nothing shipped to a browser. |
 | `playwright` | no | PDF output only — omit it if you only want the HTML and CSS outputs (via `--no-pdf`). Can't be a dep of ours anyways — CLI has to be on *your* `node_modules/.bin`; it cannot run from a nested copy |
-| `node-html-markdown` | no | Markdown output only (`markdown: true`) — omit it unless you want the `.md`. Kept optional so a build that never asks for it never installs it, even though the package itself is small |
+| `node-html-markdown` | no | Markdown output only (`--md`) — omit it unless you want the `.md`. Kept optional so a build that never asks for it never installs it, even though the package itself is small |
 
 ## Getting started
 

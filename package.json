@@ -88,7 +88,7 @@
   "peerDependenciesMeta": {
     "node-html-markdown": {
       "optional": true,
-      "reason": "Only the optional `markdown` output converts the page, and it needs a parser to convert the HTML."
+      "reason": "If wanting to output a .md Markdown file via the `--md` build flag, it needs a parser to convert the page."
     },
     "playwright": {
       "optional": true,

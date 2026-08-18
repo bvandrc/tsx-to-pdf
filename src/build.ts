@@ -20,15 +20,28 @@ const outputFiles = ({ outDir, name }: ResolvedConfig) =>
     )
   )
 
+/** Which optional outputs to also write, beyond the page and its stylesheet. */
+type BuildOptions = {
+  /**
+   * Print to PDF. Needs a browser — turn it off to skip that, which is enough
+   * to tell whether the source changed.
+   * @default true
+   */
+  pdf?: boolean
+  /**
+   * Also write the document's text as Markdown. Content only — the layout the
+   * classes describe has no equivalent and is dropped.
+   * @default false
+   */
+  markdown?: boolean
+}
+
 /**
  * Renders the configured document to `outDir`, and returns what it wrote.
- * With `pdf: false` it skips the browser, which is enough to tell whether the
- * source changed. `markdown` is off by default, the opposite of `pdf` — most
- * documents never want it.
  */
 export const build = async (
   config: ResolvedConfig,
-  { pdf = true, markdown = false }: { pdf?: boolean; markdown?: boolean } = {}
+  { pdf = true, markdown = false }: BuildOptions = {}
 ): Promise<string[]> => {
   const paths = outputFiles(config)
 
