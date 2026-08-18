@@ -88,7 +88,7 @@ A tsconfig is exported if you want your editor to match, but extending it is opt
 
 ```sh
 tsx-to-pdf dev      # live preview at the printed size
-tsx-to-pdf build    # writes outputs/pdf, outputs/html (and outputs/md, with `markdown`)
+tsx-to-pdf build    # writes outputs/html/, outputs/{name}.pdf (and outputs/{name}.md, with `markdown`)
 ```
 
 ## Config

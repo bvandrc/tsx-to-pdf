@@ -12,9 +12,10 @@ const outputFiles = ({ outDir, name }: ResolvedConfig) =>
   mapValues({ PDF: 'pdf', HTML: 'html', CSS: 'css', MD: 'md' }, (extension) =>
     join(
       outDir,
-      // The stylesheet sits in html/ beside the page it styles; the rest are
-      // named after the directory they land in.
-      extension === 'css' ? 'html' : extension,
+      // HTML and CSS share html/ — the stylesheet's relative URL depends on
+      // sitting beside the page it styles. PDF and Markdown are each a single
+      // file, so they land in outDir directly rather than a folder of their own.
+      extension === 'html' || extension === 'css' ? 'html' : '',
       `${name}.${extension}`
     )
   )
