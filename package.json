@@ -81,29 +81,28 @@
     "type-fest": ">=3"
   },
   "peerDependencies": {
+    "node-html-markdown": "^2",
     "playwright": "^1",
-    "preact": "^10",
-    "turndown": "^7"
+    "preact": "^10"
   },
   "peerDependenciesMeta": {
+    "node-html-markdown": {
+      "optional": true,
+      "reason": "Only the optional `markdown` output converts the page, and it needs a parser to convert the HTML."
+    },
     "playwright": {
       "optional": true,
       "reason": "`build --no-pdf` renders the HTML and CSS without a browser."
-    },
-    "turndown": {
-      "optional": true,
-      "reason": "Only the optional `markdown` output converts the page, and its DOM parser is 9 MB installed."
     }
   },
   "devDependencies": {
     "@biomejs/biome": "^2",
     "@types/node": "^24",
-    "@types/turndown": "^5",
     "es-toolkit": "^1",
+    "node-html-markdown": "^2",
     "playwright": "^1",
     "preact": "^10",
     "tsdown": "^0.22",
-    "turndown": "^7",
     "typescript": "^7",
     "valibot": "^1"
   }
