@@ -98,6 +98,13 @@ export type Config = {
    */
   author?: string
   /**
+   * Stamp `/CreationDate` and `/ModDate` with the time of the build. Turn it
+   * off for a build that has to be reproducible — a byte-identical rebuild
+   * of unchanged source, which a live date can never be twice.
+   * @default true
+   */
+  setDate?: boolean
+  /**
    * Port for `tsx-to-pdf dev`.
    * @default 4000
    */
@@ -198,6 +205,7 @@ const CONFIG_SCHEMA: GenericSchema<Config> = object({
   maxPages: optional(pipe(number(), integer(), minValue(1))),
   checkPdfFontTypes: optional(boolean()),
   author: optional(string()),
+  setDate: optional(boolean()),
   port: optional(pipe(number(), integer())),
 })
 
@@ -247,6 +255,7 @@ export const loadConfig = async (path: string): Promise<ResolvedConfig> => {
       'maxPages',
       'checkPdfFontTypes',
       'author',
+      'setDate',
     ]),
     root,
     entryPath: resolve(root, entry),

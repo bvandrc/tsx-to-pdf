@@ -50,7 +50,13 @@ const getFontSubtypes = (pdf: PDFDocument): string[] =>
  */
 export const buildPdf = async (
   pageUrl: string,
-  { maxPages, page: sheet, checkPdfFontTypes = true, author }: ResolvedConfig
+  {
+    maxPages,
+    page: sheet,
+    checkPdfFontTypes = true,
+    author,
+    setDate = true,
+  }: ResolvedConfig
 ): Promise<Uint8Array> => {
   const { chromium } = await playwright()
 
@@ -127,16 +133,23 @@ export const buildPdf = async (
       )
     }
 
-    // Strip what Chromium and pdf-lib vary per run — timestamps and the
-    // document ID — so an unchanged document rebuilds to identical bytes. A
-    // staleness check in CI relies on that to tell a real change from a
-    // rerun. The dates are omitted rather than pinned to an arbitrary
-    // instant: a build date can't be true on every run without breaking that
-    // reproducibility, and a fixed placeholder (e.g. the Unix epoch) just
-    // trades one wrong date for another.
-    const info = pdf.context.lookup(pdf.context.trailerInfo.Info, PDFDict)
-    info?.delete(PDFName.of('CreationDate'))
-    info?.delete(PDFName.of('ModDate'))
+    // Chromium and pdf-lib both stamp a date here on their own — Chromium's
+    // print and pdf-lib's load each set it to the moment they ran, so left
+    // alone the file would carry two different "now"s that are really just
+    // build noise. `setDate` decides what replaces them: a single real
+    // build time, or nothing, for a build that has to be reproducible — a
+    // byte-identical rebuild of unchanged source, which a live date can
+    // never be twice. A fixed placeholder (e.g. the Unix epoch) was tried
+    // and rejected: it is no less wrong than the date it replaces.
+    if (setDate) {
+      const now = new Date()
+      pdf.setCreationDate(now)
+      pdf.setModificationDate(now)
+    } else {
+      const info = pdf.context.lookup(pdf.context.trailerInfo.Info, PDFDict)
+      info?.delete(PDFName.of('CreationDate'))
+      info?.delete(PDFName.of('ModDate'))
+    }
     pdf.setProducer(PRODUCER)
     pdf.setCreator(PRODUCER)
 
