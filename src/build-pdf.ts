@@ -139,9 +139,7 @@ export const buildPdf = async (
     // build noise. `setDate` decides what replaces them: the actual build
     // time, a given instant, or nothing, for a build that has to be
     // reproducible — a byte-identical rebuild of unchanged source, which a
-    // live date can never be twice. A fixed placeholder (e.g. the Unix
-    // epoch) was tried and rejected: it is no less wrong than the date it
-    // replaces.
+    // live date can never be twice.
     if (setDate) {
       const date = setDate === true ? new Date() : setDate
       pdf.setCreationDate(date)

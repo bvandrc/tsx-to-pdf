@@ -99,10 +99,12 @@ export type Config = {
    */
   author?: string
   /**
-   * Stamp `/CreationDate` and `/ModDate`: `true` for the time of the build,
-   * a `Date` to set them to that instant instead, or `false` to omit them —
-   * for a build that has to be reproducible, a byte-identical rebuild of
-   * unchanged source, which a live date can never be twice.
+   * Stamp `/CreationDate` and `/ModDate`:
+   * - `true` — the time of the build
+   * - a `Date` — that instant instead
+   * - `false` — omit them, for a build that has to be reproducible — a
+   *   byte-identical rebuild of unchanged source, which a live date can
+   *   never be twice
    * @default true
    */
   setDate?: boolean | Date
