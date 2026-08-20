@@ -1,5 +1,6 @@
+import { existsSync, readFileSync } from 'node:fs'
 import { cp, readdir, readFile, rm } from 'node:fs/promises'
-import { join } from 'node:path'
+import { dirname, extname, join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { compile as twCompile } from '@tailwindcss/node'
 import { Scanner as twScanner } from '@tailwindcss/oxide'
@@ -40,6 +41,68 @@ const DEFAULT_MARGIN = 1
 /** CSS padding order, which is also the order the sides are emitted in. */
 const MARGIN_SIDES = ['top', 'right', 'bottom', 'left'] as const
 
+/** A document's own files — what a relative import might resolve to. */
+const IMPORTABLE_EXTENSIONS = ['.tsx', '.ts', '.jsx', '.js']
+
+/**
+ * Every specifier a `from` clause names, plus bare `import '...'` and dynamic
+ * `import('...')` calls. Good enough to find local files to scan — it does not
+ * need to understand the syntax, just find the string literals that name a module.
+ */
+const IMPORT_SPECIFIER =
+  /\bfrom\s*['"]([^'"]+)['"]|\bimport\s*\(\s*['"]([^'"]+)['"]\s*\)|^\s*import\s*['"]([^'"]+)['"]/gm
+
+const importSpecifiers = (source: string): string[] =>
+  [...source.matchAll(IMPORT_SPECIFIER)].map(
+    (match) => match[1] ?? match[2] ?? match[3]
+  )
+
+/** A relative specifier resolved to a file on disk, trying extensions and index files. */
+const resolveRelativeImport = (
+  specifier: string,
+  fromDir: string
+): string | undefined => {
+  const target = join(fromDir, specifier)
+
+  const candidates = extname(target)
+    ? [target]
+    : [
+        ...IMPORTABLE_EXTENSIONS.map((extension) => `${target}${extension}`),
+        ...IMPORTABLE_EXTENSIONS.map((extension) =>
+          join(target, `index${extension}`)
+        ),
+      ]
+
+  return candidates.find((candidate) => existsSync(candidate))
+}
+
+/**
+ * The entry and every local file it imports, transitively — so a document split
+ * across files is scanned for Tailwind classes the same as one that isn't.
+ * Imports from packages are skipped: only a document's own files hold its classes.
+ */
+const localSources = (
+  entryPath: string,
+  seen = new Set<string>()
+): Set<string> => {
+  if (seen.has(entryPath)) return seen
+  seen.add(entryPath)
+
+  const fromDir = dirname(entryPath)
+
+  for (const specifier of importSpecifiers(readFileSync(entryPath, 'utf8'))) {
+    if (!specifier.startsWith('.')) continue
+
+    const resolved = resolveRelativeImport(specifier, fromDir)
+
+    if (resolved && IMPORTABLE_EXTENSIONS.includes(extname(resolved))) {
+      localSources(resolved, seen)
+    }
+  }
+
+  return seen
+}
+
 /** A number or the four sides alike become the padding the sheet is given. */
 const toMargin = (margin: Margin = DEFAULT_MARGIN): string =>
   typeof margin === 'number'
@@ -51,7 +114,7 @@ const toMargin = (margin: Margin = DEFAULT_MARGIN): string =>
  * the sheet geometry with the configured page size resolved into it.
  */
 export const buildStylesheet = async ({
-  entry,
+  entryPath,
   styles,
   root,
   page,
@@ -59,12 +122,16 @@ export const buildStylesheet = async ({
 }: ResolvedConfig): Promise<string> => {
   const input = [
     // `source(none)` turns off automatic content detection so the `@source`
-    // below is the only input. Without it any stray file in the project can add
-    // utilities to the emitted CSS, which a staleness check reads as a change.
+    // lines below are the only input. Without it any stray file in the project
+    // can add utilities to the emitted CSS, which a staleness check reads as a
+    // change.
     '@import "tailwindcss" source(none);',
     // A document that only uses utility classes needs no stylesheet of its own.
     ...(styles ? [`@import "${styles}";`] : []),
-    `@source "${entry}";`,
+    // The entry alone would miss classes that live in a file it imports — a
+    // component split out of the document, say — so its import graph is walked
+    // too.
+    ...[...localSources(entryPath)].map((source) => `@source "${source}";`),
     // Both carry the sheet: `.page` reads the variables, while `@page` needs the
     // numbers literally because Chromium rejects `var()` in `size`. Emitted
     // after the document's import, so the config wins over a stray `:root`.
