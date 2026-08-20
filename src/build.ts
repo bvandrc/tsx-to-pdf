@@ -1,11 +1,11 @@
-import { mkdir, writeFile } from 'node:fs/promises'
+import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { basename, dirname, join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { mapValues } from 'es-toolkit'
 
 import { buildPage, copyAssets } from './build-html.tsx'
 import { buildMarkdown } from './build-markdown.ts'
-import { buildPdf } from './build-pdf.ts'
+import { buildPdf, reusePreviousDate } from './build-pdf.ts'
 import type { ResolvedConfig } from './config.ts'
 
 const outputFiles = ({ outDir, name }: ResolvedConfig) =>
@@ -59,6 +59,15 @@ export const build = async (
     stylesheet: `./${config.name}.css`,
   })
 
+  // Read ahead of overwriting them, so a rebuild of an unchanged document can
+  // tell it did not change and reuse the PDF's previous date instead of
+  // stamping a fresh one.
+  const [previousHtml, previousCss] = await Promise.all([
+    readFile(paths.HTML, 'utf8').catch(() => undefined),
+    readFile(paths.CSS, 'utf8').catch(() => undefined),
+  ])
+  const unchanged = previousHtml === html && previousCss === css
+
   await Promise.all(
     written.map((path) => mkdir(dirname(path), { recursive: true }))
   )
@@ -78,9 +87,13 @@ export const build = async (
   }
 
   if (pdf) {
+    const setDate = unchanged
+      ? await reusePreviousDate(paths.PDF, config.setDate)
+      : config.setDate
+
     await writeFile(
       paths.PDF,
-      await buildPdf(pathToFileURL(paths.HTML).href, config)
+      await buildPdf(pathToFileURL(paths.HTML).href, { ...config, setDate })
     )
   }
 

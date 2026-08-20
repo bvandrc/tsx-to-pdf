@@ -1,3 +1,4 @@
+import { readFile } from 'node:fs/promises'
 import { PDFDict, PDFDocument, PDFHexString, PDFName } from 'pdf-lib'
 
 import { version } from '../package.json' with { type: 'json' }
@@ -26,6 +27,30 @@ const playwright = async (): Promise<typeof import('playwright')> => {
         'Or pass --no-pdf to render only the HTML and CSS.',
       { cause: error }
     )
+  }
+}
+
+/**
+ * `setDate`, with `true` swapped for the previous build's stamped date when
+ * the document did not change — otherwise an unchanged document still gets a
+ * fresh `/CreationDate` every rebuild, which is noise a reproducible build
+ * (`false`, or a fixed `Date`) already avoids on its own, so only `true` is
+ * worth reusing. The previous PDF is the source of truth for that date rather
+ * than tracking it separately, since it is already sitting at `pdfPath`.
+ */
+export const reusePreviousDate = async (
+  pdfPath: string,
+  setDate: ResolvedConfig['setDate']
+): Promise<ResolvedConfig['setDate']> => {
+  if ((setDate ?? true) !== true) {
+    return setDate
+  }
+
+  try {
+    const previous = await PDFDocument.load(await readFile(pdfPath))
+    return previous.getCreationDate() ?? setDate
+  } catch {
+    return setDate
   }
 }
 
