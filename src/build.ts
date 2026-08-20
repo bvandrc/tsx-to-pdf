@@ -5,7 +5,7 @@ import { mapValues } from 'es-toolkit'
 
 import { buildPage, copyAssets } from './build-html.tsx'
 import { buildMarkdown } from './build-markdown.ts'
-import { buildPdf, reusePreviousDate } from './build-pdf.ts'
+import { buildPdf, isPdfUpToDate, reusePreviousDate } from './build-pdf.ts'
 import type { ResolvedConfig } from './config.ts'
 
 const outputFiles = ({ outDir, name }: ResolvedConfig) =>
@@ -45,9 +45,9 @@ export const build = async (
 ): Promise<string[]> => {
   const paths = outputFiles(config)
 
-  // The page and its stylesheet always; the other two only when asked for, so
-  // neither leaves an empty directory behind when it is off.
-  const written = [
+  // Everywhere this call might write, so their directories exist up front —
+  // the page and its stylesheet always, the other two only when asked for.
+  const outputs = [
     paths.HTML,
     paths.CSS,
     ...(markdown ? [paths.MD] : []),
@@ -60,8 +60,8 @@ export const build = async (
   })
 
   // Read ahead of overwriting them, so a rebuild of an unchanged document can
-  // tell it did not change and reuse the PDF's previous date instead of
-  // stamping a fresh one.
+  // tell it did not change and either reuse the PDF's previous date or skip
+  // printing it again entirely.
   const [previousHtml, previousCss] = await Promise.all([
     readFile(paths.HTML, 'utf8').catch(() => undefined),
     readFile(paths.CSS, 'utf8').catch(() => undefined),
@@ -69,7 +69,7 @@ export const build = async (
   const unchanged = previousHtml === html && previousCss === css
 
   await Promise.all(
-    written.map((path) => mkdir(dirname(path), { recursive: true }))
+    outputs.map((path) => mkdir(dirname(path), { recursive: true }))
   )
 
   await writeFile(paths.HTML, html)
@@ -87,15 +87,22 @@ export const build = async (
   }
 
   if (pdf) {
-    const setDate = unchanged
-      ? await reusePreviousDate(paths.PDF, config.setDate)
-      : config.setDate
+    // A launch of Chromium to reproduce a PDF already sitting there correctly
+    // is pure waste, so an unchanged document skips it outright rather than
+    // only reusing its date.
+    const upToDate = unchanged && (await isPdfUpToDate(paths.PDF, config))
 
-    await writeFile(
-      paths.PDF,
-      await buildPdf(pathToFileURL(paths.HTML).href, { ...config, setDate })
-    )
+    if (!upToDate) {
+      const setDate = unchanged
+        ? await reusePreviousDate(paths.PDF, config.setDate)
+        : config.setDate
+
+      await writeFile(
+        paths.PDF,
+        await buildPdf(pathToFileURL(paths.HTML).href, { ...config, setDate })
+      )
+    }
   }
 
-  return written
+  return outputs
 }

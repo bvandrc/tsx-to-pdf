@@ -47,10 +47,55 @@ export const reusePreviousDate = async (
   }
 
   try {
-    const previous = await PDFDocument.load(await readFile(pdfPath))
+    const previous = await PDFDocument.load(await readFile(pdfPath), {
+      updateMetadata: false,
+    })
     return previous.getCreationDate() ?? setDate
   } catch {
     return setDate
+  }
+}
+
+/**
+ * Whether the PDF already at `pdfPath` is what this build would produce
+ * anyway, so printing it again — a browser launch, for an unchanged document
+ * — would be pure waste. Only `author` and `setDate` land in the file outside
+ * of the rendered content itself: `checkPdfFontTypes` and `maxPages` are
+ * validations against that content rather than anything embedded, so an
+ * unchanged document already has the same answer for both without checking.
+ */
+export const isPdfUpToDate = async (
+  pdfPath: string,
+  { author, setDate }: Pick<ResolvedConfig, 'author' | 'setDate'>
+): Promise<boolean> => {
+  try {
+    // `updateMetadata: false`, or this load synthesises the very fields being
+    // inspected — pdf-lib's default stamps a fresh CreationDate on load
+    // whenever one isn't already present, which is exactly the case a
+    // `setDate: false` PDF is always in.
+    const previous = await PDFDocument.load(await readFile(pdfPath), {
+      updateMetadata: false,
+    })
+
+    if ((previous.getAuthor() || undefined) !== author) {
+      return false
+    }
+
+    const resolved = setDate ?? true
+
+    if (resolved === true) {
+      // Any previously stamped date is still a legitimate "now" for a
+      // document that has not changed since.
+      return true
+    }
+
+    if (resolved === false) {
+      return previous.getCreationDate() === undefined
+    }
+
+    return previous.getCreationDate()?.getTime() === resolved.getTime()
+  } catch {
+    return false
   }
 }
 
