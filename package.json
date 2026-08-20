@@ -73,7 +73,6 @@
   "dependencies": {
     "@tailwindcss/node": "^4",
     "@tailwindcss/oxide": "^4",
-    "oxc-parser": "^0.146.0",
     "pdf-lib": "^1",
     "preact-render-to-string": "^6",
     "prettier": "^3",

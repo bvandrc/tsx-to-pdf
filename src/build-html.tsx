@@ -1,11 +1,9 @@
-import { existsSync, readFileSync } from 'node:fs'
 import { cp, readdir, readFile, rm } from 'node:fs/promises'
-import { dirname, extname, join } from 'node:path'
+import { dirname, join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { compile as twCompile } from '@tailwindcss/node'
 import { Scanner as twScanner } from '@tailwindcss/oxide'
 import { noop } from 'es-toolkit'
-import { parseSync, type Span } from 'oxc-parser'
 import type { ComponentChildren, FunctionComponent } from 'preact'
 import { render as preactRenderJsxToString } from 'preact-render-to-string/jsx'
 import { format as prettify } from 'prettier'
@@ -42,92 +40,6 @@ const DEFAULT_MARGIN = 1
 /** CSS padding order, which is also the order the sides are emitted in. */
 const MARGIN_SIDES = ['top', 'right', 'bottom', 'left'] as const
 
-/** A document's own files — what a relative import might resolve to. */
-const IMPORTABLE_EXTENSIONS = ['.tsx', '.ts', '.jsx', '.js']
-
-/**
- * The string literal a dynamic `import(...)` names, if its argument is one —
- * oxc reports only the argument's span, not its value, since the argument need
- * not be a string at all.
- */
-const dynamicImportSpecifier = (
-  source: string,
-  { start, end }: Span
-): string | undefined => {
-  const raw = source.slice(start, end)
-
-  return raw.startsWith("'") || raw.startsWith('"')
-    ? raw.slice(1, -1)
-    : undefined
-}
-
-/**
- * Every specifier a file imports or re-exports. Parsed with oxc rather than
- * pattern-matched, so TypeScript and JSX syntax around an import — generics,
- * decorators, a tag that happens to look like a comparison — never has to be
- * worked around.
- */
-const importSpecifiers = (fileName: string, source: string): string[] => {
-  const { module } = parseSync(fileName, source, { sourceType: 'module' })
-
-  return [
-    ...module.staticImports.map((imp) => imp.moduleRequest.value),
-    ...module.staticExports.flatMap((exp) =>
-      exp.entries.map((entry) => entry.moduleRequest?.value)
-    ),
-    ...module.dynamicImports.map(({ moduleRequest }) =>
-      dynamicImportSpecifier(source, moduleRequest)
-    ),
-  ].filter((specifier) => specifier != null)
-}
-
-/** A relative specifier resolved to a file on disk, trying extensions and index files. */
-const resolveRelativeImport = (
-  specifier: string,
-  fromDir: string
-): string | undefined => {
-  const target = join(fromDir, specifier)
-
-  const candidates = extname(target)
-    ? [target]
-    : [
-        ...IMPORTABLE_EXTENSIONS.map((extension) => `${target}${extension}`),
-        ...IMPORTABLE_EXTENSIONS.map((extension) =>
-          join(target, `index${extension}`)
-        ),
-      ]
-
-  return candidates.find((candidate) => existsSync(candidate))
-}
-
-/**
- * The entry and every local file it imports, transitively — so a document split
- * across files is scanned for Tailwind classes the same as one that isn't.
- * Imports from packages are skipped: only a document's own files hold its classes.
- */
-const localSources = (
-  entryPath: string,
-  seen = new Set<string>()
-): Set<string> => {
-  if (seen.has(entryPath)) return seen
-  seen.add(entryPath)
-
-  const fromDir = dirname(entryPath)
-  const source = readFileSync(entryPath, 'utf8')
-
-  for (const specifier of importSpecifiers(entryPath, source)) {
-    if (!specifier.startsWith('.')) continue
-
-    const resolved = resolveRelativeImport(specifier, fromDir)
-
-    if (resolved && IMPORTABLE_EXTENSIONS.includes(extname(resolved))) {
-      localSources(resolved, seen)
-    }
-  }
-
-  return seen
-}
-
 /** A number or the four sides alike become the padding the sheet is given. */
 const toMargin = (margin: Margin = DEFAULT_MARGIN): string =>
   typeof margin === 'number'
@@ -153,10 +65,10 @@ export const buildStylesheet = async ({
     '@import "tailwindcss" source(none);',
     // A document that only uses utility classes needs no stylesheet of its own.
     ...(styles ? [`@import "${styles}";`] : []),
-    // The entry alone would miss classes that live in a file it imports — a
-    // component split out of the document, say — so its import graph is walked
-    // too.
-    ...[...localSources(entryPath)].map((source) => `@source "${source}";`),
+    // Globbed rather than pointed at the entry alone, so a component split into
+    // its own file — beside the entry, or in a subdirectory of it — is still
+    // scanned for the classes it uses.
+    `@source "${dirname(entryPath)}/**/*.{tsx,ts,jsx,js}";`,
     // Both carry the sheet: `.page` reads the variables, while `@page` needs the
     // numbers literally because Chromium rejects `var()` in `size`. Emitted
     // after the document's import, so the config wins over a stray `:root`.
