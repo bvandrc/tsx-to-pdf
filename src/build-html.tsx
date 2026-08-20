@@ -5,6 +5,7 @@ import { pathToFileURL } from 'node:url'
 import { compile as twCompile } from '@tailwindcss/node'
 import { Scanner as twScanner } from '@tailwindcss/oxide'
 import { noop } from 'es-toolkit'
+import { parseSync, type Span } from 'oxc-parser'
 import type { ComponentChildren, FunctionComponent } from 'preact'
 import { render as preactRenderJsxToString } from 'preact-render-to-string/jsx'
 import { format as prettify } from 'prettier'
@@ -45,17 +46,40 @@ const MARGIN_SIDES = ['top', 'right', 'bottom', 'left'] as const
 const IMPORTABLE_EXTENSIONS = ['.tsx', '.ts', '.jsx', '.js']
 
 /**
- * Every specifier a `from` clause names, plus bare `import '...'` and dynamic
- * `import('...')` calls. Good enough to find local files to scan — it does not
- * need to understand the syntax, just find the string literals that name a module.
+ * The string literal a dynamic `import(...)` names, if its argument is one —
+ * oxc reports only the argument's span, not its value, since the argument need
+ * not be a string at all.
  */
-const IMPORT_SPECIFIER =
-  /\bfrom\s*['"]([^'"]+)['"]|\bimport\s*\(\s*['"]([^'"]+)['"]\s*\)|^\s*import\s*['"]([^'"]+)['"]/gm
+const dynamicImportSpecifier = (
+  source: string,
+  { start, end }: Span
+): string | undefined => {
+  const raw = source.slice(start, end)
 
-const importSpecifiers = (source: string): string[] =>
-  [...source.matchAll(IMPORT_SPECIFIER)].map(
-    (match) => match[1] ?? match[2] ?? match[3]
-  )
+  return raw.startsWith("'") || raw.startsWith('"')
+    ? raw.slice(1, -1)
+    : undefined
+}
+
+/**
+ * Every specifier a file imports or re-exports. Parsed with oxc rather than
+ * pattern-matched, so TypeScript and JSX syntax around an import — generics,
+ * decorators, a tag that happens to look like a comparison — never has to be
+ * worked around.
+ */
+const importSpecifiers = (fileName: string, source: string): string[] => {
+  const { module } = parseSync(fileName, source, { sourceType: 'module' })
+
+  return [
+    ...module.staticImports.map((imp) => imp.moduleRequest.value),
+    ...module.staticExports.flatMap((exp) =>
+      exp.entries.map((entry) => entry.moduleRequest?.value)
+    ),
+    ...module.dynamicImports.map(({ moduleRequest }) =>
+      dynamicImportSpecifier(source, moduleRequest)
+    ),
+  ].filter((specifier) => specifier != null)
+}
 
 /** A relative specifier resolved to a file on disk, trying extensions and index files. */
 const resolveRelativeImport = (
@@ -89,8 +113,9 @@ const localSources = (
   seen.add(entryPath)
 
   const fromDir = dirname(entryPath)
+  const source = readFileSync(entryPath, 'utf8')
 
-  for (const specifier of importSpecifiers(readFileSync(entryPath, 'utf8'))) {
+  for (const specifier of importSpecifiers(entryPath, source)) {
     if (!specifier.startsWith('.')) continue
 
     const resolved = resolveRelativeImport(specifier, fromDir)
