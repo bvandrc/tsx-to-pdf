@@ -87,9 +87,6 @@ export const build = async (
   }
 
   if (pdf) {
-    // A launch of Chromium to reproduce a PDF already sitting there correctly
-    // is pure waste, so an unchanged document skips it outright rather than
-    // only reusing its date.
     const upToDate = unchanged && (await isPdfUpToDate(paths.PDF, config))
 
     if (!upToDate) {
