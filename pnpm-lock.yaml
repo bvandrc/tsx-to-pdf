@@ -14,6 +14,9 @@ importers:
       '@tailwindcss/oxide':
         specifier: ^4
         version: 4.3.3
+      node-html-markdown:
+        specifier: ^2
+        version: 2.0.0
       pdf-lib:
         specifier: ^1
         version: 1.17.1
@@ -42,9 +45,6 @@ importers:
       es-toolkit:
         specifier: ^1
         version: 1.50.0
-      node-html-markdown:
-        specifier: ^2
-        version: 2.0.0
       playwright:
         specifier: ^1
         version: 1.62.1
