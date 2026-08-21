@@ -62,11 +62,9 @@ export const reusePreviousDate = async (
   pdfPath: string,
   setDate: ResolvedConfig['setDate']
 ): Promise<ResolvedConfig['setDate']> => {
-  const resolved = setDate ?? true
-
   // Only true (the default, "stamp now") has a previous date worth reusing —
   // false and a fixed Date are already deterministic on their own.
-  if (resolved !== true) {
+  if (setDate !== true) {
     return setDate
   }
 
@@ -92,19 +90,17 @@ export const isPdfUpToDate = async (
     return false
   }
 
-  const resolved = setDate ?? true
-
-  if (resolved === true) {
+  if (setDate === true) {
     // Any previously stamped date is still a legitimate "now" for a
     // document that has not changed since.
     return true
   }
 
-  if (resolved === false) {
+  if (setDate === false) {
     return previous.getCreationDate() === undefined
   }
 
-  return previous.getCreationDate()?.getTime() === resolved.getTime()
+  return previous.getCreationDate()?.getTime() === setDate.getTime()
 }
 
 /** Every font resource across the document, as `/Type0`, `/Type3` and friends. */
@@ -133,7 +129,7 @@ export const buildPdf = async (
     page: sheet,
     checkPdfFontTypes = true,
     author,
-    setDate = true,
+    setDate,
   }: ResolvedConfig
 ): Promise<Uint8Array> => {
   const { chromium } = await playwright()
