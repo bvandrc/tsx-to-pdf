@@ -5,7 +5,7 @@ import { mapValues } from 'es-toolkit'
 
 import { buildPage, copyAssets } from './build-html.tsx'
 import { buildMarkdown } from './build-markdown.ts'
-import { buildPdf, isPdfUpToDate, loadPreviousPdf } from './build-pdf.ts'
+import { buildPdf, loadPreviousPdf } from './build-pdf.ts'
 import type { ResolvedConfig } from './config.ts'
 
 const outputFiles = ({ outDir, name }: ResolvedConfig) =>
@@ -54,19 +54,19 @@ export const build = async (
     ...(pdf ? [paths.PDF] : []),
   ]
 
+  // Read ahead of overwriting them, to tell if the source changed and a PDF rebuild is needed.
+  const [previousHtml, previousCss] = await Promise.all(
+    [paths.HTML, paths.CSS].map((p) =>
+      readFile(p, 'utf8').catch(() => undefined)
+    )
+  )
+
   const { html, css } = await buildPage({
     config,
     stylesheet: `./${config.name}.css`,
   })
 
-  // Read ahead of overwriting them, so a rebuild of an unchanged document can
-  // tell it did not change and either reuse the PDF's previous date or skip
-  // printing it again entirely.
-  const [previousHtml, previousCss] = await Promise.all([
-    readFile(paths.HTML, 'utf8').catch(() => undefined),
-    readFile(paths.CSS, 'utf8').catch(() => undefined),
-  ])
-  const unchanged = previousHtml === html && previousCss === css
+  const sourceUnchanged = previousHtml === html && previousCss === css
 
   await Promise.all(
     outputs.map((path) => mkdir(dirname(path), { recursive: true }))
@@ -87,23 +87,30 @@ export const build = async (
   }
 
   if (pdf) {
-    const upToDate = unchanged && (await isPdfUpToDate(paths.PDF, config))
+    const previousPdf = await loadPreviousPdf(paths.PDF)
+    const prevDate = previousPdf?.getCreationDate()
+
+    const upToDate =
+      sourceUnchanged &&
+      previousPdf != null &&
+      // author matches
+      (previousPdf.getAuthor() || undefined) === config.author &&
+      // date matches
+      (config.setDate === true ||
+        (config.setDate === false
+          ? prevDate === undefined
+          : prevDate?.getTime() === config.setDate.getTime()))
 
     if (!upToDate) {
-      let setDate = config.setDate
-
-      // Only true (the default, "stamp now") has a previous date worth
-      // reusing — false and a fixed Date are already deterministic, and only
-      // matter here on an unchanged document, where the previous PDF is the
-      // source of truth for that date rather than tracking it separately.
-      if (unchanged && setDate === true) {
-        const previous = await loadPreviousPdf(paths.PDF)
-        setDate = previous?.getCreationDate() ?? setDate
-      }
-
       await writeFile(
         paths.PDF,
-        await buildPdf(pathToFileURL(paths.HTML).href, { ...config, setDate })
+        await buildPdf(pathToFileURL(paths.HTML).href, {
+          ...config,
+          setDate:
+            sourceUnchanged && config.setDate === true && prevDate
+              ? prevDate
+              : config.setDate,
+        })
       )
     }
   }

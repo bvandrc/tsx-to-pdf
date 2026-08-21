@@ -50,37 +50,6 @@ export const loadPreviousPdf = async (
   }
 }
 
-/**
- * Whether the PDF already at `pdfPath` is what this build would produce
- * anyway, so printing it again — a browser launch, for an unchanged document
- * — would be pure waste. Only `author` and `setDate` land in the file outside
- * of the rendered content itself: `checkPdfFontTypes` and `maxPages` are
- * validations against that content rather than anything embedded, so an
- * unchanged document already has the same answer for both without checking.
- */
-export const isPdfUpToDate = async (
-  pdfPath: string,
-  { author, setDate }: Pick<ResolvedConfig, 'author' | 'setDate'>
-): Promise<boolean> => {
-  const previous = await loadPreviousPdf(pdfPath)
-
-  if (!previous || (previous.getAuthor() || undefined) !== author) {
-    return false
-  }
-
-  if (setDate === true) {
-    // Any previously stamped date is still a legitimate "now" for a
-    // document that has not changed since.
-    return true
-  }
-
-  if (setDate === false) {
-    return previous.getCreationDate() === undefined
-  }
-
-  return previous.getCreationDate()?.getTime() === setDate.getTime()
-}
-
 /** Every font resource across the document, as `/Type0`, `/Type3` and friends. */
 const getFontSubtypes = (pdf: PDFDocument): string[] =>
   pdf.getPages().flatMap((page) => {
