@@ -146,6 +146,7 @@ export const build = async (
   if (pdfNeeded || png || jpg) {
     const { browser, page } = await getBrowser({
       pageUrl: pathToFileURL(paths.HTML).href,
+      browser: config.browser,
     })
 
     try {
