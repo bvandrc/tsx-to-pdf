@@ -1,5 +1,5 @@
 import { cp, readdir, readFile, rm } from 'node:fs/promises'
-import { join } from 'node:path'
+import { dirname, join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { compile as twCompile } from '@tailwindcss/node'
 import { Scanner as twScanner } from '@tailwindcss/oxide'
@@ -51,7 +51,7 @@ const toMargin = (margin: Margin = DEFAULT_MARGIN): string =>
  * the sheet geometry with the configured page size resolved into it.
  */
 export const buildStylesheet = async ({
-  entry,
+  entryPath,
   styles,
   root,
   page,
@@ -59,12 +59,16 @@ export const buildStylesheet = async ({
 }: ResolvedConfig): Promise<string> => {
   const input = [
     // `source(none)` turns off automatic content detection so the `@source`
-    // below is the only input. Without it any stray file in the project can add
-    // utilities to the emitted CSS, which a staleness check reads as a change.
+    // lines below are the only input. Without it any stray file in the project
+    // can add utilities to the emitted CSS, which a staleness check reads as a
+    // change.
     '@import "tailwindcss" source(none);',
     // A document that only uses utility classes needs no stylesheet of its own.
     ...(styles ? [`@import "${styles}";`] : []),
-    `@source "${entry}";`,
+    // Globbed rather than pointed at the entry alone, so a component split into
+    // its own file — beside the entry, or in a subdirectory of it — is still
+    // scanned for the classes it uses.
+    `@source "${dirname(entryPath)}/**/*.{tsx,ts,jsx,js}";`,
     // Both carry the sheet: `.page` reads the variables, while `@page` needs the
     // numbers literally because Chromium rejects `var()` in `size`. Emitted
     // after the document's import, so the config wins over a stray `:root`.
