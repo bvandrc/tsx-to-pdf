@@ -90,12 +90,21 @@ export const build = async (
     const previousPdf = await loadPreviousPdf(paths.PDF)
     const prevDate = previousPdf?.getCreationDate()
 
+    // Printing again — a browser launch — is pure waste when the existing
+    // PDF is already what this build would produce. Only `author` and
+    // `setDate` land in the file outside of the rendered content itself:
+    // `checkPdfFontTypes` and `maxPages` are validations against that
+    // content, so an unchanged document already has the same answer for
+    // both without checking.
     const upToDate =
       sourceUnchanged &&
       previousPdf != null &&
       // author matches
       (previousPdf.getAuthor() || undefined) === config.author &&
-      // date matches
+      // date matches — any previously stamped date is still a legitimate
+      // "now" for a document that hasn't changed since, so `true` alone is
+      // enough; `false` or a fixed `Date` are only up to date if the file
+      // already carries exactly that.
       (config.setDate === true ||
         (config.setDate === false
           ? prevDate === undefined
@@ -106,6 +115,11 @@ export const build = async (
         paths.PDF,
         await buildPdf(pathToFileURL(paths.HTML).href, {
           ...config,
+          // Only true (the default, "stamp now") has a previous date worth
+          // reusing on an unchanged document — false and a fixed Date are
+          // already deterministic on their own. The previous PDF is the
+          // source of truth for that date rather than tracking it
+          // separately.
           setDate:
             sourceUnchanged && config.setDate === true && prevDate
               ? prevDate
