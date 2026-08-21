@@ -15,9 +15,7 @@ export type Page = {
   goto: (url: string, options: { waitUntil: 'load' }) => Promise<unknown>
   evaluate: <T>(fn: () => T) => Promise<T>
   pdf: (options: Record<string, unknown>) => Promise<Uint8Array>
-  $: (
-    selector: string
-  ) => Promise<{
+  $: (selector: string) => Promise<{
     screenshot: (options: { type: 'png' | 'jpeg' }) => Promise<Uint8Array>
   } | null>
 }
@@ -51,7 +49,10 @@ const attemptPuppeteer = async (
 const ATTEMPTS = {
   playwright: attemptPlaywright,
   puppeteer: attemptPuppeteer,
-} satisfies Record<PdfBrowser, (executablePath?: string) => Promise<Browser | undefined>>
+} satisfies Record<
+  PdfBrowser,
+  (executablePath?: string) => Promise<Browser | undefined>
+>
 
 const INSTALL_HINTS = {
   playwright:
