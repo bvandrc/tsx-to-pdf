@@ -32,16 +32,17 @@ const playwright = async (): Promise<typeof import('playwright')> => {
 
 /**
  * Reads the PDF at `pdfPath` for inspection, or `undefined` if there is
- * nothing there yet. `updateMetadata: false`, or the load itself synthesises
- * the very fields callers are trying to read back — pdf-lib's default stamps
- * a fresh `/CreationDate` on load whenever one isn't already present, which
- * is exactly the case a `setDate: false` PDF is always in.
+ * nothing there yet.
  */
 const loadPreviousPdf = async (
   pdfPath: string
 ): Promise<PDFDocument | undefined> => {
   try {
     return await PDFDocument.load(await readFile(pdfPath), {
+      // Otherwise the load itself synthesises the very fields callers are
+      // trying to read back — pdf-lib's default stamps a fresh
+      // `/CreationDate` on load whenever one isn't already present, which is
+      // exactly the case a `setDate: false` PDF is always in.
       updateMetadata: false,
     })
   } catch {
@@ -61,7 +62,11 @@ export const reusePreviousDate = async (
   pdfPath: string,
   setDate: ResolvedConfig['setDate']
 ): Promise<ResolvedConfig['setDate']> => {
-  if ((setDate ?? true) !== true) {
+  const resolved = setDate ?? true
+
+  // Only true (the default, "stamp now") has a previous date worth reusing —
+  // false and a fixed Date are already deterministic on their own.
+  if (resolved !== true) {
     return setDate
   }
 
