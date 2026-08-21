@@ -58,7 +58,7 @@ const loadPreviousPdf = async (
  * worth reusing. The previous PDF is the source of truth for that date rather
  * than tracking it separately, since it is already sitting at `pdfPath`.
  */
-export const reusePreviousDate = async (
+export const resolveSetDate = async (
   pdfPath: string,
   setDate: ResolvedConfig['setDate']
 ): Promise<ResolvedConfig['setDate']> => {

@@ -5,7 +5,7 @@ import { mapValues } from 'es-toolkit'
 
 import { buildPage, copyAssets } from './build-html.tsx'
 import { buildMarkdown } from './build-markdown.ts'
-import { buildPdf, isPdfUpToDate, reusePreviousDate } from './build-pdf.ts'
+import { buildPdf, isPdfUpToDate, resolveSetDate } from './build-pdf.ts'
 import type { ResolvedConfig } from './config.ts'
 
 const outputFiles = ({ outDir, name }: ResolvedConfig) =>
@@ -91,7 +91,7 @@ export const build = async (
 
     if (!upToDate) {
       const setDate = unchanged
-        ? await reusePreviousDate(paths.PDF, config.setDate)
+        ? await resolveSetDate(paths.PDF, config.setDate)
         : config.setDate
 
       await writeFile(
