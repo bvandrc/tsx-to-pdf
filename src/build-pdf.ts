@@ -34,7 +34,7 @@ const playwright = async (): Promise<typeof import('playwright')> => {
  * Reads the PDF at `pdfPath` for inspection, or `undefined` if there is
  * nothing there yet.
  */
-const loadPreviousPdf = async (
+export const loadPreviousPdf = async (
   pdfPath: string
 ): Promise<PDFDocument | undefined> => {
   try {
@@ -48,28 +48,6 @@ const loadPreviousPdf = async (
   } catch {
     return undefined
   }
-}
-
-/**
- * `setDate`, with `true` swapped for the previous build's stamped date when
- * the document did not change — otherwise an unchanged document still gets a
- * fresh `/CreationDate` every rebuild, which is noise a reproducible build
- * (`false`, or a fixed `Date`) already avoids on its own, so only `true` is
- * worth reusing. The previous PDF is the source of truth for that date rather
- * than tracking it separately, since it is already sitting at `pdfPath`.
- */
-export const resolveSetDate = async (
-  pdfPath: string,
-  setDate: ResolvedConfig['setDate']
-): Promise<ResolvedConfig['setDate']> => {
-  // Only true (the default, "stamp now") has a previous date worth reusing —
-  // false and a fixed Date are already deterministic on their own.
-  if (setDate !== true) {
-    return setDate
-  }
-
-  const previous = await loadPreviousPdf(pdfPath)
-  return previous?.getCreationDate() ?? setDate
 }
 
 /**

@@ -5,7 +5,7 @@ import { mapValues } from 'es-toolkit'
 
 import { buildPage, copyAssets } from './build-html.tsx'
 import { buildMarkdown } from './build-markdown.ts'
-import { buildPdf, isPdfUpToDate, resolveSetDate } from './build-pdf.ts'
+import { buildPdf, isPdfUpToDate, loadPreviousPdf } from './build-pdf.ts'
 import type { ResolvedConfig } from './config.ts'
 
 const outputFiles = ({ outDir, name }: ResolvedConfig) =>
@@ -90,9 +90,16 @@ export const build = async (
     const upToDate = unchanged && (await isPdfUpToDate(paths.PDF, config))
 
     if (!upToDate) {
-      const setDate = unchanged
-        ? await resolveSetDate(paths.PDF, config.setDate)
-        : config.setDate
+      let setDate = config.setDate
+
+      // Only true (the default, "stamp now") has a previous date worth
+      // reusing — false and a fixed Date are already deterministic, and only
+      // matter here on an unchanged document, where the previous PDF is the
+      // source of truth for that date rather than tracking it separately.
+      if (unchanged && setDate === true) {
+        const previous = await loadPreviousPdf(paths.PDF)
+        setDate = previous?.getCreationDate() ?? setDate
+      }
 
       await writeFile(
         paths.PDF,
