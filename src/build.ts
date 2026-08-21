@@ -4,27 +4,30 @@ import { pathToFileURL } from 'node:url'
 import { mapValues } from 'es-toolkit'
 
 import { buildPage, copyAssets } from './build-html.tsx'
+import { buildImage } from './build-image.ts'
 import { buildMarkdown } from './build-markdown.ts'
 import { buildPdf, loadPreviousPdf } from './build-pdf.ts'
 import type { ResolvedConfig } from './config.ts'
+import { getBrowser } from './get-browser.ts'
 
 const outputFiles = ({ outDir, name }: ResolvedConfig) =>
-  mapValues({ PDF: 'pdf', HTML: 'html', CSS: 'css', MD: 'md' }, (extension) =>
-    join(
-      outDir,
-      // HTML and CSS share html/ — the stylesheet's relative URL depends on
-      // sitting beside the page it styles. PDF and Markdown are each a single
-      // file, so they land in outDir directly rather than a folder of their own.
-      extension === 'html' || extension === 'css' ? 'html' : '',
-      `${name}.${extension}`
-    )
+  mapValues(
+    { PDF: 'pdf', HTML: 'html', CSS: 'css', MD: 'md', PNG: 'png', JPG: 'jpg' },
+    (extension) =>
+      join(
+        outDir,
+        // HTML and CSS share html/ — the stylesheet's relative URL depends on
+        // sitting beside the page it styles. The rest are each a single file,
+        // so they land in outDir directly rather than a folder of their own.
+        extension === 'html' || extension === 'css' ? 'html' : '',
+        `${name}.${extension}`
+      )
   )
 
 /** Which optional outputs to also write, beyond the page and its stylesheet. */
 type BuildOptions = {
   /**
-   * Print to PDF. Needs a browser — turn it off to skip that, which is enough
-   * to tell whether the source changed.
+   * Generate the PDF. Needs a browser.
    * @default true
    */
   pdf?: boolean
@@ -34,6 +37,18 @@ type BuildOptions = {
    * @default false
    */
   markdown?: boolean
+  /**
+   * Also write a full-page PNG screenshot of the same render the PDF is
+   * generated from. Needs a browser, shared with `pdf` when both are on.
+   * @default false
+   */
+  png?: boolean
+  /**
+   * Also write a full-page JPG screenshot of the same render the PDF is
+   * generated from. Needs a browser, shared with `pdf` when both are on.
+   * @default false
+   */
+  jpg?: boolean
 }
 
 /**
@@ -41,17 +56,19 @@ type BuildOptions = {
  */
 export const build = async (
   config: ResolvedConfig,
-  { pdf = true, markdown = false }: BuildOptions = {}
+  { pdf = true, markdown = false, png = false, jpg = false }: BuildOptions = {}
 ): Promise<string[]> => {
   const paths = outputFiles(config)
 
   // Everywhere this call might write, so their directories exist up front —
-  // the page and its stylesheet always, the other two only when asked for.
+  // the page and its stylesheet always, the rest only when asked for.
   const outputs = [
     paths.HTML,
     paths.CSS,
     ...(markdown ? [paths.MD] : []),
     ...(pdf ? [paths.PDF] : []),
+    ...(png ? [paths.PNG] : []),
+    ...(jpg ? [paths.JPG] : []),
   ]
 
   // Read ahead of overwriting them, to tell if the source changed and a PDF rebuild is needed.
@@ -86,11 +103,14 @@ export const build = async (
     await writeFile(paths.MD, await buildMarkdown(html))
   }
 
+  let pdfNeeded = pdf
+  let pdfSetDate = config.setDate
+
   if (pdf) {
     const previousPdf = await loadPreviousPdf(paths.PDF)
     const prevDate = previousPdf?.getCreationDate()
 
-    // Printing again — a browser launch — is pure waste when the existing
+    // Generating again — a browser launch — is pure waste when the existing
     // PDF is already what this build would produce. Only `author` and
     // `setDate` land in the file outside of the rendered content itself:
     // `checkPdfFontTypes` and `maxPages` are validations against that
@@ -110,22 +130,41 @@ export const build = async (
           ? prevDate === undefined
           : prevDate?.getTime() === config.setDate.getTime()))
 
-    if (!upToDate) {
-      await writeFile(
-        paths.PDF,
-        await buildPdf(pathToFileURL(paths.HTML).href, {
-          ...config,
-          // Only true (the default, "stamp now") has a previous date worth
-          // reusing on an unchanged document — false and a fixed Date are
-          // already deterministic on their own. The previous PDF is the
-          // source of truth for that date rather than tracking it
-          // separately.
-          setDate:
-            sourceUnchanged && config.setDate === true && prevDate
-              ? prevDate
-              : config.setDate,
-        })
-      )
+    pdfNeeded = !upToDate
+    // Only true (the default, "stamp now") has a previous date worth reusing
+    // on an unchanged document — false and a fixed Date are already
+    // deterministic on their own. The previous PDF is the source of truth
+    // for that date rather than tracking it separately.
+    pdfSetDate =
+      sourceUnchanged && config.setDate === true && prevDate
+        ? prevDate
+        : config.setDate
+  }
+
+  // One browser for PDF (when it actually needs regenerating) and both image
+  // formats, so asking for more than one doesn't pay for a second Chromium launch.
+  if (pdfNeeded || png || jpg) {
+    const { browser, page } = await getBrowser({
+      pageUrl: pathToFileURL(paths.HTML).href,
+    })
+
+    try {
+      if (pdfNeeded) {
+        await writeFile(
+          paths.PDF,
+          await buildPdf(page, { ...config, setDate: pdfSetDate })
+        )
+      }
+
+      if (png) {
+        await writeFile(paths.PNG, await buildImage(page, 'png'))
+      }
+
+      if (jpg) {
+        await writeFile(paths.JPG, await buildImage(page, 'jpg'))
+      }
+    } finally {
+      await browser.close()
     }
   }
 

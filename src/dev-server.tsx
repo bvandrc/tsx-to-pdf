@@ -26,7 +26,7 @@ const getContentType = (file: string): string =>
   'application/octet-stream'
 
 /**
- * Serves the document at its exact printed dimensions on a page-like backdrop, so
+ * Serves the document at its exact page dimensions on a page-like backdrop, so
  * the preview is the PDF rather than an approximation of it.
  *
  * Nothing is compiled up front — every request builds, so a reload cannot serve
@@ -128,7 +128,7 @@ export const serve = (config: ResolvedConfig): void => {
                 body { background: #525659; padding: 24px 0; }
                 .page { margin: 0 auto; box-shadow: 0 2px 12px rgb(0 0 0 / 0.5); position: relative; }
                 /*
-                 * Where the printer will break. \`.page\` is one tall box that
+                 * Where the page will break. \`.page\` is one tall box that
                  * grows past the sheet — that is what puts the overflow onto a
                  * second PDF page — so without this the preview shows a long
                  * first page rather than two. Reads \`--page-height\`, the same
