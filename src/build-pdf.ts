@@ -31,6 +31,25 @@ const playwright = async (): Promise<typeof import('playwright')> => {
 }
 
 /**
+ * Reads the PDF at `pdfPath` for inspection, or `undefined` if there is
+ * nothing there yet. `updateMetadata: false`, or the load itself synthesises
+ * the very fields callers are trying to read back — pdf-lib's default stamps
+ * a fresh `/CreationDate` on load whenever one isn't already present, which
+ * is exactly the case a `setDate: false` PDF is always in.
+ */
+const loadPreviousPdf = async (
+  pdfPath: string
+): Promise<PDFDocument | undefined> => {
+  try {
+    return await PDFDocument.load(await readFile(pdfPath), {
+      updateMetadata: false,
+    })
+  } catch {
+    return undefined
+  }
+}
+
+/**
  * `setDate`, with `true` swapped for the previous build's stamped date when
  * the document did not change — otherwise an unchanged document still gets a
  * fresh `/CreationDate` every rebuild, which is noise a reproducible build
@@ -46,14 +65,8 @@ export const reusePreviousDate = async (
     return setDate
   }
 
-  try {
-    const previous = await PDFDocument.load(await readFile(pdfPath), {
-      updateMetadata: false,
-    })
-    return previous.getCreationDate() ?? setDate
-  } catch {
-    return setDate
-  }
+  const previous = await loadPreviousPdf(pdfPath)
+  return previous?.getCreationDate() ?? setDate
 }
 
 /**
@@ -68,35 +81,25 @@ export const isPdfUpToDate = async (
   pdfPath: string,
   { author, setDate }: Pick<ResolvedConfig, 'author' | 'setDate'>
 ): Promise<boolean> => {
-  try {
-    // `updateMetadata: false`, or this load synthesises the very fields being
-    // inspected — pdf-lib's default stamps a fresh CreationDate on load
-    // whenever one isn't already present, which is exactly the case a
-    // `setDate: false` PDF is always in.
-    const previous = await PDFDocument.load(await readFile(pdfPath), {
-      updateMetadata: false,
-    })
+  const previous = await loadPreviousPdf(pdfPath)
 
-    if ((previous.getAuthor() || undefined) !== author) {
-      return false
-    }
-
-    const resolved = setDate ?? true
-
-    if (resolved === true) {
-      // Any previously stamped date is still a legitimate "now" for a
-      // document that has not changed since.
-      return true
-    }
-
-    if (resolved === false) {
-      return previous.getCreationDate() === undefined
-    }
-
-    return previous.getCreationDate()?.getTime() === resolved.getTime()
-  } catch {
+  if (!previous || (previous.getAuthor() || undefined) !== author) {
     return false
   }
+
+  const resolved = setDate ?? true
+
+  if (resolved === true) {
+    // Any previously stamped date is still a legitimate "now" for a
+    // document that has not changed since.
+    return true
+  }
+
+  if (resolved === false) {
+    return previous.getCreationDate() === undefined
+  }
+
+  return previous.getCreationDate()?.getTime() === resolved.getTime()
 }
 
 /** Every font resource across the document, as `/Type0`, `/Type3` and friends. */
