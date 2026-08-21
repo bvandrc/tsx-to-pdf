@@ -122,7 +122,7 @@ export type Config = {
  */
 export type ResolvedConfig = SetRequired<
   Omit<Config, 'assets' | 'pageSize'>,
-  'name' | 'port'
+  'name' | 'port' | 'setDate'
 > & {
   /** The config file's directory. Relative paths resolve against it. */
   root: string
@@ -264,7 +264,6 @@ export const loadConfig = async (path: string): Promise<ResolvedConfig> => {
       'maxPages',
       'checkPdfFontTypes',
       'author',
-      'setDate',
     ]),
     root,
     entryPath: resolve(root, entry),
@@ -274,5 +273,6 @@ export const loadConfig = async (path: string): Promise<ResolvedConfig> => {
     name: name ?? basename(entry, extname(entry)),
     page: toDimensions(config.pageSize),
     port: config.port ?? 4000,
+    setDate: config.setDate ?? true,
   }
 }

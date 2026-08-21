@@ -1,3 +1,4 @@
+import { readFile } from 'node:fs/promises'
 import { PDFDict, PDFDocument, PDFHexString, PDFName } from 'pdf-lib'
 
 import { version } from '../package.json' with { type: 'json' }
@@ -29,6 +30,26 @@ const playwright = async (): Promise<typeof import('playwright')> => {
   }
 }
 
+/**
+ * Reads the PDF at `pdfPath` for inspection, or `undefined` if there is
+ * nothing there yet.
+ */
+export const loadPreviousPdf = async (
+  pdfPath: string
+): Promise<PDFDocument | undefined> => {
+  try {
+    return await PDFDocument.load(await readFile(pdfPath), {
+      // Otherwise the load itself synthesises the very fields callers are
+      // trying to read back — pdf-lib's default stamps a fresh
+      // `/CreationDate` on load whenever one isn't already present, which is
+      // exactly the case a `setDate: false` PDF is always in.
+      updateMetadata: false,
+    })
+  } catch {
+    return undefined
+  }
+}
+
 /** Every font resource across the document, as `/Type0`, `/Type3` and friends. */
 const getFontSubtypes = (pdf: PDFDocument): string[] =>
   pdf.getPages().flatMap((page) => {
@@ -55,7 +76,7 @@ export const buildPdf = async (
     page: sheet,
     checkPdfFontTypes = true,
     author,
-    setDate = true,
+    setDate,
   }: ResolvedConfig
 ): Promise<Uint8Array> => {
   const { chromium } = await playwright()

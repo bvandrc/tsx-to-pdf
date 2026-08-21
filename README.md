@@ -104,7 +104,7 @@ tsx-to-pdf build    # writes outputs/html/, outputs/{name}.pdf (and outputs/{nam
 | `maxPages` | unlimited | Building past this many pages fails. Set to `1` for a one-pager |
 | `checkPdfFontTypes` | `true` | Fail when a font embeds as Type3, which extractors read poorly |
 | `author` | — | `/Author` in the PDF: the person who wrote the document. This is where your own name goes |
-| `setDate` | `true` | Stamp `/CreationDate` and `/ModDate` with the build time, a given `Date`, or `false` to omit them for a reproducible build |
+| `setDate` | `true` | Stamp `/CreationDate` and `/ModDate` with the build time, a given `Date`, or `false` to omit them for a reproducible build. A rebuild that renders identical HTML and CSS skips printing altogether — no browser launch — and leaves the existing PDF as it is |
 | `port` | `4000` | For `tsx-to-pdf dev` |
 
 ```
@@ -188,6 +188,7 @@ await build(await loadConfig(findConfig()))
 
 - Chromium is installed separately (`playwright install chromium`), since the browser is large and yours to manage. The full browser is pinned rather than the `chromium-headless-shell` a headless launch would otherwise pick: the shell lays text out about 1.7% taller, which is enough to push a full page onto a second one on one machine and not the next. Don't install with `--only-shell`.
 - `CHROMIUM_EXECUTABLE_PATH` overrides which browser is launched.
+- Tailwind scans every `.tsx`/`.ts`/`.jsx`/`.js` file in the entry's directory (recursively), not just the entry itself, so that a component split into its own file is still picked up. This also means that unrelated file in the dir gets scanned too— harmless to the PDF or HTML, since an unused class is just dead weight in the stylesheet, but worth knowing if looking at the output CSS file.
 - JSX escapes content by construction, so there is no raw-HTML path into the document. See [Do you need to know React or Preact?](#do-you-need-to-know-react-or-preact) for what the renderer is and isn't.
 
 ## License
