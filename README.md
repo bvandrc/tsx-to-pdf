@@ -1,8 +1,8 @@
 # tsx-to-pdf
 
-Write a document as JSX — React style, in a `.tsx` file — style it with Tailwind, and print it to a page-exact PDF, with the rendered HTML alongside it.
+Write a document as JSX — React style, in a `.tsx` file — style it with Tailwind, and generate a page-exact PDF, with the rendered HTML alongside it and optional Markdown, PNG and JPG output.
 
-Features a dev server to preview the document at its printed page size, which live-updates as you make changes. It serves the same HTML the PDF is rendered from, so the preview is not an approximation of the result.
+Features a dev server to preview the document at its exact page size, which live-updates as you make changes. It serves the same HTML the PDF is rendered from, so the preview is not an approximation of the result.
 
 Built for documents that have to fit a page: a resume, a one-pager, a leave-behind. The sheet is yours to choose — `pageSize` takes `letter`, `legal`, `tabloid`, `a3`, `a4`, `a5`, or explicit dimensions — and setting `maxPages` fails the build when the layout overflows, so "it still fits" is enforced rather than remembered.
 
@@ -18,7 +18,7 @@ npx playwright install chromium
 | package | required | why it is yours |
 | --- | --- | --- |
 | `preact` | yes | The JSX runtime your document compiles against, and where its types come from (`ComponentChildren` and friends). A lightweight alternative to React, which suits a page that is static — no hooks, no providers, nothing shipped to a browser. |
-| `playwright` | no | PDF output only — omit it if you only want the HTML and CSS outputs (via `--no-pdf`). Can't be a dep of ours anyways — CLI has to be on *your* `node_modules/.bin`; it cannot run from a nested copy |
+| `playwright` | no | PDF, PNG and JPG output — omit it if you only want the HTML and CSS outputs (via `--no-pdf`). Can't be a dep of ours anyways — CLI has to be on *your* `node_modules/.bin`; it cannot run from a nested copy |
 
 ## Getting started
 
@@ -86,8 +86,8 @@ A tsconfig is exported if you want your editor to match, but extending it is opt
 ### Executing
 
 ```sh
-tsx-to-pdf dev      # live preview at the printed size
-tsx-to-pdf build    # writes outputs/html/, outputs/{name}.pdf (and outputs/{name}.md, with `--md`)
+tsx-to-pdf dev      # live preview at the exact page size
+tsx-to-pdf build    # writes outputs/html/, outputs/{name}.pdf (and .md/.png/.jpg with `--md`/`--png`/`--jpg`)
 ```
 
 ## Config
@@ -108,19 +108,23 @@ tsx-to-pdf build    # writes outputs/html/, outputs/{name}.pdf (and outputs/{nam
 | `port` | `4000` | For `tsx-to-pdf dev` |
 
 ```
-tsx-to-pdf build [--no-pdf] [--md] [--config <path>]
+tsx-to-pdf build [--no-pdf] [--md] [--png] [--jpg] [--config <path>]
 tsx-to-pdf dev   [--port <n>] [--config <path>]
 ```
 
-`--md` writes the Markdown output alongside the rest for that build. It has no config equivalent — like `pdf`, whether to write it is a per-build choice, not a property of the document, so it lives only here (and as `{ markdown: true }` to `build()` — see [Programmatic use](#programmatic-use)).
+`--md`, `--png` and `--jpg` each write an extra output alongside the rest for that build.
 
-`--no-pdf` never launches a browser: it writes the HTML and CSS, and the Markdown too if `--md` is also given. Those are a pure function of your sources, so rebuilding them is a fast, browserless way for CI to ask whether the document actually changed.
+`--no-pdf` never launches a browser on its own: it writes the HTML and CSS, and the Markdown too if `--md` is also given. Those are a pure function of your sources, so rebuilding them is a fast, browserless way for CI to ask whether the document actually changed.
 
 ## Markdown output
 
-`--md` — or `{ markdown: true }` to `build()` — writes `<name>.md` beside the rest, converted from the same HTML the PDF is printed from. **It is the document's text, not the document.** Headings, lists, links and emphasis survive because they are elements; everything this package exists to control does not, because it lives in classes Markdown cannot express — the sheet, the margins, columns, alignment, spacing, colour. A row that puts a job title on the left and its dates on the right comes out as two stacked blocks.
+`--md` — or `{ markdown: true }` to `build()` — writes `<name>.md` beside the rest, converted from the same HTML the PDF is generated from. **It is the document's text, not the document.** Headings, lists, links and emphasis survive because they are elements; everything this package exists to control does not, because it lives in classes Markdown cannot express — the sheet, the margins, columns, alignment, spacing, colour. A row that puts a job title on the left and its dates on the right comes out as two stacked blocks.
 
 That makes it useful for the things that read text and ignore layout — a diff that shows what changed in the wording, an ATS or an LLM being handed a resume, a `grep` — and not for anything that has to look right. The PDF and the preview are the same render; the Markdown is a derivative of it.
+
+## Image output
+
+`--png`/`--jpg` — or `{ png: true, jpg: true }` to `build()` — write `<name>.png`/`<name>.jpg` beside the rest, a screenshot of the `.page` element from the same render the PDF is generated from, so it is pixel-for-pixel the page, not an approximation. A multi-page document — anything past `maxPages: 1` — comes out as one tall image, the same way `--md` writes one file regardless of page count. It needs Playwright, same as `pdf` — no separate install.
 
 ## Do you need to know React or Preact?
 
@@ -182,7 +186,7 @@ register() // needed only if your config or document is TypeScript
 await build(await loadConfig(findConfig()))
 ```
 
-`findConfig` looks for `tsx-to-pdf.config.{ts,mts,js,mjs}` in the cwd, or takes an explicit path. `build` accepts `{ pdf, markdown }` as a second argument — `pdf: false` is the equivalent of `--no-pdf`, `markdown: true` of `--md`.
+`findConfig` looks for `tsx-to-pdf.config.{ts,mts,js,mjs}` in the cwd, or takes an explicit path. `build` accepts `{ pdf, markdown, png, jpg }` as a second argument — `pdf: false` is the equivalent of `--no-pdf`, `markdown: true` of `--md`, `png`/`jpg: true` of `--png`/`--jpg`.
 
 ## Notes
 

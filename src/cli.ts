@@ -5,18 +5,20 @@ import { register } from 'tsx/esm/api'
 import { build } from './build.ts'
 import { findConfig, loadConfig } from './config.ts'
 import { serve } from './dev-server.tsx'
-import { jsxTsconfig } from './tsconfig.ts'
+import { jsxTsconfig } from './merge-tsconfig.ts'
 
 const USAGE = `tsx-to-pdf <command>
 
 Commands:
   build            Render the document to its output directory
-  dev              Serve a live preview at the printed page size
+  dev              Serve a live preview at the page's exact size
 
 Options:
   --config <path>  Config file. Defaults to tsx-to-pdf.config.ts in the cwd
   --no-pdf         build only: skip the PDF, so no browser is needed
   --md             build only: also write the Markdown
+  --png            build only: also write a full-page PNG screenshot
+  --jpg            build only: also write a full-page JPG screenshot
   --port <n>       dev only: overrides the configured port
 `
 
@@ -28,6 +30,8 @@ const main = async (args: string[]): Promise<void> => {
       config: { type: 'string' },
       'no-pdf': { type: 'boolean' },
       md: { type: 'boolean' },
+      png: { type: 'boolean' },
+      jpg: { type: 'boolean' },
       port: { type: 'string' },
       help: { type: 'boolean', short: 'h' },
     },
@@ -59,6 +63,8 @@ const main = async (args: string[]): Promise<void> => {
       const written = await build(config, {
         pdf: !values['no-pdf'],
         markdown: values.md,
+        png: values.png,
+        jpg: values.jpg,
       })
       console.info(`Wrote ${written.join(', ')}`)
       return

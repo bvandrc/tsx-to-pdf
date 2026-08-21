@@ -1,7 +1,7 @@
 {
   "name": "tsx-to-pdf",
   "version": "1.4.2",
-  "description": "Generate a page-exact PDF from a document written in TSX and Tailwind. Live preview at the printed size, diffable HTML alongside, and a build that can be configured to fail when the layout overflows.",
+  "description": "Generate a page-exact PDF from a document written in TSX and Tailwind, with optional Markdown, PNG and JPG output. Live preview at the exact page size, diffable HTML alongside, and a build that can be configured to fail when the layout overflows.",
   "keywords": [
     "pdf",
     "preact",
@@ -62,7 +62,7 @@
     "prepare": "pnpm build",
     "build": "tsdown",
     "__c1": "====================[ The example document ]=====================",
-    "example": "node bin/tsx-to-pdf.mjs build --md",
+    "example": "node bin/tsx-to-pdf.mjs build --md --png --jpg",
     "example:html": "node bin/tsx-to-pdf.mjs build --no-pdf --md",
     "dev": "node bin/tsx-to-pdf.mjs dev",
     "__c2": "====================[ Linting & Type Checking ]==================",
@@ -88,7 +88,7 @@
   "peerDependenciesMeta": {
     "playwright": {
       "optional": true,
-      "reason": "`build --no-pdf` renders the HTML and CSS without a browser."
+      "reason": "Needed for PDF, PNG and JPG output — `build --no-pdf` renders the HTML and CSS without a browser."
     }
   },
   "devDependencies": {
