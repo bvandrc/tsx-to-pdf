@@ -41,8 +41,9 @@ export const serve = (config: ResolvedConfig): void => {
 
   /**
    * Newest mtime beside the document, which is what `loadContent` is keyed on.
-   * Keying on the files rather than on a watcher event means a missed filesystem
-   * notification still can't serve a stale render.
+   *
+   * Keying on the files rather than on a watcher event means a missed
+   * filesystem notification still can't serve a stale render.
    */
   const contentRevision = async (): Promise<number> => {
     const siblings = await readdir(contentDir)

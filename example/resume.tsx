@@ -1,8 +1,10 @@
 import type { ComponentChildren } from 'preact'
 
 /**
- * A section heading. `break-after` keeps one from stranding at the foot of a page
- * if the resume ever grows.
+ * A section heading.
+ *
+ * `break-after` keeps one from stranding at the foot of a page if the resume
+ * ever grows.
  */
 const SectionHeader = ({ children }: { children: ComponentChildren }) => (
   <h2 class="text-lg leading-none font-bold text-accent break-after-avoid pt-1 pb-2">

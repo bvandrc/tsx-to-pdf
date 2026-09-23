@@ -75,9 +75,10 @@ export type Config = {
    */
   pageSize?: PageSize | PageDimensions
   /**
-   * White space around the document, in inches — one number for all four
-   * sides, or an object giving every side. Applied as the page's padding, so a
-   * full-width banner still sits inside it.
+   * White space around the document, in inches — one number for all four sides,
+   * or an object giving every side.
+   *
+   * Applied as the page's padding, so a full-width banner still sits inside it.
    * @default 1
    */
   margin?: Margin
@@ -88,14 +89,16 @@ export type Config = {
   maxPages?: number
   /**
    * Fail when a font is embedded as Type3, which text extractors read poorly.
+   *
    * Chromium does this for any font it cannot embed — a variable font, for one.
    * Turn it off if you would rather have the PDF anyway.
    * @default true
    */
   checkPdfFontTypes?: boolean
   /**
-   * `/Author` in the PDF: the person who wrote the document. Left unset by
-   * default.
+   * `/Author` in the PDF: the person who wrote the document.
+   *
+   * Left unset by default.
    */
   author?: string
   /**
@@ -116,8 +119,9 @@ export type Config = {
 }
 
 /**
- * Paths resolved, and the defaults more than one caller needs filled in. The
- * rest are defaulted where they are read, against the same value `Config`
+ * Paths resolved, and the defaults more than one caller needs filled in.
+ *
+ * The rest are defaulted where they are read, against the same value `Config`
  * documents.
  */
 export type ResolvedConfig = SetRequired<
@@ -169,10 +173,12 @@ export const findConfig = (explicit?: string, from = process.cwd()): string => {
 const INCHES = pipe(number(), minValue(0))
 
 /**
- * `Config` as a runtime check. Typed as a schema *for* `Config` rather than the
- * source of it, so the type stays hand-written and keeps the per-property JSDoc
- * an inferred one would lose. They cannot drift either: a key added to one and
- * not the other is a type error here.
+ * `Config` as a runtime check.
+ *
+ * Typed as a schema *for* `Config` rather than the source of it, so the type
+ * stays hand-written and keeps the per-property JSDoc an inferred one would
+ * lose. They cannot drift either: a key added to one and not the other is a
+ * type error here.
  */
 const CONFIG_SCHEMA: GenericSchema<Config> = object({
   entry: string(),
@@ -225,9 +231,11 @@ const toDimensions = (
   typeof pageSize === 'string' ? PAGE_SIZES[pageSize] : pageSize
 
 /**
- * Reads the config at `path` and fills in its defaults. Loading a TypeScript
- * config needs `tsx` registered first, which the CLI does — hence taking the
- * path rather than finding it here, so registration can happen in between.
+ * Reads the config at `path` and fills in its defaults.
+ *
+ * Loading a TypeScript config needs `tsx` registered first, which the CLI does
+ * — hence taking the path rather than finding it here, so registration can
+ * happen in between.
  */
 export const loadConfig = async (path: string): Promise<ResolvedConfig> => {
   const root = dirname(path)

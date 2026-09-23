@@ -45,10 +45,10 @@ const getFontSubtypes = (pdf: PDFDocument): string[] =>
   })
 
 /**
- * Generates a PDF from an already-loaded page with headless Chromium,
- * honouring the compiled `@page` rule rather than Chromium's own default
- * page box. Throws if the result runs past `maxPages`, where the config
- * sets one.
+ * Generates a PDF from an already-loaded page with headless Chromium, honouring
+ * the compiled `@page` rule rather than Chromium's own default page box.
+ *
+ * Throws if the result runs past `maxPages`, where the config sets one.
  */
 export const buildPdf = async (
   page: Page,
@@ -64,7 +64,7 @@ export const buildPdf = async (
     await page.pdf({
       preferCSSPageSize: true,
       printBackground: true,
-      // Carries the headings, lists and reading order into the file as
+      // Carries the headings, lists, and reading order into the file as
       // structure. Without it a parser only sees text at coordinates and has
       // to infer the order, which is where multi-column layouts scramble.
       tagged: true,

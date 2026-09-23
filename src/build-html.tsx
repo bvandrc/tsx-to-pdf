@@ -97,8 +97,10 @@ type ContentModule = {
 }
 
 /**
- * Assembles the page and the stylesheet it links. They come from one call because
- * they are one render: Tailwind emits utilities by scanning the document.
+ * Assembles the page and the stylesheet it links.
+ *
+ * They come from one call because they are one render: Tailwind emits utilities
+ * by scanning the document.
  */
 export const buildPage = async ({
   config,

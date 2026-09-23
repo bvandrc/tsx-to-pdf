@@ -3,8 +3,10 @@ import { format as prettify } from 'prettier'
 
 /**
  * The page's text as Markdown: headings, lists, links, emphasis, and nothing
- * else. Layout lives in classes here — columns, alignment, spacing — and none of
- * it survives, so this is what the document says rather than how it looks.
+ * else.
+ *
+ * Layout lives in classes here — columns, alignment, spacing — and none of it
+ * survives, so this is what the document says rather than how it looks.
  */
 export const buildMarkdown = (html: string): Promise<string> => {
   const markdown = NodeHtmlMarkdown.translate(html, {
