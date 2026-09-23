@@ -76,9 +76,8 @@ export type Config = {
   pageSize?: PageSize | PageDimensions
   /**
    * White space around the document, in inches — one number for all four sides,
-   * or an object giving every side.
-   *
-   * Applied as the page's padding, so a full-width banner still sits inside it.
+   * or an object giving every side. Applied as the page's padding, so a
+   * full-width banner still sits inside it.
    * @default 1
    */
   margin?: Margin

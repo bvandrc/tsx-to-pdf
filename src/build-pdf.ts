@@ -47,7 +47,6 @@ const getFontSubtypes = (pdf: PDFDocument): string[] =>
 /**
  * Generates a PDF from an already-loaded page with headless Chromium, honouring
  * the compiled `@page` rule rather than Chromium's own default page box.
- *
  * Throws if the result runs past `maxPages`, where the config sets one.
  */
 export const buildPdf = async (
