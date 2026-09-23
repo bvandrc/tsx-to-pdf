@@ -10,7 +10,7 @@
 {
   "extends": "./tsconfig.consumer.json",
   "compilerOptions": {
-    "types": ["node"],
+    "types": ["node", "vitest/globals"],
     "rewriteRelativeImportExtensions": true,
     "noFallthroughCasesInSwitch": true,
     "noImplicitReturns": true,
