@@ -1,6 +1,6 @@
 # tsx-to-pdf
 
-Write a document as JSX — React style, in a `.tsx` file — style it with Tailwind, and generate a page-exact PDF, with the rendered HTML alongside it and optional Markdown, PNG and JPG output.
+Write a document as JSX — React style, in a `.tsx` file — style it with Tailwind, and generate a page-exact PDF, with the rendered HTML alongside it and optional Markdown, PNG, and JPG output.
 
 Features a dev server to preview the document at its exact page size, which live-updates as you make changes. It serves the same HTML the PDF is rendered from, so the preview is not an approximation of the result.
 
@@ -118,7 +118,7 @@ tsx-to-pdf dev   [--port <n>] [--config <path>]
 
 ## Markdown output
 
-`--md` — or `{ markdown: true }` to `build()` — writes `<name>.md` beside the rest, converted from the same HTML the PDF is generated from. **It is the document's text, not the document.** Headings, lists, links and emphasis survive because they are elements; everything this package exists to control does not, because it lives in classes Markdown cannot express — the sheet, the margins, columns, alignment, spacing, colour. A row that puts a job title on the left and its dates on the right comes out as two stacked blocks.
+`--md` — or `{ markdown: true }` to `build()` — writes `<name>.md` beside the rest, converted from the same HTML the PDF is generated from. **It is the document's text, not the document.** Headings, lists, links, and emphasis survive because they are elements; everything this package exists to control does not, because it lives in classes Markdown cannot express — the sheet, the margins, columns, alignment, spacing, colour. A row that puts a job title on the left and its dates on the right comes out as two stacked blocks.
 
 That makes it useful for the things that read text and ignore layout — a diff that shows what changed in the wording, an ATS or an LLM being handed a resume, a `grep` — and not for anything that has to look right. The PDF and the preview are the same render; the Markdown is a derivative of it.
 

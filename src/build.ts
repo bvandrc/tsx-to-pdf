@@ -32,20 +32,26 @@ type BuildOptions = {
    */
   pdf?: boolean
   /**
-   * Also write the document's text as Markdown. Content only — the layout the
-   * classes describe has no equivalent and is dropped.
+   * Also write the document's text as Markdown.
+   *
+   * Content only — the layout the classes describe has no equivalent and is
+   * dropped.
    * @default false
    */
   markdown?: boolean
   /**
    * Also write a full-page PNG screenshot of the same render the PDF is
-   * generated from. Needs a browser, shared with `pdf` when both are on.
+   * generated from.
+   *
+   * Needs a browser, shared with `pdf` when both are on.
    * @default false
    */
   png?: boolean
   /**
    * Also write a full-page JPG screenshot of the same render the PDF is
-   * generated from. Needs a browser, shared with `pdf` when both are on.
+   * generated from.
+   *
+   * Needs a browser, shared with `pdf` when both are on.
    * @default false
    */
   jpg?: boolean
