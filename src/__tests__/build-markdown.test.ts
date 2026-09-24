@@ -1,8 +1,15 @@
 import { buildMarkdown } from '../build-markdown.ts'
 
 /** A whole page, since that is what the converter is handed. */
-const page = (body: string) =>
-  `<!DOCTYPE html><html><head><title>Resume</title><style>.a{color:red}</style><script>window.x=1</script></head><body>${body}</body></html>`
+const page = (body: string) => `<!DOCTYPE html>
+<html>
+  <head>
+    <title>Resume</title>
+    <style>.a{color:red}</style>
+    <script>window.x=1</script>
+  </head>
+  <body>${body}</body>
+</html>`
 
 describe('buildMarkdown', () => {
   it('drops the head, so its text does not open the document', async () => {
