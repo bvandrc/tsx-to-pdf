@@ -12,7 +12,7 @@ const page = (body: string) => `<!DOCTYPE html>
 </html>`
 
 describe('buildMarkdown', () => {
-  it('keeps the structure Markdown can say, and nothing from the head', async () => {
+  it('converts the page to the document, and nothing from the head', async () => {
     const markdown = await buildMarkdown(
       page(`
         <h1>Blake</h1>
@@ -20,36 +20,27 @@ describe('buildMarkdown', () => {
         <ul>
           <li>Built <strong>things</strong></li>
           <li><a href="https://example.com">A link</a></li>
+          <li><em>Emphasised</em></li>
         </ul>
+        <pre><code>npm i</code></pre>
       `)
     )
 
     // Matching the whole document is what keeps the head out of it: the title,
-    // the stylesheet, and the script would each land above the heading.
+    // the stylesheet, and the script would each land above the heading. It is
+    // also what pins the markers — node-html-markdown emits `* ` and `*em*`,
+    // and a fenced block only reads as one when it is not indented instead.
     expect(markdown).toBe(`# Blake
 
 ## Experience
 
 - Built **things**
 - [A link](https://example.com)
-`)
-  })
+- _Emphasised_
 
-  it('fences a code block rather than indenting it', async () => {
-    const markdown = await buildMarkdown(page('<pre><code>npm i</code></pre>'))
-
-    expect(markdown).toBe(`\`\`\`
+\`\`\`
 npm i
 \`\`\`
 `)
-  })
-
-  it('normalises the markers Prettier has an opinion about', async () => {
-    const markdown = await buildMarkdown(
-      page('<ul><li><em>Emphasised</em></li></ul>')
-    )
-
-    // node-html-markdown emits `* ` and `*em*`; the Prettier pass rewrites both.
-    expect(markdown.trim()).toBe('- _Emphasised_')
   })
 })
