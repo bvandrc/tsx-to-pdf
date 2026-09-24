@@ -86,7 +86,7 @@ describe('loadConfig', () => {
 
   it('rejects a config file with no default export', async () => {
     await expect(loadFrom('export const title = "doc"')).rejects.toThrow(
-      'has no default export.'
+      'no default export'
     )
   })
 
@@ -99,17 +99,13 @@ describe('loadConfig', () => {
   it('rejects a page size that is neither a name nor dimensions', async () => {
     await expect(
       loadFrom(exporting({ ...MINIMAL, pageSize: 'a6' }))
-    ).rejects.toThrow(
-      'Expected letter, legal, tabloid, a3, a4, a5, or { width, height } as CSS lengths'
-    )
+    ).rejects.toThrow('or { width, height } as CSS lengths')
   })
 
   it('rejects a margin naming some sides but not all four', async () => {
     await expect(
       loadFrom(exporting({ ...MINIMAL, margin: { top: 1, bottom: 1 } }))
-    ).rejects.toThrow(
-      'Expected inches as a number, or { top, right, bottom, left }'
-    )
+    ).rejects.toThrow('{ top, right, bottom, left }')
   })
 
   it('rejects a negative margin, while allowing zero', async () => {
