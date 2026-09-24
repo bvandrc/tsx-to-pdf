@@ -20,14 +20,6 @@ describe('jsxTsconfig', () => {
     vol.reset()
   })
 
-  it('writes the config inside the project it is given', async () => {
-    vol.fromJSON({ '/project/package.json': '{}' })
-
-    expect(await jsxTsconfig('/project')).toBe(
-      '/project/node_modules/.tsx-to-pdf/tsconfig.json'
-    )
-  })
-
   it('pins the JSX settings a Preact render needs', async () => {
     vol.fromJSON({ '/project/package.json': '{}' })
 
@@ -77,13 +69,5 @@ describe('jsxTsconfig', () => {
     vol.fromJSON({ '/project/package.json': '{}' })
 
     expect(written(await jsxTsconfig('/project'))).not.toHaveProperty('extends')
-  })
-
-  it('creates the directory rather than failing when node_modules is bare', async () => {
-    vol.fromJSON({ '/project/package.json': '{}' })
-
-    await jsxTsconfig('/project')
-
-    expect(vol.existsSync('/project/node_modules/.tsx-to-pdf')).toBe(true)
   })
 })

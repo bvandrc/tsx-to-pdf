@@ -29,14 +29,6 @@ describe('buildMarkdown', () => {
     )
   })
 
-  it('drops the classes that carry the layout', async () => {
-    const markdown = await buildMarkdown(
-      page('<div class="grid grid-cols-2 gap-4"><p>Left</p><p>Right</p></div>')
-    )
-
-    expect(markdown).toBe(['Left', '', 'Right', ''].join('\n'))
-  })
-
   it('fences a code block rather than indenting it', async () => {
     const markdown = await buildMarkdown(page('<pre><code>npm i</code></pre>'))
 

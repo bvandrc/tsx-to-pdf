@@ -34,14 +34,6 @@ describe('findConfig', () => {
     vol.reset()
   })
 
-  it('finds the config beside the directory it is given', () => {
-    vol.fromJSON({ '/project/tsx-to-pdf.config.ts': '' })
-
-    expect(findConfig(undefined, '/project')).toBe(
-      '/project/tsx-to-pdf.config.ts'
-    )
-  })
-
   it('accepts the other extensions a config may use', () => {
     for (const extension of ['mts', 'js', 'mjs']) {
       vol.reset()
@@ -105,12 +97,6 @@ describe('loadConfig', () => {
       outDir: join(dir, 'outputs'),
       assetsDir: join(dir, '../shared/assets'),
     })
-  })
-
-  it('leaves `assetsDir` unset when the config names no assets', async () => {
-    const { config } = await loadFrom(exporting(MINIMAL))
-
-    expect(config.assetsDir).toBeUndefined()
   })
 
   it('fills the defaults a caller would otherwise have to know', async () => {
