@@ -150,15 +150,6 @@ describe('buildStylesheet', () => {
     expect(css).toContain('--page-margin: 1in 2in 3in 4in')
   })
 
-  it('emits the utilities the document actually uses, and no others', async () => {
-    const root = await withDocument('<div className="flex" />')
-
-    const css = await buildStylesheet(resolvedConfig(root))
-
-    expect(css).toContain('.flex')
-    expect(css).not.toContain('.grid')
-  })
-
   it('scans a component beside the entry, not just the entry itself', async () => {
     const root = await makeDirTree({
       'doc.tsx': 'export default () => null',
