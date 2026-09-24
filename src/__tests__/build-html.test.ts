@@ -5,20 +5,29 @@ import { buildStylesheet, copyAssets } from '../build-html.tsx'
 import type { ResolvedConfig } from '../config.ts'
 import { PAGE_SIZES } from '../config.ts'
 
-/** The document a build is pointed at, and the two files it writes from it. */
-const NAME = 'doc'
-const ENTRY = `${NAME}.tsx`
-const PAGE = `${NAME}.html`
-const SHEET = `${NAME}.css`
+/** The document a build is pointed at, and the directory it writes into. */
+const MOCK_FILE_NAME = 'doc'
+const OUTPUTS = 'outputs'
 
-const LOGO = 'logo.svg'
-const ASSETS_DIR = 'assets'
-const OUT_DIR = 'outputs'
-const HTML_DIR = join(OUT_DIR, 'html')
+/** The three the build names after the document, and one asset to copy. */
+const FILENAMES = {
+  ENTRY: `${MOCK_FILE_NAME}.tsx`,
+  PAGE: `${MOCK_FILE_NAME}.html`,
+  SHEET: `${MOCK_FILE_NAME}.css`,
+  LOGO: 'logo.svg',
+}
+
+const DIRS = {
+  ASSETS: 'assets',
+  OUTPUTS,
+  HTML: join(OUTPUTS, 'html'),
+}
 
 /** Contents nothing under test reads — only whether the file is there. */
-const SVG = '<svg />'
-const MARKUP = '<html></html>'
+const MOCK_HTML = {
+  SVG: '<svg />',
+  HTML: '<html></html>',
+}
 
 const roots: string[] = []
 
@@ -60,10 +69,10 @@ const resolvedConfig = (
   overrides: Partial<ResolvedConfig> = {}
 ): ResolvedConfig => ({
   root,
-  entry: ENTRY,
-  entryPath: join(root, ENTRY),
-  outDir: join(root, OUT_DIR),
-  name: NAME,
+  entry: FILENAMES.ENTRY,
+  entryPath: join(root, FILENAMES.ENTRY),
+  outDir: join(root, DIRS.OUTPUTS),
+  name: MOCK_FILE_NAME,
   page: PAGE_SIZES.letter,
   port: 4000,
   setDate: true,
@@ -74,55 +83,59 @@ describe('copyAssets', () => {
   /** A build that has written its page, which is the state a copy runs after. */
   const built = async (files: Record<string, string> = {}) => {
     const root = await makeDirTree({
-      [join(HTML_DIR, PAGE)]: MARKUP,
+      [join(DIRS.HTML, FILENAMES.PAGE)]: MOCK_HTML.HTML,
       ...files,
     })
 
-    return { root, destination: join(root, HTML_DIR) }
+    return { root, destination: join(root, DIRS.HTML) }
   }
 
   it("puts the assets beside the page, keeping what it's told to keep", async () => {
     const { root, destination } = await built({
-      [join(ASSETS_DIR, LOGO)]: SVG,
-      [join(HTML_DIR, SHEET)]: '',
+      [join(DIRS.ASSETS, FILENAMES.LOGO)]: MOCK_HTML.SVG,
+      [join(DIRS.HTML, FILENAMES.SHEET)]: '',
     })
 
     await copyAssets(
-      resolvedConfig(root, { assetsDir: join(root, ASSETS_DIR) }),
+      resolvedConfig(root, { assetsDir: join(root, DIRS.ASSETS) }),
       destination,
-      [PAGE, SHEET]
+      [FILENAMES.PAGE, FILENAMES.SHEET]
     )
 
-    expect((await readdir(destination)).sort()).toEqual([SHEET, PAGE, LOGO])
+    expect((await readdir(destination)).sort()).toEqual([
+      FILENAMES.SHEET,
+      FILENAMES.PAGE,
+      FILENAMES.LOGO,
+    ])
   })
 
   it('clears an asset that the config no longer copies', async () => {
     const { root, destination } = await built({
-      [join(HTML_DIR, 'removed.svg')]: SVG,
+      [join(DIRS.HTML, 'removed.svg')]: MOCK_HTML.SVG,
     })
 
     // No `assetsDir` at all: the clear still runs, which is what stops a
     // dropped `assets` leaving its files in the output forever.
-    await copyAssets(resolvedConfig(root), destination, [PAGE])
+    await copyAssets(resolvedConfig(root), destination, [FILENAMES.PAGE])
 
-    expect(await readdir(destination)).toEqual([PAGE])
+    expect(await readdir(destination)).toEqual([FILENAMES.PAGE])
   })
 
   it('clears a directory of stale assets, not just loose files', async () => {
     const { root, destination } = await built({
-      [join(HTML_DIR, 'fonts/old.woff2')]: '',
+      [join(DIRS.HTML, 'fonts/old.woff2')]: '',
     })
 
-    await copyAssets(resolvedConfig(root), destination, [PAGE])
+    await copyAssets(resolvedConfig(root), destination, [FILENAMES.PAGE])
 
-    expect(await readdir(destination)).toEqual([PAGE])
+    expect(await readdir(destination)).toEqual([FILENAMES.PAGE])
   })
 })
 
 describe('buildStylesheet', () => {
   /** A document whose classes are what Tailwind has to be given to emit. */
   const withDocument = (contents = '<div className="flex" />') =>
-    makeDirTree({ [ENTRY]: `export default () => ${contents}` })
+    makeDirTree({ [FILENAMES.ENTRY]: `export default () => ${contents}` })
 
   it('carries the sheet as variables and in the `@page` rule alike', async () => {
     const root = await withDocument()
@@ -167,7 +180,7 @@ describe('buildStylesheet', () => {
 
   it('scans a component beside the entry, not just the entry itself', async () => {
     const root = await makeDirTree({
-      [ENTRY]: 'export default () => null',
+      [FILENAMES.ENTRY]: 'export default () => null',
       'parts/Header.tsx':
         'export const Header = () => <h1 className="italic" />',
     })
