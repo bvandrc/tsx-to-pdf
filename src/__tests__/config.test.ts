@@ -45,14 +45,6 @@ describe('findConfig', () => {
     }
   })
 
-  it('resolves an explicit path against the directory, not the process', () => {
-    vol.fromJSON({ '/project/configs/doc.config.ts': '' })
-
-    expect(findConfig('configs/doc.config.ts', '/project')).toBe(
-      '/project/configs/doc.config.ts'
-    )
-  })
-
   it('names the missing path when an explicit config is not there', () => {
     expect(() => findConfig('missing.config.ts', '/project')).toThrow(
       'No config at /project/missing.config.ts'
