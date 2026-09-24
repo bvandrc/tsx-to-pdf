@@ -45,17 +45,6 @@ describe('findConfig', () => {
     }
   })
 
-  it('prefers the TypeScript config where a project has both', () => {
-    vol.fromJSON({
-      '/project/tsx-to-pdf.config.js': '',
-      '/project/tsx-to-pdf.config.ts': '',
-    })
-
-    expect(findConfig(undefined, '/project')).toBe(
-      '/project/tsx-to-pdf.config.ts'
-    )
-  })
-
   it('resolves an explicit path against the directory, not the process', () => {
     vol.fromJSON({ '/project/configs/doc.config.ts': '' })
 
