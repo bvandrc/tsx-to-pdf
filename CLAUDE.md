@@ -13,6 +13,7 @@ Nothing here is specific to any one document. What to render comes from a config
 - `pnpm build` — tsdown bundles `src/` into `dist/`, emits declarations, and copies `page.css` beside them. `prepare` runs it on install and on publish, so it rarely needs invoking by hand.
 - `pnpm example` / `pnpm example:html` / `pnpm dev` — drive the CLI against `example/`. The `:html` variant needs no browser.
 - `pnpm check` — Biome plus `tsc --noEmit`; what CI runs. `pnpm format` fixes.
+- `pnpm test` — Vitest over `src/__tests__/`. `pnpm test:watch` to re-run on a change; CI runs `pnpm test:unit`.
 
 ## Conventions
 

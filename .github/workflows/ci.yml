@@ -40,6 +40,9 @@ jobs:
       - name: Lint & Type Check
         run: pnpm run check
 
+      - name: Unit Tests
+        run: pnpm run test:unit
+
       # No browser needed, so this fails fast on anything wrong with the
       # renderer, the config or the stylesheet.
       - name: Render the example without a browser

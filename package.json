@@ -68,7 +68,11 @@
     "__c2": "====================[ Linting & Type Checking ]==================",
     "check": "npx biome check . && pnpm ts:check",
     "format": "npx biome check . --fix",
-    "ts:check": "tsc --noEmit"
+    "ts:check": "tsc --noEmit",
+    "__c3": "====================[ Unit Testing ]=============================",
+    "test": "vitest",
+    "test:unit": "pnpm test",
+    "test:watch": "pnpm run test --watch"
   },
   "dependencies": {
     "@tailwindcss/node": "^4",
@@ -95,10 +99,12 @@
     "@biomejs/biome": "^2",
     "@types/node": "^24",
     "es-toolkit": "^1",
+    "memfs": "^4",
     "playwright": "^1",
     "preact": "^10",
     "tsdown": "^0.22",
     "typescript": "^7",
-    "valibot": "^1"
+    "valibot": "^1",
+    "vitest": "^4"
   }
 }
