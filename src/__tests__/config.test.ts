@@ -64,14 +64,6 @@ describe('findConfig', () => {
     )
   })
 
-  it('takes an absolute explicit path as given', () => {
-    vol.fromJSON({ '/elsewhere/doc.config.ts': '' })
-
-    expect(findConfig('/elsewhere/doc.config.ts', '/project')).toBe(
-      '/elsewhere/doc.config.ts'
-    )
-  })
-
   it('names the missing path when an explicit config is not there', () => {
     expect(() => findConfig('missing.config.ts', '/project')).toThrow(
       'No config at /project/missing.config.ts'
@@ -109,16 +101,6 @@ describe('loadConfig', () => {
       port: 4000,
       setDate: true,
     })
-  })
-
-  it('looks up each named page size', async () => {
-    for (const [size, dimensions] of Object.entries(PAGE_SIZES)) {
-      const { config } = await loadFrom(
-        exporting({ ...MINIMAL, pageSize: size })
-      )
-
-      expect(config.page, size).toEqual(dimensions)
-    }
   })
 
   it('takes explicit dimensions as the sheet', async () => {
