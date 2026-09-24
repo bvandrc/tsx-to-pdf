@@ -21,7 +21,7 @@ afterAll(async () => {
  * temp dir, because Tailwind resolves `@import "tailwindcss"` from the root it
  * is given and only a directory under one can reach it.
  */
-const tree = async (files: Record<string, string>) => {
+const makeDirTree = async (files: Record<string, string>) => {
   const dir = await mkdtemp(
     join(import.meta.dirname, '../../node_modules/.tsx-to-pdf-test-')
   )
@@ -57,7 +57,7 @@ const resolvedConfig = (
 
 describe('copyAssets', () => {
   it("puts the assets beside the page, keeping what it's told to keep", async () => {
-    const root = await tree({
+    const root = await makeDirTree({
       'assets/logo.svg': '<svg />',
       'outputs/html/doc.html': '<html></html>',
       'outputs/html/doc.css': '',
@@ -78,7 +78,7 @@ describe('copyAssets', () => {
   })
 
   it('clears an asset that the config no longer copies', async () => {
-    const root = await tree({
+    const root = await makeDirTree({
       'outputs/html/doc.html': '<html></html>',
       'outputs/html/removed.svg': '<svg />',
     })
@@ -92,7 +92,7 @@ describe('copyAssets', () => {
   })
 
   it('clears a directory of stale assets, not just loose files', async () => {
-    const root = await tree({
+    const root = await makeDirTree({
       'outputs/html/doc.html': '<html></html>',
       'outputs/html/fonts/old.woff2': '',
     })
@@ -107,7 +107,7 @@ describe('copyAssets', () => {
 describe('buildStylesheet', () => {
   /** A document whose classes are what Tailwind has to be given to emit. */
   const withDocument = (contents = '<div className="flex" />') =>
-    tree({ 'doc.tsx': `export default () => ${contents}` })
+    makeDirTree({ 'doc.tsx': `export default () => ${contents}` })
 
   it('carries the sheet as variables and in the `@page` rule alike', async () => {
     const root = await withDocument()
@@ -160,7 +160,7 @@ describe('buildStylesheet', () => {
   })
 
   it('scans a component beside the entry, not just the entry itself', async () => {
-    const root = await tree({
+    const root = await makeDirTree({
       'doc.tsx': 'export default () => null',
       'parts/Header.tsx':
         'export const Header = () => <h1 className="italic" />',
