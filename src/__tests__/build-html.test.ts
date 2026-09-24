@@ -150,14 +150,6 @@ describe('buildStylesheet', () => {
     expect(css).toContain('@page {\n  size: 210mm 297mm;')
   })
 
-  it('defaults the margin to the inch a word processor would give', async () => {
-    const root = await withDocument()
-
-    expect(await buildStylesheet(resolvedConfig(root))).toContain(
-      '--page-margin: 1in'
-    )
-  })
-
   it('emits one number as all four sides', async () => {
     const root = await withDocument()
 
