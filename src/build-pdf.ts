@@ -32,7 +32,7 @@ export const loadPreviousPdf = async (
   }
 }
 
-/** Every font resource across the document, as `/Type0`, `/Type3` and friends. */
+/** Every font resource across the document, as `/Type0`, `/Type3`, and friends. */
 const getFontSubtypes = (pdf: PDFDocument): string[] =>
   pdf.getPages().flatMap((page) => {
     const fonts = page.node.Resources()?.lookup(PDFName.of('Font'), PDFDict)
