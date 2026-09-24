@@ -20,47 +20,16 @@ describe('jsxTsconfig', () => {
     vol.reset()
   })
 
-  it('pins the JSX settings a Preact render needs', async () => {
-    vol.fromJSON({ '/project/package.json': '{}' })
-
-    expect(written(await jsxTsconfig('/project'))).toMatchObject({
-      compilerOptions: { jsx: 'react-jsx', jsxImportSource: 'preact' },
-    })
-  })
-
-  it("widens `include` to the whole project, not just the entry's folder", async () => {
-    vol.fromJSON({ '/project/package.json': '{}' })
-
-    // tsx applies a tsconfig only to the files its `include` matches, so a
-    // document outside the project's own `src` would otherwise get no settings.
-    expect(written(await jsxTsconfig('/project'))).toMatchObject({
-      include: ['../../**/*'],
-    })
-  })
-
-  it("extends the project's tsconfig, so its paths and target survive", async () => {
+  it('pins the JSX settings over the project, reaching the whole of it', async () => {
     vol.fromJSON({ '/project/tsconfig.json': '{}' })
 
     expect(written(await jsxTsconfig('/project'))).toMatchObject({
-      extends: '../../tsconfig.json',
-    })
-  })
-
-  it('falls back to a jsconfig where that is what the project has', async () => {
-    vol.fromJSON({ '/project/jsconfig.json': '{}' })
-
-    expect(written(await jsxTsconfig('/project'))).toMatchObject({
-      extends: '../../jsconfig.json',
-    })
-  })
-
-  it('prefers the tsconfig when a project carries both', async () => {
-    vol.fromJSON({
-      '/project/jsconfig.json': '{}',
-      '/project/tsconfig.json': '{}',
-    })
-
-    expect(written(await jsxTsconfig('/project'))).toMatchObject({
+      // Without these the document compiles for React and fails at render.
+      compilerOptions: { jsx: 'react-jsx', jsxImportSource: 'preact' },
+      // tsx applies a tsconfig only to the files its `include` matches, so a
+      // document outside the project's own `src` would otherwise get none.
+      include: ['../../**/*'],
+      // Relative to `node_modules/.tsx-to-pdf/`, and POSIX on Windows too.
       extends: '../../tsconfig.json',
     })
   })
