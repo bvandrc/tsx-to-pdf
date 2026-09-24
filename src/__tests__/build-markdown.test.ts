@@ -12,15 +12,10 @@ const page = (body: string) => `<!DOCTYPE html>
 </html>`
 
 describe('buildMarkdown', () => {
-  it('drops the head, so its text does not open the document', async () => {
-    const markdown = await buildMarkdown(page('<h1>Blake</h1>'))
-
-    expect(markdown.trim()).toBe('# Blake')
-  })
-
-  it('keeps the structure Markdown can say', async () => {
+  it('keeps the structure Markdown can say, and nothing from the head', async () => {
     const markdown = await buildMarkdown(
       page(`
+        <h1>Blake</h1>
         <h2>Experience</h2>
         <ul>
           <li>Built <strong>things</strong></li>
@@ -29,7 +24,11 @@ describe('buildMarkdown', () => {
       `)
     )
 
-    expect(markdown).toBe(`## Experience
+    // Matching the whole document is what keeps the head out of it: the title,
+    // the stylesheet, and the script would each land above the heading.
+    expect(markdown).toBe(`# Blake
+
+## Experience
 
 - Built **things**
 - [A link](https://example.com)
@@ -39,8 +38,10 @@ describe('buildMarkdown', () => {
   it('fences a code block rather than indenting it', async () => {
     const markdown = await buildMarkdown(page('<pre><code>npm i</code></pre>'))
 
-    // Quoted rather than a template literal, which would need every backtick escaped.
-    expect(markdown).toBe('```\nnpm i\n```\n')
+    expect(markdown).toBe(`\`\`\`
+npm i
+\`\`\`
+`)
   })
 
   it('normalises the markers Prettier has an opinion about', async () => {
