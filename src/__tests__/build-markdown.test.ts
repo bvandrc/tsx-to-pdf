@@ -20,27 +20,27 @@ describe('buildMarkdown', () => {
 
   it('keeps the structure Markdown can say', async () => {
     const markdown = await buildMarkdown(
-      page(
-        '<h2>Experience</h2><ul><li>Built <strong>things</strong></li><li><a href="https://example.com">A link</a></li></ul>'
-      )
+      page(`
+        <h2>Experience</h2>
+        <ul>
+          <li>Built <strong>things</strong></li>
+          <li><a href="https://example.com">A link</a></li>
+        </ul>
+      `)
     )
 
-    expect(markdown).toBe(
-      [
-        '## Experience',
-        '',
-        '- Built **things**',
-        '- [A link](https://example.com)',
-        '',
-      ].join('\n')
-    )
+    expect(markdown).toBe(`## Experience
+
+- Built **things**
+- [A link](https://example.com)
+`)
   })
 
   it('fences a code block rather than indenting it', async () => {
     const markdown = await buildMarkdown(page('<pre><code>npm i</code></pre>'))
 
-    expect(markdown).toContain('```')
-    expect(markdown).toContain('npm i')
+    // Quoted rather than a template literal, which would need every backtick escaped.
+    expect(markdown).toBe('```\nnpm i\n```\n')
   })
 
   it('normalises the markers Prettier has an opinion about', async () => {
