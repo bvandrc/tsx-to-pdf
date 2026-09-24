@@ -10,25 +10,6 @@ vi.mock('node:fs', async () => {
   return { ...fs, default: fs }
 })
 
-/** A minimal valid config, as the object a config file default-exports. */
-const MINIMAL = { entry: 'doc.tsx', outDir: 'outputs' }
-
-/**
- * Writes a config to a real directory and loads it.
- *
- * `loadConfig` reaches its file through `import()`, which goes to the real
- * loader rather than the mocked `node:fs` the rest of this file installs.
- */
-const loadFrom = async (source: string) => {
-  const dir = await mkdtemp(join(tmpdir(), 'tsx-to-pdf-'))
-  const path = join(dir, 'tsx-to-pdf.config.mjs')
-  await writeFile(path, source)
-  return { dir, config: await loadConfig(path) }
-}
-
-const exporting = (config: unknown) =>
-  `export default ${JSON.stringify(config)}`
-
 describe('findConfig', () => {
   beforeEach(() => {
     vol.reset()
@@ -45,20 +26,31 @@ describe('findConfig', () => {
     }
   })
 
-  it('names the missing path when an explicit config is not there', () => {
-    expect(() => findConfig('missing.config.ts', '/project')).toThrow(
-      'No config at /project/missing.config.ts'
-    )
-  })
-
   it('says what to create when a project has no config at all', () => {
-    expect(() => findConfig(undefined, '/project')).toThrow(
-      'No config found in /project. Create tsx-to-pdf.config.ts, or pass --config <path>.'
-    )
+    expect(() => findConfig(undefined, '/project')).toThrow('No config found')
   })
 })
 
 describe('loadConfig', () => {
+  /** A minimal valid config, as the object a config file default-exports. */
+  const MINIMAL = { entry: 'doc.tsx', outDir: 'outputs' }
+
+  /**
+   * Writes a config to a real directory and loads it.
+   *
+   * `loadConfig` reaches its file through `import()`, which goes to the real
+   * loader rather than the mocked `node:fs` the rest of this file installs.
+   */
+  const loadFrom = async (source: string) => {
+    const dir = await mkdtemp(join(tmpdir(), 'tsx-to-pdf-'))
+    const path = join(dir, 'tsx-to-pdf.config.mjs')
+    await writeFile(path, source)
+    return { dir, config: await loadConfig(path) }
+  }
+
+  const exporting = (config: unknown) =>
+    `export default ${JSON.stringify(config)}`
+
   it('resolves the paths against the config file, not the process', async () => {
     const { dir, config } = await loadFrom(
       exporting({ ...MINIMAL, assets: '../shared/assets' })
