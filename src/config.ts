@@ -28,7 +28,7 @@ import {
   union,
 } from 'valibot'
 
-import { typedKeys } from './typed-object.ts'
+import { typedKeys } from './utils/index.ts'
 
 /** A sheet, as CSS lengths. */
 export type PageDimensions = { width: string; height: string }
