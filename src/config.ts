@@ -28,6 +28,8 @@ import {
   union,
 } from 'valibot'
 
+import { typedKeys } from './utils/index.ts'
+
 /** A sheet, as CSS lengths. */
 export type PageDimensions = { width: string; height: string }
 
@@ -43,7 +45,7 @@ export const PAGE_SIZES = {
 export type PageSize = keyof typeof PAGE_SIZES
 
 /** The names, as a value, so the schema and its message can both read them. */
-const PAGE_SIZE_NAMES = Object.keys(PAGE_SIZES) as PageSize[]
+const PAGE_SIZE_NAMES = typedKeys(PAGE_SIZES)
 
 /**
  * Which driver prints the PDF, as a value so the schema and its message can
