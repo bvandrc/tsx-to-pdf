@@ -24,7 +24,7 @@ const posix = (path: string): string => path.split(sep).join('/')
  * tsx applies a single tsconfig to everything it transforms, so pointing it
  * straight at the project's would leave the JSX settings to chance — they have
  * to be set, and `include` has to happen to match the document. Extending gives
- * both: ours always apply, and the project keeps its `paths`, `target` and the
+ * both: ours always apply, and the project keeps its `paths`, `target`, and the
  * rest.
  */
 export const jsxTsconfig = async (root: string): Promise<string> => {
