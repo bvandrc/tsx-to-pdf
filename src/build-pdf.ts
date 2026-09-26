@@ -32,7 +32,7 @@ export const loadPreviousPdf = async (
   }
 }
 
-/** Every font resource across the document, as `/Type0`, `/Type3` and friends. */
+/** Every font resource across the document, as `/Type0`, `/Type3`, and friends. */
 const getFontSubtypes = (pdf: PDFDocument): string[] =>
   pdf.getPages().flatMap((page) => {
     const fonts = page.node.Resources()?.lookup(PDFName.of('Font'), PDFDict)
@@ -47,6 +47,7 @@ const getFontSubtypes = (pdf: PDFDocument): string[] =>
 /**
  * Generates a PDF from an already-loaded page with headless Chromium, honouring
  * the compiled `@page` rule rather than Chromium's own default page box.
+ *
  * Throws if the result runs past `maxPages`, where the config sets one.
  */
 export const buildPdf = async (

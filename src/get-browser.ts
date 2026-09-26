@@ -30,12 +30,8 @@ const playwright = async (): Promise<typeof import('playwright')> => {
 export const getBrowser = async ({ pageUrl }: { pageUrl: string }) => {
   const { chromium } = await playwright()
 
-  /**
-   * Escape hatch for environments whose Chromium build predates the one
-   * Playwright expects.
-   *
-   * Unset everywhere `playwright install` has run.
-   */
+  // Escape hatch for environments whose Chromium build predates the one
+  // Playwright expects. Unset everywhere `playwright install` has run.
   const executablePath = process.env.CHROMIUM_EXECUTABLE_PATH
 
   const browser = await chromium.launch(
