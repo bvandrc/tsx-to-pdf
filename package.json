@@ -53,6 +53,7 @@
     "dist",
     "tsconfig.consumer.json"
   ],
+  "sideEffects": false,
   "engines": {
     "node": ">=22.18"
   },
