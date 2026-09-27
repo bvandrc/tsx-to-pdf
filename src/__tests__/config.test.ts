@@ -48,12 +48,12 @@ describe('loadConfig', () => {
     return { dir, config: await loadConfig(path) }
   }
 
-  const exporting = (config: unknown) =>
+  const buildConfigModule = (config: unknown) =>
     `export default ${JSON.stringify(config)}`
 
   it('resolves the paths against the config file, not the process', async () => {
     const { dir, config } = await loadFrom(
-      exporting({ ...MINIMAL, assets: '../shared/assets' })
+      buildConfigModule({ ...MINIMAL, assets: '../shared/assets' })
     )
 
     expect(config).toMatchObject({
@@ -65,7 +65,7 @@ describe('loadConfig', () => {
   })
 
   it('fills the defaults a caller would otherwise have to know', async () => {
-    const { config } = await loadFrom(exporting(MINIMAL))
+    const { config } = await loadFrom(buildConfigModule(MINIMAL))
 
     expect(config).toMatchObject({
       // The entry's basename, so `doc.tsx` writes `doc.pdf`.
@@ -78,7 +78,10 @@ describe('loadConfig', () => {
 
   it('takes explicit dimensions as the sheet', async () => {
     const { config } = await loadFrom(
-      exporting({ ...MINIMAL, pageSize: { width: '90mm', height: '50mm' } })
+      buildConfigModule({
+        ...MINIMAL,
+        pageSize: { width: '90mm', height: '50mm' },
+      })
     )
 
     expect(config.page).toEqual({ width: '90mm', height: '50mm' })
@@ -92,35 +95,37 @@ describe('loadConfig', () => {
 
   it('names the offending key when a value is the wrong type', async () => {
     await expect(
-      loadFrom(exporting({ ...MINIMAL, port: 'four thousand' }))
+      loadFrom(buildConfigModule({ ...MINIMAL, port: 'four thousand' }))
     ).rejects.toThrow(/port: /)
   })
 
   it('rejects a page size that is neither a name nor dimensions', async () => {
     await expect(
-      loadFrom(exporting({ ...MINIMAL, pageSize: 'a6' }))
+      loadFrom(buildConfigModule({ ...MINIMAL, pageSize: 'a6' }))
     ).rejects.toThrow('or { width, height } as CSS lengths')
   })
 
   it('rejects a margin naming some sides but not all four', async () => {
     await expect(
-      loadFrom(exporting({ ...MINIMAL, margin: { top: 1, bottom: 1 } }))
+      loadFrom(buildConfigModule({ ...MINIMAL, margin: { top: 1, bottom: 1 } }))
     ).rejects.toThrow('{ top, right, bottom, left }')
   })
 
   it('rejects a negative margin, while allowing zero', async () => {
     await expect(
-      loadFrom(exporting({ ...MINIMAL, margin: -1 }))
+      loadFrom(buildConfigModule({ ...MINIMAL, margin: -1 }))
     ).rejects.toThrow(/margin/)
 
-    const { config } = await loadFrom(exporting({ ...MINIMAL, margin: 0 }))
+    const { config } = await loadFrom(
+      buildConfigModule({ ...MINIMAL, margin: 0 })
+    )
     expect(config.margin).toBe(0)
   })
 
   it('rejects a maxPages that is not a whole page count', async () => {
     for (const maxPages of [0, 1.5]) {
       await expect(
-        loadFrom(exporting({ ...MINIMAL, maxPages })),
+        loadFrom(buildConfigModule({ ...MINIMAL, maxPages })),
         String(maxPages)
       ).rejects.toThrow(/maxPages/)
     }
