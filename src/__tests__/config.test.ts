@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { vol } from 'memfs'
 
-import { findConfig, loadConfig, PAGE_SIZES } from '../config.ts'
+import { type Config, findConfig, loadConfig, PAGE_SIZES } from '../config.ts'
 
 vi.mock('node:fs', async () => {
   const { fs } = await import('memfs')
@@ -33,7 +33,7 @@ describe('findConfig', () => {
 
 describe('loadConfig', () => {
   /** A minimal valid config, as the object a config file default-exports. */
-  const MINIMAL = { entry: 'doc.tsx', outDir: 'outputs' }
+  const MINIMAL = { entry: 'doc.tsx', outDir: 'outputs' } satisfies Config
 
   /**
    * Writes a config to a real directory and loads it.
@@ -48,7 +48,7 @@ describe('loadConfig', () => {
     return { dir, config: await loadConfig(path) }
   }
 
-  const buildConfigModule = (config: unknown) =>
+  const buildConfigModule = (config: Config) =>
     `export default ${JSON.stringify(config)}`
 
   it('resolves the paths against the config file, not the process', async () => {
@@ -95,18 +95,21 @@ describe('loadConfig', () => {
 
   it('names the offending key when a value is the wrong type', async () => {
     await expect(
+      // @ts-expect-error -- a string port, which only the runtime check can catch in a JS config
       loadFrom(buildConfigModule({ ...MINIMAL, port: 'four thousand' }))
     ).rejects.toThrow(/port: /)
   })
 
   it('rejects a page size that is neither a name nor dimensions', async () => {
     await expect(
+      // @ts-expect-error -- a size that is not one of the named sheets
       loadFrom(buildConfigModule({ ...MINIMAL, pageSize: 'a6' }))
     ).rejects.toThrow('or { width, height } as CSS lengths')
   })
 
   it('rejects a margin naming some sides but not all four', async () => {
     await expect(
+      // @ts-expect-error -- two sides where the object form needs all four
       loadFrom(buildConfigModule({ ...MINIMAL, margin: { top: 1, bottom: 1 } }))
     ).rejects.toThrow('{ top, right, bottom, left }')
   })

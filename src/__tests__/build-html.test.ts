@@ -2,8 +2,7 @@ import { mkdir, mkdtemp, readdir, rm, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 
 import { buildStylesheet, copyAssets } from '../build-html.tsx'
-import type { ResolvedConfig } from '../config.ts'
-import { PAGE_SIZES } from '../config.ts'
+import { PAGE_SIZES, type ResolvedConfig } from '../config.ts'
 
 /** The document a build is pointed at, and the directory it writes into. */
 const MOCK_FILE_NAME = 'doc'
@@ -144,10 +143,14 @@ describe('buildStylesheet', () => {
       buildResolvedConfig(root, { page: PAGE_SIZES.a4 })
     )
 
-    expect(css).toContain('--page-width: 210mm')
-    expect(css).toContain('--page-height: 297mm')
-    // Chromium rejects `var()` in `size`, so the numbers appear twice on purpose.
-    expect(css).toContain('@page {\n  size: 210mm 297mm;')
+    for (const declaration of [
+      '--page-width: 210mm',
+      '--page-height: 297mm',
+      // Chromium rejects `var()` in `size`, so the numbers appear twice on purpose.
+      '@page {\n  size: 210mm 297mm;',
+    ]) {
+      expect(css, declaration).toContain(declaration)
+    }
   })
 
   it('emits one number as all four sides', async () => {
