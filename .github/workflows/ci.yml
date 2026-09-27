@@ -44,7 +44,7 @@ jobs:
         run: pnpm run test:unit
 
       # No browser needed, so this fails fast on anything wrong with the
-      # renderer, the config or the stylesheet.
+      # renderer, the config, or the stylesheet.
       - name: Render the example without a browser
         run: pnpm run example:html
 

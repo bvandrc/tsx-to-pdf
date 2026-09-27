@@ -34,7 +34,7 @@ export const copyAssets = async (
 /** Copied beside the compiled output, so this resolves inside `dist/` too. */
 const PAGE_CSS = join(import.meta.dirname, 'page.css')
 
-/** What Word, Google Docs and Pages all give a document. */
+/** What Word, Google Docs, and Pages all give a document. */
 const DEFAULT_MARGIN = 1
 
 /** CSS padding order, which is also the order the sides are emitted in. */
