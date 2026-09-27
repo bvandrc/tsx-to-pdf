@@ -4,6 +4,9 @@ Builds on the language-level rules in `./typescript.md` — follow those too.
 
 - **File naming**: PascalCase for component primitives (`DropdownMenu.tsx`), camelCase for hooks (`useSession.tsx`, `useSettings.ts`); use `.tsx` when the file exports JSX.
 - **Components**: Arrow-function `const` with a named export. Default exports only where something requires one (e.g. page components for lazy-loaded routes).
+- **React namespace**
+  - **Types**: Reach them off the namespace — `React.ReactNode`, `React.ComponentProps<'div'>` — never by importing the name. A type reference to the `React` global needs no import where a value reference does, so there is no import line to keep in step as a file's types change.
+  - **Values**: Import these by name (`import { useId, forwardRef } from 'react'`), never off the namespace, so a bundler can drop what a file doesn't use.
 - **Component props**
   - **DOM prop types**: When a component wraps a DOM element and passes props through to it, compose from that element's prop types — extend them, or `Pick`/`Omit` the parts you need — rather than re-declaring the fields like `className`, `type`, `href`, etc.
   - **Component prop types**: Same goes for when a component passes props through to another component, whether ours or an external package's — export the inner component's props as `<ComponentName>Props` and compose from them with `Pick`/`Omit` rather than re-declaring the fields.
