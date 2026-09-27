@@ -57,9 +57,10 @@ export type Config = {
   /** A module default-exporting the component, and exporting a `title`. */
   entry: string
   /**
-   * The document's stylesheet, imported into the page's own CSS. Not required —
-   * Tailwind's utilities and the sheet itself are there either way, so a
-   * document that only uses classes needs no stylesheet of its own.
+   * The document's stylesheet, imported into the page's own CSS.
+   *
+   * Not required — Tailwind's utilities and the sheet itself are there either
+   * way, so a document that only uses classes needs no stylesheet of its own.
    */
   styles?: string
   /** Directory copied in beside the rendered page. */
@@ -78,8 +79,9 @@ export type Config = {
   pageSize?: PageSize | PageDimensions
   /**
    * White space around the document, in inches — one number for all four sides,
-   * or an object giving every side. Applied as the page's padding, so a
-   * full-width banner still sits inside it.
+   * or an object giving every side.
+   *
+   * Applied as the page's padding, so a full-width banner still sits inside it.
    * @default 1
    */
   margin?: Margin
