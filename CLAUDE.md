@@ -21,6 +21,7 @@ Synced from https://github.com/bvandrc/bvandrc-conventions — follow all of the
 
 @conventions/typescript.md — language-level TypeScript/JavaScript rules
 @conventions/react.md — component and JSX rules; they apply to the Preact renderer even though nothing here runs in a browser
+@conventions/ts-testing-all.md — testing rules shared by every TypeScript suite: test IDs, naming, assertions
 @conventions/ts-unit-testing.md — TypeScript unit test layout, naming, fixtures, and assertions
 @conventions/all.md — practice for every repo: branches, formatting, markdown, PR reviews
 
