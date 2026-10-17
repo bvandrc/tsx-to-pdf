@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented in this file.
 
+## 1.5.1 — 2026-10-17
+
+### Fixed
+
+- The dev server now re-renders after edits to components the document imports, not only the document file itself.
+
 ## 1.5.0 — 2026-08-21
 
 ### Added

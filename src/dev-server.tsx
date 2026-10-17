@@ -3,9 +3,11 @@ import { readdir, readFile, stat } from 'node:fs/promises'
 import { createServer, type ServerResponse } from 'node:http'
 import { dirname, extname, join, sep } from 'node:path'
 import { debounce } from 'es-toolkit'
+import { type NamespacedUnregister, register } from 'tsx/esm/api'
 
 import { buildPage, buildStylesheet } from './build-html.tsx'
 import type { ResolvedConfig } from './config.ts'
+import { jsxTsconfig } from './merge-tsconfig.ts'
 
 /** Shared by the route and the client that subscribes to it. */
 const LIVERELOAD = '/livereload'
@@ -40,7 +42,8 @@ export const serve = (config: ResolvedConfig): void => {
   const clients = new Set<ServerResponse>()
 
   /**
-   * Newest mtime beside the document, which is what `loadContent` is keyed on.
+   * Newest mtime beside the document, which is what `importDocument` is keyed
+   * on.
    *
    * Keying on the files rather than on a watcher event means a missed
    * filesystem notification still can't serve a stale render.
@@ -52,6 +55,34 @@ export const serve = (config: ResolvedConfig): void => {
     )
 
     return Math.max(...stats.map(({ mtimeMs }) => mtimeMs))
+  }
+
+  // Started once rather than per request, since it writes the file `tsx` reads.
+  const tsconfig = jsxTsconfig(config.root)
+
+  let scope: { revision: number; tsx: NamespacedUnregister } | undefined
+
+  /** Imports the document afresh whenever a file beside it has changed. */
+  const importDocument = async (url: string): Promise<unknown> => {
+    const revision = await contentRevision()
+
+    // A query on the entry's URL would only refresh the entry: the components
+    // it imports resolve to their plain URLs, which Node's module cache never
+    // evicts. A `tsx` namespace is carried down to every import beneath it, so
+    // each revision gets a module graph of its own. Swapped per revision rather
+    // than per request, so reloading an unchanged document adds no new hook.
+    if (scope?.revision !== revision) {
+      await scope?.tsx.unregister()
+      scope = {
+        revision,
+        tsx: register({
+          namespace: String(revision),
+          tsconfig: await tsconfig,
+        }),
+      }
+    }
+
+    return scope.tsx.import(url, import.meta.url)
   }
 
   const server = createServer((req, res) => {
@@ -115,17 +146,15 @@ export const serve = (config: ResolvedConfig): void => {
       return
     }
 
-    contentRevision()
-      .then((revision) =>
-        buildPage({
-          config,
-          cacheKey: revision,
-          stylesheet,
-          // Shows the sheet against a backdrop, marks where it ends, and
-          // reloads on rebuild.
-          head: (
-            <>
-              <style>{`
+    buildPage({
+      config,
+      importDocument,
+      stylesheet,
+      // Shows the sheet against a backdrop, marks where it ends, and
+      // reloads on rebuild.
+      head: (
+        <>
+          <style>{`
                 body { background: #525659; padding: 24px 0; }
                 .page { margin: 0 auto; box-shadow: 0 2px 12px rgb(0 0 0 / 0.5); position: relative; }
                 /*
@@ -150,11 +179,10 @@ export const serve = (config: ResolvedConfig): void => {
                   );
                 }
               `}</style>
-              <script>{`new EventSource('${LIVERELOAD}').onmessage = () => location.reload()`}</script>
-            </>
-          ),
-        })
-      )
+          <script>{`new EventSource('${LIVERELOAD}').onmessage = () => location.reload()`}</script>
+        </>
+      ),
+    })
       .then(({ html }) => {
         res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' })
         res.end(html)

@@ -106,22 +106,22 @@ export const buildPage = async ({
   config,
   head,
   stylesheet,
-  cacheKey,
+  importDocument = (url) => import(url),
 }: {
   config: ResolvedConfig
   /** Extra `<head>` content. (The dev server passes its preview styling here.) */
   head?: ComponentChildren
   /** Where the page should link its stylesheet. */
   stylesheet: string
-  /** Busts the module cache, so the dev server sees an edited document. */
-  cacheKey?: string | number
+  /** Loads the document's module. The dev server passes one that sees edits. */
+  importDocument?: (url: string) => Promise<unknown>
 }): Promise<{ html: string; css: string }> => {
   const css = await buildStylesheet(config)
 
   // A `.tsx` document needs `tsx` registered before this import. The CLI does
   // that; callers using the API directly have to do it themselves.
-  const content = (await import(
-    `${pathToFileURL(config.entryPath).href}${cacheKey ? `?v=${cacheKey}` : ''}`
+  const content = (await importDocument(
+    pathToFileURL(config.entryPath).href
   )) as Partial<ContentModule>
 
   if (
