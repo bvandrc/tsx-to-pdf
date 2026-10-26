@@ -58,9 +58,14 @@
     "node": ">=22.18"
   },
   "packageManager": "pnpm@11.9.0",
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
   "scripts": {
     "__c0": "====================[ Package ]==================================",
     "prepare": "pnpm build",
+    "prepublishOnly": "pnpm run check && pnpm test --run && pnpm run build",
     "build": "tsdown",
     "__c1": "====================[ The example document ]=====================",
     "example": "node bin/tsx-to-pdf.mjs build --md --png --jpg",
