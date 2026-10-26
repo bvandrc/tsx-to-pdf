@@ -1,6 +1,6 @@
 {
   "name": "tsx-to-pdf",
-  "version": "1.5.1",
+  "version": "1.6.0",
   "description": "Generate a page-exact PDF from a document written in TSX and Tailwind, with optional Markdown, PNG, and JPG output. Live preview at the exact page size, diffable HTML alongside, and a build that can be configured to fail when the layout overflows.",
   "keywords": [
     "pdf",
@@ -84,6 +84,7 @@
     "@tailwindcss/node": "^4",
     "@tailwindcss/oxide": "^4",
     "node-html-markdown": "^2",
+    "node-html-parser": "^6",
     "pdf-lib": "^1",
     "preact-render-to-string": "^6",
     "prettier": "^3",
