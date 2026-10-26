@@ -27,6 +27,10 @@ Synced from https://github.com/bvandrc/bvandrc-conventions — follow all of the
 
 `conventions/` is overwritten on every sync. Edit a rule upstream, never here.
 
+## Releasing
+
+Bump `version` in `package.json`, merge, then publish a GitHub release tagged `v<version>`. `.github/workflows/release.yml` checks the tag matches and runs `pnpm stage publish` with provenance, which leaves the version staged: approve it on npmjs.com with 2FA to publish it. A release for a version npm already has skips the publish, so a tag can be backfilled for a version published by hand.
+
 ## Repo conventions
 
 - **Package manager**: pnpm. `npm install` writes a competing lockfile CI ignores.
