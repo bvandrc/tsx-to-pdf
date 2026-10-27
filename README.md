@@ -15,10 +15,10 @@ npx playwright install chromium
 
 ### Peer dependencies
 
-| package | required | why it is yours |
-| --- | --- | --- |
-| `preact` | yes | The JSX runtime your document compiles against, and where its types come from (`ComponentChildren` and friends). A lightweight alternative to React, which suits a page that is static — no hooks, no providers, nothing shipped to a browser. |
-| `playwright` | no | PDF, PNG, and JPG output — omit it if you only want the HTML and CSS outputs (via `--no-pdf`). Can't be a dep of ours anyways — CLI has to be on *your* `node_modules/.bin`; it cannot run from a nested copy |
+| package      | required | why it is yours                                                                                                                                                                                                                                |
+| ------------ | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `preact`     | yes      | The JSX runtime your document compiles against, and where its types come from (`ComponentChildren` and friends). A lightweight alternative to React, which suits a page that is static — no hooks, no providers, nothing shipped to a browser. |
+| `playwright` | no       | PDF, PNG, and JPG output — omit it if you only want the HTML and CSS outputs (via `--no-pdf`). Can't be a dep of ours anyways — CLI has to be on _your_ `node_modules/.bin`; it cannot run from a nested copy                                  |
 
 ## Getting started
 
@@ -92,20 +92,20 @@ tsx-to-pdf build    # writes outputs/html/, outputs/{name}.pdf (and .md/.png/.jp
 
 ## Config
 
-| key | default | what it does |
-| --- | --- | --- |
-| `entry` | required | `.tsx` module that default-exports the component and exports `title` |
-| `outDir` | required | Where the rendered files land |
-| `styles` | — | The document's stylesheet. Tailwind and the sheet are there without one |
-| `assets` | — | Directory copied in beside the rendered page |
-| `name` | `entry`'s basename | Their basename: `<name>.pdf`, `<name>.html`, `<name>.css` |
-| `pageSize` | `'letter'` | `letter`, `legal`, `tabloid`, `a3`, `a4`, `a5`, or `{ width, height }` as CSS lengths |
-| `margin` | `1` | White space around the document, **in inches**: one number, or `{ top, right, bottom, left }` with every side given |
-| `maxPages` | unlimited | Building past this many pages fails. Set to `1` for a one-pager |
-| `checkPdfFontTypes` | `true` | Fail when a font embeds as Type3, which extractors read poorly |
-| `author` | — | `/Author` in the PDF: the person who wrote the document. This is where your own name goes |
-| `setDate` | `true` | Stamp `/CreationDate` and `/ModDate` with the build time, a given `Date`, or `false` to omit them for a reproducible build. A rebuild that renders identical HTML and CSS skips printing altogether — no browser launch — and leaves the existing PDF as it is |
-| `port` | `4000` | For `tsx-to-pdf dev` |
+| key                 | default            | what it does                                                                                                                                                                                                                                                   |
+| ------------------- | ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `entry`             | required           | `.tsx` module that default-exports the component and exports `title`                                                                                                                                                                                           |
+| `outDir`            | required           | Where the rendered files land                                                                                                                                                                                                                                  |
+| `styles`            | —                  | The document's stylesheet. Tailwind and the sheet are there without one                                                                                                                                                                                        |
+| `assets`            | —                  | Directory copied in beside the rendered page                                                                                                                                                                                                                   |
+| `name`              | `entry`'s basename | Their basename: `<name>.pdf`, `<name>.html`, `<name>.css`                                                                                                                                                                                                      |
+| `pageSize`          | `'letter'`         | `letter`, `legal`, `tabloid`, `a3`, `a4`, `a5`, or `{ width, height }` as CSS lengths                                                                                                                                                                          |
+| `margin`            | `1`                | White space around the document, **in inches**: one number, or `{ top, right, bottom, left }` with every side given                                                                                                                                            |
+| `maxPages`          | unlimited          | Building past this many pages fails. Set to `1` for a one-pager                                                                                                                                                                                                |
+| `checkPdfFontTypes` | `true`             | Fail when a font embeds as Type3, which extractors read poorly                                                                                                                                                                                                 |
+| `author`            | —                  | `/Author` in the PDF: the person who wrote the document. This is where your own name goes                                                                                                                                                                      |
+| `setDate`           | `true`             | Stamp `/CreationDate` and `/ModDate` with the build time, a given `Date`, or `false` to omit them for a reproducible build. A rebuild that renders identical HTML and CSS skips printing altogether — no browser launch — and leaves the existing PDF as it is |
+| `port`              | `4000`             | For `tsx-to-pdf dev`                                                                                                                                                                                                                                           |
 
 ```
 tsx-to-pdf build [--no-pdf] [--md] [--png] [--jpg] [--config <path>]
@@ -130,7 +130,7 @@ That makes it useful for the things that read text and ignore layout — a diff 
 
 No. **You are writing JSX — `.tsx` files — which is not React-specific.** It is a syntax, consumed by React, Preact, Solid, Qwik, and other JSX runtimes alike; which one compiles it is decided by `jsxImportSource`, and here that is settled for you. If you know React, you know how to write these documents.
 
-Preact is the *serializer*: it turns your elements into an HTML string at build time. There are no hooks, no state, no hydration, and nothing ships to a browser — which is also why the runtime is an implementation detail rather than something you build against.
+Preact is the _serializer_: it turns your elements into an HTML string at build time. There are no hooks, no state, no hydration, and nothing ships to a browser — which is also why the runtime is an implementation detail rather than something you build against.
 
 ## Using React types
 
@@ -152,14 +152,14 @@ const Section = ({ children }: { children: ReactNode }) => (
 Two things to know:
 
 - **Use `className`, not `class`.** React's types reject `class`; Preact accepts both, so `className` is the spelling that satisfies React's typechecker and still emits `class="…"` in the HTML.
-- **Don't import React *values*** — a component from a React package produces React elements, which this cannot render. Type-only imports are erased before runtime and are always fine. If you need a React component library, alias it with [`preact/compat`](https://preactjs.com/guide/v10/switching-to-preact).
+- **Don't import React _values_** — a component from a React package produces React elements, which this cannot render. Type-only imports are erased before runtime and are always fine. If you need a React component library, alias it with [`preact/compat`](https://preactjs.com/guide/v10/switching-to-preact).
 
 ## Converting a document you already have
 
 You almost certainly don't want to retype an existing document as JSX. Hand it to an LLM — [Claude](https://claude.ai) works well for this — and have it do the transcription.
 
 1. **Scaffold the repo first**, so there is somewhere for the document to land. Copy [`example/`](./example) — a config, a `.tsx` document, a stylesheet, and an assets directory — and check that `tsx-to-pdf build` runs before you change anything. Starting from a build that works means any later breakage is something you just did.
-2. **Export your existing doc as HTML, if you can.** Google Docs does this under File → Download → *Web page (.html, zipped)*, and it is a much better input than a PDF: the markup carries the headings, fonts, sizes, and margins, so the model reads your layout rather than inferring it. Upload the whole zip. A PDF or a screenshot works, but every measurement is then a guess and the conversion is less accurate.
+2. **Export your existing doc as HTML, if you can.** Google Docs does this under File → Download → _Web page (.html, zipped)_, and it is a much better input than a PDF: the markup carries the headings, fonts, sizes, and margins, so the model reads your layout rather than inferring it. Upload the whole zip. A PDF or a screenshot works, but every measurement is then a guess and the conversion is less accurate.
 3. **Upload your existing document** (the zipped HTML, PDF, image, etc.) and **ask it to recreate it** as accurately as possible, editing `content/*.tsx` and `content/styles.css` and leaving the config alone.
 4. **Iterate against the preview.** Run `tsx-to-pdf dev` and put it beside the original. Differences in spacing and type size are the usual ones, and they are quick to describe: "the header block is too tight", "the dates should be right-aligned with the bullets".
 
