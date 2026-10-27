@@ -40,3 +40,16 @@ npm i
 `)
   })
 })
+
+describe('buildMarkdown with NBSP', () => {
+  it('keeps a run of NBSP as entities, but not in code', async () => {
+    const markdown = await buildMarkdown(
+      '<body><h2>A\u00A0\u00A0\u00A0B</h2><p><code>x\u00A0y</code></p></body>'
+    )
+
+    // Collapsed to one plain space, the heading would lose its spacing. A code
+    // span would show the entity as typed, so it is left to the converter,
+    // which gives a plain space there.
+    expect(markdown).toBe('## A&nbsp;&nbsp;&nbsp;B\n\n`x y`\n')
+  })
+})
