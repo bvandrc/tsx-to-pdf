@@ -84,6 +84,7 @@
     "@tailwindcss/node": "^4",
     "@tailwindcss/oxide": "^4",
     "node-html-markdown": "^2",
+    "node-html-parser": "^6",
     "pdf-lib": "^1",
     "preact-render-to-string": "^6",
     "prettier": "^3",
