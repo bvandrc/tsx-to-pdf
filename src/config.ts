@@ -123,7 +123,7 @@ export type Config = {
   /**
    * Port for `tsx-to-pdf dev`.
    *
-   * @cli `--port` sets it
+   * @cli `--port`
    * @default 4000
    */
   port?: number
