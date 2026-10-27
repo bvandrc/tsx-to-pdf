@@ -213,6 +213,12 @@ importers:
       "@tailwindcss/oxide":
         specifier: ^4
         version: 4.3.3
+      get-tsconfig:
+        specifier: ^4
+        version: 4.14.3
+      jiti:
+        specifier: ^2
+        version: 2.7.0
       node-html-markdown:
         specifier: ^2
         version: 2.0.0
@@ -231,9 +237,6 @@ importers:
       tailwindcss:
         specifier: ^4
         version: 4.3.3
-      tsx:
-        specifier: ^4
-        version: 4.23.15
       type-fest:
         specifier: ">=3"
         version: 5.10.0
@@ -1755,6 +1758,12 @@ packages:
     engines: { node: ^8.16.0 || ^10.6.0 || >=11.0.0 }
     os: [darwin]
 
+  get-tsconfig@4.14.3:
+    resolution:
+      {
+        integrity: sha512-++QEw4DIY7WGoukz+/+A/8dGYPT9l9yIadnmSgZ8Rjr3YVSVDipQSO9CdnJo9ePqFqUUqh+wk9uIaoiAwsiPkA==,
+      }
+
   get-tsconfig@5.0.0-beta.5:
     resolution:
       {
@@ -3146,6 +3155,7 @@ snapshots:
       "@esbuild/win32-arm64": 0.28.2
       "@esbuild/win32-ia32": 0.28.2
       "@esbuild/win32-x64": 0.28.2
+    optional: true
 
   estree-walker@3.0.3:
     dependencies:
@@ -3159,6 +3169,10 @@ snapshots:
 
   fsevents@2.3.3:
     optional: true
+
+  get-tsconfig@4.14.3:
+    dependencies:
+      resolve-pkg-maps: 1.0.0
 
   get-tsconfig@5.0.0-beta.5:
     dependencies:
@@ -3465,6 +3479,7 @@ snapshots:
       esbuild: 0.28.2
     optionalDependencies:
       fsevents: 2.3.3
+    optional: true
 
   type-fest@5.10.0:
     dependencies:

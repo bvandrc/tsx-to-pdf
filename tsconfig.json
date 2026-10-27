@@ -5,8 +5,8 @@
 // Added on top: Node types, which a document has no use for, and the stricter
 // lint-ish flags, which are ours to hold ourselves to rather than to impose.
 //
-// `include` covers the whole repo because `tsx` picks the nearest tsconfig whose
-// `include` matches the file it is transforming. Emitting is tsconfig.build.json.
+// `include` covers the whole repo, so `pnpm check` typechecks the example and the
+// tests along with `src/`. tsdown does the emitting.
 {
   "extends": "./tsconfig.consumer.json",
   "compilerOptions": {

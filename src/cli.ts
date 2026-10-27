@@ -1,10 +1,8 @@
-import { dirname } from 'node:path'
 import { parseArgs } from 'node:util'
 
 import { build } from './build.ts'
 import { findConfig, loadConfig } from './config.ts'
 import { serve } from './dev-server.tsx'
-import { jsxTsconfig } from './merge-tsconfig.ts'
 
 const USAGE = `tsx-to-pdf <command>
 
@@ -43,21 +41,7 @@ const main = async (args: string[]): Promise<void> => {
     return
   }
 
-  // Found before registering, since locating it only touches the filesystem
-  // while loading it may need TypeScript.
-  const configPath = findConfig(values.config)
-
-  // Lets the config and the document be TypeScript without the project having
-  // to compile them first. Node strips type annotations natively but cannot
-  // parse JSX — `<div/>` is a syntax error to it — so the document needs a real
-  // transform. This is only ever applied to the project's own files; ours ship
-  // compiled. The JSX settings are pinned on top of whatever it already has, so
-  // a project needs no tsconfig, and nothing in an existing one has to be right.
-  // Imported here rather than at the top, so the help text loads none of it.
-  const { register } = await import('tsx/esm/api')
-  register({ tsconfig: await jsxTsconfig(dirname(configPath)) })
-
-  const config = await loadConfig(configPath)
+  const config = await loadConfig(findConfig(values.config))
 
   switch (command) {
     case 'build': {

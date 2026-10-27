@@ -1,6 +1,5 @@
 import { cp, readdir, readFile, rm } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
-import { pathToFileURL } from 'node:url'
 import { compile as twCompile } from '@tailwindcss/node'
 import { Scanner as twScanner } from '@tailwindcss/oxide'
 import { noop } from 'es-toolkit'
@@ -9,6 +8,7 @@ import { render as preactRenderJsxToString } from 'preact-render-to-string/jsx'
 import { format as prettify } from 'prettier'
 
 import type { Margin, ResolvedConfig } from './config.ts'
+import { createImporter } from './load-module.ts'
 
 /** Puts the assets beside a rendered page, leaving only them and `keep`. */
 export const copyAssets = async (
@@ -106,7 +106,7 @@ export const buildPage = async ({
   config,
   head,
   stylesheet,
-  importDocument = (url) => import(url),
+  importDocument = createImporter(config.root),
 }: {
   config: ResolvedConfig
   /** Extra `<head>` content. (The dev server passes its preview styling here.) */
@@ -114,14 +114,12 @@ export const buildPage = async ({
   /** Where the page should link its stylesheet. */
   stylesheet: string
   /** Loads the document's module. The dev server passes one that sees edits. */
-  importDocument?: (url: string) => Promise<unknown>
+  importDocument?: (path: string) => Promise<unknown>
 }): Promise<{ html: string; css: string }> => {
   const css = await buildStylesheet(config)
 
-  // A `.tsx` document needs `tsx` registered before this import. The CLI does
-  // that; callers using the API directly have to do it themselves.
   const content = (await importDocument(
-    pathToFileURL(config.entryPath).href
+    config.entryPath
   )) as Partial<ContentModule>
 
   if (
@@ -163,16 +161,15 @@ export const buildPage = async ({
       }
     )
   } catch (error) {
-    // The one failure a correct document still hits: JSX compiled for React,
-    // because the project's tsconfig did not reach it.
+    // The project's own files always compile for Preact, so JSX compiled for
+    // React can only come from a package the document imports, built for it.
     if (
       error instanceof ReferenceError &&
       error.message.includes('React is not defined')
     ) {
       throw new Error(
-        'The document was compiled for React. Its JSX needs `"jsx": ' +
-          '"react-jsx"` and `"jsxImportSource": "preact"`, from a tsconfig ' +
-          'whose `include` covers the document — extend "tsx-to-pdf/tsconfig".',
+        'The document renders JSX compiled for React, from a package it ' +
+          'imports. Only React types can be used here, not React components.',
         { cause: error }
       )
     }
