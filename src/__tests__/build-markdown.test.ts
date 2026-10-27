@@ -53,3 +53,59 @@ describe('buildMarkdown with NBSP', () => {
     expect(markdown).toBe('## A&nbsp;&nbsp;&nbsp;B\n\n`x y`\n')
   })
 })
+
+describe('buildMarkdown with data-keep-html', () => {
+  it('keeps a marked element whole, formatted, without the marker', async () => {
+    const markdown = await buildMarkdown(
+      '<body><h2>Skills</h2><table data-keep-html="true"><tr><td colspan="2" align="center"><img src="a.svg?x=1&amp;y=2" width="40" data-keep-html />\u00A0<em>A</em></td></tr></table><p>After</p></body>'
+    )
+
+    // The nested marker goes too: it means nothing inside a kept element.
+    expect(markdown).toBe(`## Skills
+
+<table>
+  <tr>
+    <td colspan="2" align="center"><img src="a.svg?x=1&amp;y=2" width="40" />&nbsp;<em>A</em></td>
+  </tr>
+</table>
+
+After
+`)
+  })
+
+  it('keeps a block element on lines of its own, and an inline one inline', async () => {
+    const markdown = await buildMarkdown(
+      '<body><p data-keep-html>One</p><p data-keep-html>Two</p><p>Text <img src="a.svg" width="9" data-keep-html /> more</p></body>'
+    )
+
+    // Two blocks on one line would read as a single HTML block.
+    expect(markdown).toBe(`<p>One</p>
+
+<p>Two</p>
+
+Text <img src="a.svg" width="9" /> more
+`)
+  })
+
+  it('indents a kept block to the list item it sits in', async () => {
+    const markdown = await buildMarkdown(
+      '<body><ul><li><table data-keep-html><tr><td>A</td></tr></table></li></ul></body>'
+    )
+
+    expect(markdown).toBe(`- <table>
+    <tr>
+      <td>A</td>
+    </tr>
+  </table>
+`)
+  })
+
+  it('converts an element marked `"false"`, without the marker', async () => {
+    // How Preact writes `data-keep-html={false}` out.
+    const markdown = await buildMarkdown(
+      '<body><p data-keep-html="false"><em>A</em></p></body>'
+    )
+
+    expect(markdown).toBe('_A_\n')
+  })
+})

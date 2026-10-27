@@ -122,6 +122,25 @@ tsx-to-pdf dev   [--port <n>] [--config <path>]
 
 That makes it useful for the things that read text and ignore layout — a diff that shows what changed in the wording, an ATS or an LLM being handed a resume, a `grep` — and not for anything that has to look right. The PDF and the preview are the same render; the Markdown is a derivative of it.
 
+### Keeping HTML in the Markdown
+
+Some Markdown is read somewhere that renders HTML too — a GitHub README, most notably, which honours a sanitised subset of it (`align`, `width`, `colspan`, and the like) and is written as Markdown and HTML mixed. For that, mark the elements Markdown can't express with `data-keep-html`, and they come out whole, as formatted HTML — a table with spans, a sized image, a centered paragraph. A block element (`table`, `p`, `div`, …) gets lines of its own; an inline one stays in its paragraph.
+
+```tsx
+<h2>Projects</h2>
+<table data-keep-html>…</table>
+```
+
+```md
+## Projects
+
+<table>
+  …
+</table>
+```
+
+The attribute itself is removed from the Markdown; the HTML and PDF are unaffected. `data-keep-html={false}` converts the element as usual, so a condition can decide.
+
 ## Image output
 
 `--png`/`--jpg` — or `{ png: true, jpg: true }` to `build()` — write `<name>.png`/`<name>.jpg` beside the rest, a screenshot of the `.page` element from the same render the PDF is generated from, so it is pixel-for-pixel the page, not an approximation. A multi-page document — anything past `maxPages: 1` — comes out as one tall image, the same way `--md` writes one file regardless of page count. It needs Playwright, same as `pdf` — no separate install.

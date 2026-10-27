@@ -83,6 +83,7 @@
   "dependencies": {
     "@tailwindcss/node": "^4",
     "@tailwindcss/oxide": "^4",
+    "micromark-util-html-tag-name": "^2",
     "node-html-markdown": "^2",
     "node-html-parser": "^9",
     "pdf-lib": "^1",
