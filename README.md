@@ -122,8 +122,6 @@ tsx-to-pdf dev   [--port <n>] [--config <path>]
 
 That makes it useful for the things that read text and ignore layout — a diff that shows what changed in the wording, an ATS or an LLM being handed a resume, a `grep` — and not for anything that has to look right. The PDF and the preview are the same render; the Markdown is a derivative of it.
 
-Runs of non-breaking spaces come out as `&nbsp;` entities rather than collapsing to one space, so spacing written with `&nbsp;` survives in the text.
-
 ## Image output
 
 `--png`/`--jpg` — or `{ png: true, jpg: true }` to `build()` — write `<name>.png`/`<name>.jpg` beside the rest, a screenshot of the `.page` element from the same render the PDF is generated from, so it is pixel-for-pixel the page, not an approximation. A multi-page document — anything past `maxPages: 1` — comes out as one tall image, the same way `--md` writes one file regardless of page count. It needs Playwright, same as `pdf` — no separate install.
