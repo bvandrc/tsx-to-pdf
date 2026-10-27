@@ -60,11 +60,13 @@ const main = async (args: string[]): Promise<void> => {
 
   switch (command) {
     case 'build': {
-      const written = await build(config, {
-        pdf: !values['no-pdf'],
-        markdown: values.md,
-        png: values.png,
-        jpg: values.jpg,
+      const written = await build({
+        ...config,
+        // A flag left off leaves the config's choice as it is.
+        ...(values['no-pdf'] && { pdf: false }),
+        ...(values.md && { markdown: true }),
+        ...(values.png && { png: true }),
+        ...(values.jpg && { jpg: true }),
       })
       console.info(`Wrote ${written.join(', ')}`)
       return

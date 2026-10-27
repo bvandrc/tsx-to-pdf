@@ -3,7 +3,13 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { vol } from 'memfs'
 
-import { type Config, findConfig, loadConfig, PAGE_SIZES } from '../config.ts'
+import { type Config, findConfig, loadConfig } from '../config.ts'
+import {
+  DEFAULTS,
+  ENTRY_FILE,
+  MOCK_FILE_NAME,
+  OUTPUTS_DIR,
+} from './fixtures.ts'
 
 vi.mock('node:fs', async () => {
   const { fs } = await import('memfs')
@@ -33,7 +39,7 @@ describe('findConfig', () => {
 
 describe('loadConfig', () => {
   /** A minimal valid config, as the object a config file default-exports. */
-  const MINIMAL = { entry: 'doc.tsx', outDir: 'outputs' } satisfies Config
+  const MINIMAL = { entry: ENTRY_FILE, outDir: OUTPUTS_DIR } satisfies Config
 
   /**
    * Writes a config to a real directory and loads it.
@@ -58,8 +64,8 @@ describe('loadConfig', () => {
 
     expect(config).toMatchObject({
       root: dir,
-      entryPath: join(dir, 'doc.tsx'),
-      outDir: join(dir, 'outputs'),
+      entryPath: join(dir, ENTRY_FILE),
+      outDir: join(dir, OUTPUTS_DIR),
       assetsDir: join(dir, '../shared/assets'),
     })
   })
@@ -69,12 +75,8 @@ describe('loadConfig', () => {
 
     expect(config).toMatchObject({
       // The entry's basename, so `doc.tsx` writes `doc.pdf`.
-      name: 'doc',
-      page: PAGE_SIZES.letter,
-      margin: 1,
-      checkPdfFontTypes: true,
-      setDate: true,
-      port: 4000,
+      name: MOCK_FILE_NAME,
+      ...DEFAULTS,
     })
   })
 
@@ -87,6 +89,20 @@ describe('loadConfig', () => {
     )
 
     expect(config.page).toEqual({ width: '90mm', height: '50mm' })
+  })
+
+  it('keeps the outputs for the build to default from', async () => {
+    const OUTPUTS = {
+      pdf: false,
+      markdown: true,
+      png: true,
+      jpg: true,
+    } satisfies Pick<Config, 'pdf' | 'markdown' | 'png' | 'jpg'>
+    const { config } = await loadFrom(
+      buildConfigModule({ ...MINIMAL, ...OUTPUTS })
+    )
+
+    expect(config).toMatchObject(OUTPUTS)
   })
 
   it('rejects a config file with no default export', async () => {

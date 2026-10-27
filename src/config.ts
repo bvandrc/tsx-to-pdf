@@ -121,6 +121,48 @@ export type Config = {
    */
   setDate?: boolean | Date
   /**
+   * Generate `<name>.pdf`.
+   *
+   * Needs Playwright, and Chromium installed through it (`playwright install
+   * chromium`).
+   *
+   * @cli `--no-pdf`
+   * @default true
+   */
+  pdf?: boolean
+  /**
+   * Also write the document's text as `<name>.md`.
+   *
+   * Content only: layout set by classes has no Markdown equivalent, so it is
+   * dropped.
+   *
+   * @cli `--md`
+   * @default false
+   */
+  markdown?: boolean
+  /**
+   * Also write `<name>.png`, a full-page screenshot of the same render the PDF
+   * is generated from.
+   *
+   * Needs Playwright and its Chromium, like {@link Config.pdf}, and shares the
+   * one browser with it when both are on.
+   *
+   * @cli `--png`
+   * @default false
+   */
+  png?: boolean
+  /**
+   * Also write `<name>.jpg`, a full-page screenshot of the same render the PDF
+   * is generated from.
+   *
+   * Needs Playwright and its Chromium, like {@link Config.pdf}, and shares the
+   * one browser with it when both are on.
+   *
+   * @cli `--jpg`
+   * @default false
+   */
+  jpg?: boolean
+  /**
    * Port for `tsx-to-pdf dev`.
    *
    * @cli `--port`
@@ -135,6 +177,10 @@ type DefaultedKey =
   | 'margin'
   | 'checkPdfFontTypes'
   | 'setDate'
+  | 'pdf'
+  | 'markdown'
+  | 'png'
+  | 'jpg'
   | 'port'
 
 /** Paths resolved, and every documented default filled in. */
@@ -243,6 +289,10 @@ const CONFIG_SCHEMA: GenericSchema<
     ),
     true
   ),
+  pdf: optional(boolean(), true),
+  markdown: optional(boolean(), false),
+  png: optional(boolean(), false),
+  jpg: optional(boolean(), false),
   port: optional(pipe(number(), integer()), 4000),
 })
 

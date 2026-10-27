@@ -2,15 +2,17 @@ import { mkdir, mkdtemp, readdir, rm, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 
 import { buildStylesheet, copyAssets } from '../build-html.tsx'
-import { PAGE_SIZES, type ResolvedConfig } from '../config.ts'
-
-/** The document a build is pointed at, and the directory it writes into. */
-const MOCK_FILE_NAME = 'doc'
-const OUTPUTS = 'outputs'
+import { PAGE_SIZES } from '../config.ts'
+import {
+  buildResolvedConfig,
+  ENTRY_FILE,
+  MOCK_FILE_NAME,
+  OUTPUTS_DIR,
+} from './fixtures.ts'
 
 /** The three the build names after the document, and one asset to copy. */
 const FILENAMES = {
-  ENTRY: `${MOCK_FILE_NAME}.tsx`,
+  ENTRY: ENTRY_FILE,
   PAGE: `${MOCK_FILE_NAME}.html`,
   SHEET: `${MOCK_FILE_NAME}.css`,
   LOGO: 'logo.svg',
@@ -18,8 +20,8 @@ const FILENAMES = {
 
 const DIRS = {
   ASSETS: 'assets',
-  OUTPUTS,
-  HTML: join(OUTPUTS, 'html'),
+  OUTPUTS: OUTPUTS_DIR,
+  HTML: join(OUTPUTS_DIR, 'html'),
 }
 
 /** Contents nothing under test reads — only whether the file is there. */
@@ -62,23 +64,6 @@ const createDirTree = async (files: Record<string, string>) => {
 
   return dir
 }
-
-const buildResolvedConfig = (
-  root: string,
-  overrides: Partial<ResolvedConfig> = {}
-): ResolvedConfig => ({
-  root,
-  entry: FILENAMES.ENTRY,
-  entryPath: join(root, FILENAMES.ENTRY),
-  outDir: join(root, DIRS.OUTPUTS),
-  name: MOCK_FILE_NAME,
-  page: PAGE_SIZES.letter,
-  margin: 1,
-  checkPdfFontTypes: true,
-  setDate: true,
-  port: 4000,
-  ...overrides,
-})
 
 describe('copyAssets', () => {
   /** A build that has written its page, which is the state a copy runs after. */

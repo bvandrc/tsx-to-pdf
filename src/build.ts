@@ -24,46 +24,12 @@ const outputFiles = ({ outDir, name }: ResolvedConfig) =>
       )
   )
 
-/** Which optional outputs to also write, beyond the page and its stylesheet. */
-type BuildOptions = {
-  /**
-   * Generate the PDF. Needs a browser.
-   * @default true
-   */
-  pdf?: boolean
-  /**
-   * Also write the document's text as Markdown.
-   *
-   * Content only — the layout the classes describe has no equivalent and is
-   * dropped.
-   * @default false
-   */
-  markdown?: boolean
-  /**
-   * Also write a full-page PNG screenshot of the same render the PDF is
-   * generated from.
-   *
-   * Needs a browser, shared with `pdf` when both are on.
-   * @default false
-   */
-  png?: boolean
-  /**
-   * Also write a full-page JPG screenshot of the same render the PDF is
-   * generated from.
-   *
-   * Needs a browser, shared with `pdf` when both are on.
-   * @default false
-   */
-  jpg?: boolean
-}
-
 /**
- * Renders the configured document to `outDir`, and returns what it wrote.
+ * Renders the configured document to `outDir`, writing the outputs the config
+ * asks for, and returns what it wrote.
  */
-export const build = async (
-  config: ResolvedConfig,
-  { pdf = true, markdown = false, png = false, jpg = false }: BuildOptions = {}
-): Promise<string[]> => {
+export const build = async (config: ResolvedConfig): Promise<string[]> => {
+  const { pdf, markdown, png, jpg } = config
   const paths = outputFiles(config)
 
   // Everywhere this call might write, so their directories exist up front —
