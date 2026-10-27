@@ -42,7 +42,7 @@ Synced from https://github.com/bvandrc/bvandrc-conventions — follow all of the
 - **Markdown output**
   - **Text only**: the layout (the sheet, columns, alignment, spacing) lives in classes Markdown cannot express, so the `.md` is documented as the document's text rather than the document.
   - **No `Config` key**: like `pdf`, it is a per-build choice, not a property of the document, so `build()`'s `markdown` option and the CLI's `--md` are the only ways to ask for it.
-  - **A regular dependency**: imported directly, not lazily like Playwright. It is small (`node-html-parser` and an entity decoder, no DOM, unlike the ~9 MB `@mixmark-io/domino` under Turndown, used before), so an optional peer dependency bought consumers nothing.
+  - **A regular dependency**: `node-html-markdown` is imported directly, not lazily like Playwright. It is small (`node-html-parser` and an entity decoder, no DOM, unlike the ~9 MB `@mixmark-io/domino` under Turndown, used before), so an optional peer dependency bought consumers nothing.
   - **Options**: only `codeBlockStyle: 'fenced'`. Prettier rewrites bullet markers and emphasis afterwards regardless, and the library only emits ATX headings.
 - **Playwright is imported lazily** inside `getBrowser` (`src/get-browser.ts`), so a build that skips `pdf`, `png`, and `jpg` works with no browser installed.
 - **Point-based measurements**: sizes are in points because the output is paper, not a screen. `html { font-size: 12pt }` makes Tailwind's `0.25rem` spacing unit exactly `3pt`, so scale classes land on whole points.
