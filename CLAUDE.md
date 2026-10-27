@@ -24,12 +24,9 @@ Synced from https://github.com/bvandrc/bvandrc-conventions — follow all of the
 @conventions/ts-testing-all.md — testing rules shared by every TypeScript suite: test IDs, naming, assertions
 @conventions/ts-unit-testing.md — TypeScript unit test layout, naming, fixtures, and assertions
 @conventions/all.md — practice for every repo: branches, formatting, markdown, PR reviews
+@conventions/npm-publishing.md — releasing, trusted publishing, `package.json` publish fields, versioning
 
 `conventions/` is overwritten on every sync. Edit a rule upstream, never here.
-
-## Releasing
-
-Bump `version` in `package.json`, merge, then publish a GitHub release tagged `v<version>`. `.github/workflows/release.yml` checks the tag matches and runs `pnpm stage publish` with provenance, which leaves the version staged: approve it on npmjs.com with 2FA to publish it.
 
 ## Repo conventions
 
