@@ -7,6 +7,7 @@ import { format as prettify } from 'prettier'
 // which matches NBSP, so a run of them would otherwise come out as one space.
 const NBSP_PLACEHOLDER = '\uFDD0'
 
+/** NBSP as a text node can carry it: the character itself, or any of its entity spellings. */
 const NBSP = /\u00A0|&nbsp;|&#160;|&#xa0;/gi
 
 /** Where Markdown prints text literally, so `&nbsp;` would show as typed. */
