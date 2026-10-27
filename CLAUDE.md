@@ -2,7 +2,7 @@
 
 A generator: a document written as JSX, styled with Tailwind, rendered to HTML, and generated as a page-exact PDF by headless Chromium, with optional Markdown, PNG, and JPG output. The PDF and the browser preview are the same render, not two approximations of each other.
 
-Nothing here is specific to any one document. What to render comes from the consuming project's `tsx-to-pdf.config.ts`; this repo's own config points at `example/`, so the package always has something to build and consumers have something to copy.
+What to render comes from the consuming project's `tsx-to-pdf.config.ts`; this repo's own config points at `example/`, so the package always has something to build and consumers have something to copy.
 
 - **`src/`** is the package. `config.ts` owns the `Config` type, the named page sizes, and config discovery; `build-html.tsx` renders and compiles the stylesheet; `build-pdf.ts` generates the PDF and asserts; `build-markdown.ts` converts the rendered page for the optional `.md`; `build.ts` writes the outputs; `dev-server.tsx` serves the live preview; `cli.ts` is the entry point behind the `tsx-to-pdf` bin.
 - **`page.css`** holds the sheet and nothing document-specific. `buildStylesheet` injects its geometry as `--page-width` / `--page-height` / `--page-margin`, beside an `@page` rule with the dimensions written literally, since Chromium rejects `var()` in `size`. That block comes *after* the document's stylesheet, so the config beats a `--page-margin` the consumer declares.
