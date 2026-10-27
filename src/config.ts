@@ -9,11 +9,12 @@ import {
 } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { omit } from 'es-toolkit'
-import type { SetRequired } from 'type-fest'
+import type { OptionalKeysOf, SetRequired } from 'type-fest'
 import {
   boolean,
   type GenericSchema,
   getDotPath,
+  type InferOutput,
   instance,
   integer,
   minValue,
@@ -130,12 +131,10 @@ export type Config = {
 }
 
 /** The keys the schema fills with their documented `@default` when left out. */
-type DefaultedKey =
-  | 'pageSize'
-  | 'margin'
-  | 'checkPdfFontTypes'
-  | 'setDate'
-  | 'port'
+type DefaultedKey = Exclude<
+  OptionalKeysOf<Config>,
+  OptionalKeysOf<InferOutput<typeof CONFIG_SCHEMA>>
+>
 
 /** Paths resolved, and every documented default filled in. */
 export type ResolvedConfig = SetRequired<
@@ -187,18 +186,13 @@ export const findConfig = (explicit?: string, from = process.cwd()): string => {
 const INCHES = pipe(number(), minValue(0))
 
 /**
- * `Config` as a runtime check.
+ * `Config` as a runtime check, its output with every default filled so nothing
+ * downstream repeats one.
  *
- * Typed as a schema *for* `Config` rather than the source of it, so the type
- * stays hand-written and keeps the per-property JSDoc an inferred one would
- * lose. They cannot drift either: a key added to one and not the other is a
- * type error here. Its output has every default filled, so nothing downstream
- * repeats one.
+ * Checked against `Config` rather than the source of it, so the type stays
+ * hand-written and keeps the per-property JSDoc an inferred one would lose.
  */
-const CONFIG_SCHEMA: GenericSchema<
-  Config,
-  SetRequired<Config, DefaultedKey>
-> = object({
+const CONFIG_SCHEMA = object({
   entry: string(),
   styles: optional(string()),
   assets: optional(string()),
@@ -244,7 +238,11 @@ const CONFIG_SCHEMA: GenericSchema<
     true
   ),
   port: optional(pipe(number(), integer()), 4000),
-})
+  // Every key of `Config` and no other, so the two cannot drift.
+} satisfies Record<keyof Config, GenericSchema>) satisfies GenericSchema<
+  Config,
+  Config
+>
 
 /** `letter` and the rest resolved to the lengths the stylesheet is built from. */
 const toDimensions = (
