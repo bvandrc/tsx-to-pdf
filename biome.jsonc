@@ -8,7 +8,9 @@
       "!**/node_modules",
       // Generated. Formatting either would only be undone by the next build.
       "!!dist",
-      "!!example/outputs"
+      "!!example/outputs",
+      // Synced from upstream and overwritten on every sync.
+      "!!conventions/*.md"
     ]
   },
   "css": {
