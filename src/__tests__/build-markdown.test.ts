@@ -41,7 +41,7 @@ npm i
   })
 })
 
-describe('buildMarkdown with NBSP', () => {
+describe('buildMarkdown with data-markdown', () => {
   it('keeps a run of NBSP as entities, but not in code', async () => {
     const markdown = await buildMarkdown(
       '<body><h2>A\u00A0\u00A0\u00A0B</h2><p><code>x\u00A0y</code></p></body>'
@@ -51,5 +51,56 @@ describe('buildMarkdown with NBSP', () => {
     // span would show the entity as typed, so it is left to the converter,
     // which gives a plain space there.
     expect(markdown).toBe('## A&nbsp;&nbsp;&nbsp;B\n\n`x y`\n')
+  })
+
+  it('keeps an `html` element whole, formatted, without the marker', async () => {
+    const markdown = await buildMarkdown(
+      '<body><h2>Skills</h2><table data-markdown="html"><tr><td colspan="2" align="center"><img src="a.svg?x=1&amp;y=2" width="40" data-markdown="html" />\u00A0<em>A</em></td></tr></table><p>After</p></body>'
+    )
+
+    // The nested marker goes too: it means nothing inside a kept element.
+    expect(markdown).toBe(`## Skills
+
+<table>
+  <tr>
+    <td colspan="2" align="center"><img src="a.svg?x=1&amp;y=2" width="40" />&nbsp;<em>A</em></td>
+  </tr>
+</table>
+
+After
+`)
+  })
+
+  it('keeps a block element on lines of its own, and an inline one inline', async () => {
+    const markdown = await buildMarkdown(
+      '<body><p data-markdown="html">One</p><p data-markdown="html">Two</p><p>Text <img src="a.svg" width="9" data-markdown="html" /> more</p></body>'
+    )
+
+    // Two blocks on one line would read as a single HTML block.
+    expect(markdown).toBe(`<p>One</p>
+
+<p>Two</p>
+
+Text <img src="a.svg" width="9" /> more
+`)
+  })
+
+  it('indents a kept block to the list item it sits in', async () => {
+    const markdown = await buildMarkdown(
+      '<body><ul><li><table data-markdown="html"><tr><td>A</td></tr></table></li></ul></body>'
+    )
+
+    expect(markdown).toBe(`- <table>
+    <tr>
+      <td>A</td>
+    </tr>
+  </table>
+`)
+  })
+
+  it('refuses a value it does not know', async () => {
+    await expect(
+      buildMarkdown('<body><table data-markdown="raw"></table></body>')
+    ).rejects.toThrow('<table data-markdown="raw"> is not one of html.')
   })
 })

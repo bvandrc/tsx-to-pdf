@@ -124,6 +124,29 @@ That makes it useful for the things that read text and ignore layout — a diff 
 
 Runs of non-breaking spaces come out as `&nbsp;` entities rather than collapsing to one space, so spacing written with `&nbsp;` survives in the text.
 
+### Keeping HTML in the Markdown
+
+Some Markdown is read somewhere that renders HTML too — a GitHub README, most notably, which honours a sanitised subset of it (`align`, `width`, `colspan`, and the like) and is written as Markdown and HTML mixed. For that, mark the elements Markdown can't express with `data-markdown`:
+
+| value | what comes out |
+| --- | --- |
+| `html` | The element, whole, as formatted HTML — for a table with spans, a sized image, a centered paragraph. A block element (`table`, `p`, `div`, …) gets lines of its own; an inline one stays in its paragraph. |
+
+```tsx
+<h2>Projects</h2>
+<table data-markdown="html">…</table>
+```
+
+```md
+## Projects
+
+<table>
+  …
+</table>
+```
+
+The attribute itself is removed from the Markdown; the HTML and PDF are unaffected. Any other value fails the build.
+
 ## Image output
 
 `--png`/`--jpg` — or `{ png: true, jpg: true }` to `build()` — write `<name>.png`/`<name>.jpg` beside the rest, a screenshot of the `.page` element from the same render the PDF is generated from, so it is pixel-for-pixel the page, not an approximation. A multi-page document — anything past `maxPages: 1` — comes out as one tall image, the same way `--md` writes one file regardless of page count. It needs Playwright, same as `pdf` — no separate install.
