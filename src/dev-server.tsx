@@ -3,7 +3,7 @@ import { readdir, readFile, stat } from 'node:fs/promises'
 import { createServer, type ServerResponse } from 'node:http'
 import { dirname, extname, join, sep } from 'node:path'
 import { debounce } from 'es-toolkit'
-import { type NamespacedUnregister, register } from 'tsx/esm/api'
+import type { NamespacedUnregister } from 'tsx/esm/api'
 
 import { buildPage, buildStylesheet } from './build-html.tsx'
 import type { ResolvedConfig } from './config.ts'
@@ -72,6 +72,9 @@ export const serve = (config: ResolvedConfig): void => {
     // each revision gets a module graph of its own. Swapped per revision rather
     // than per request, so reloading an unchanged document adds no new hook.
     if (scope?.revision !== revision) {
+      // Imported on first use rather than at the top, so importing the package
+      // for `build()` alone loads no `tsx`.
+      const { register } = await import('tsx/esm/api')
       await scope?.tsx.unregister()
       scope = {
         revision,
