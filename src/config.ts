@@ -8,7 +8,7 @@ import {
   resolve,
 } from 'node:path'
 import { pathToFileURL } from 'node:url'
-import { pick } from 'es-toolkit'
+import { omit } from 'es-toolkit'
 import type { SetRequired } from 'type-fest'
 import {
   boolean,
@@ -69,11 +69,13 @@ export type Config = {
   outDir: string
   /**
    * Basename they are given: `<name>.pdf`, `<name>.html`, `<name>.css`.
+   *
    * @default the basename of `entry`
    */
   name?: string
   /**
    * A named page size, or explicit CSS dimensions.
+   *
    * @default 'letter'
    */
   pageSize?: PageSize | PageDimensions
@@ -82,11 +84,13 @@ export type Config = {
    * or an object giving every side.
    *
    * Applied as the page's padding, so a full-width banner still sits inside it.
+   *
    * @default 1
    */
   margin?: Margin
   /**
    * Trigger failure if the build exceeds this many pages.
+   *
    * @default undefined — the length is not checked
    */
   maxPages?: number
@@ -95,6 +99,7 @@ export type Config = {
    *
    * Chromium does this for any font it cannot embed — a variable font, for one.
    * Turn it off if you would rather have the PDF anyway.
+   *
    * @default true
    */
   checkPdfFontTypes?: boolean
@@ -111,11 +116,14 @@ export type Config = {
    * - `false` — omit them, for a build that has to be reproducible — a
    *   byte-identical rebuild of unchanged source, which a live date can
    *   never be twice
+   *
    * @default true
    */
   setDate?: boolean | Date
   /**
    * Port for `tsx-to-pdf dev`.
+   *
+   * @cli `--port` sets it
    * @default 4000
    */
   port?: number
@@ -234,7 +242,7 @@ const toDimensions = (
   typeof pageSize === 'string' ? PAGE_SIZES[pageSize] : pageSize
 
 /**
- * Reads the config at `path` and fills in its defaults.
+ * Reads the config at `path`, resolves its paths, and fills in its defaults.
  *
  * Loading a TypeScript config needs `tsx` registered first, which the CLI does
  * — hence taking the path rather than finding it here, so registration can
@@ -264,24 +272,20 @@ export const loadConfig = async (path: string): Promise<ResolvedConfig> => {
   }
 
   const config = result.output
-  const { entry, assets, outDir, name } = config
 
   return {
-    ...pick(config, [
-      // Everything the build takes as given.
-      'entry',
-      'styles',
-      'margin',
-      'maxPages',
-      'checkPdfFontTypes',
-      'author',
+    // Everything the build takes as given.
+    ...omit(config, [
+      // Come back resolved below, as `assetsDir` and `page`.
+      'assets',
+      'pageSize',
     ]),
     root,
-    entryPath: resolve(root, entry),
-    assetsDir: assets ? resolve(root, assets) : undefined,
-    outDir: resolve(root, outDir),
+    entryPath: resolve(root, config.entry),
+    assetsDir: config.assets ? resolve(root, config.assets) : undefined,
+    outDir: resolve(root, config.outDir),
     // `resume.tsx` gives `resume.pdf`, which is what you would have named it.
-    name: name ?? basename(entry, extname(entry)),
+    name: config.name ?? basename(config.entry, extname(config.entry)),
     page: toDimensions(config.pageSize),
     port: config.port ?? 4000,
     setDate: config.setDate ?? true,
