@@ -18,7 +18,6 @@ type MarkdownMode = (typeof MARKDOWN_MODES)[number]
 // A Unicode noncharacter, reserved for exactly this kind of internal use, so
 // no document carries one. node-html-markdown collapses whitespace with `\s`,
 // which matches NBSP, so a run of them would otherwise come out as one space.
-// https://github.com/crosstype/node-html-markdown/issues/87
 const NBSP_PLACEHOLDER = '\uFDD0'
 
 /** NBSP as a text node can carry it: the character itself, or any of its entity spellings. */
@@ -167,6 +166,7 @@ export const buildMarkdown = async (html: string): Promise<string> => {
       )
       // An entity rather than the character, so the spacing is visible in the
       // source and survives anything that normalises whitespace.
+      // https://github.com/crosstype/node-html-markdown/issues/87
       .replaceAll(NBSP_PLACEHOLDER, '&nbsp;')
   )
 }
