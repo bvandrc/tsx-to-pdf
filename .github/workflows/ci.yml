@@ -12,17 +12,17 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # Before setup-node, which needs pnpm on the path to find its store for
       # `cache: pnpm`. The other order fails with "Unable to locate executable".
       - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v6
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
-          node-version: 22.x
+          node-version: 24.x
           # Replaces a manual `pnpm store path` + actions/cache pair: it keys on
           # the lockfile and restores the store itself.
           cache: pnpm
@@ -59,7 +59,7 @@ jobs:
         run: pnpm run example
 
       - name: Upload the rendered example
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: example
           path: example/outputs/

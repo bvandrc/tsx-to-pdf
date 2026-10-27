@@ -21,7 +21,7 @@ describe('findConfig', () => {
       vol.fromJSON({ [`/project/tsx-to-pdf.config.${extension}`]: '' })
 
       expect(findConfig(undefined, '/project'), extension).toBe(
-        `/project/tsx-to-pdf.config.${extension}`
+        join('/project', `tsx-to-pdf.config.${extension}`)
       )
     }
   })
