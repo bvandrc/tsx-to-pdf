@@ -35,6 +35,7 @@ const protectNbsp = (node: Node): void => {
  */
 export const buildMarkdown = async (html: string): Promise<string> => {
   const page = parse(html)
+  // https://github.com/crosstype/node-html-markdown/issues/87
   protectNbsp(page)
 
   const markdown = NodeHtmlMarkdown.translate(page.toString(), {
@@ -51,6 +52,5 @@ export const buildMarkdown = async (html: string): Promise<string> => {
 
   // An entity rather than the character, so the spacing is visible in the
   // source and survives anything that normalises whitespace.
-  // https://github.com/crosstype/node-html-markdown/issues/87
   return formatted.replaceAll(NBSP_PLACEHOLDER, '&nbsp;')
 }
