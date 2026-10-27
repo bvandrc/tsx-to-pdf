@@ -37,7 +37,7 @@ Synced from https://github.com/bvandrc/bvandrc-conventions — follow all of the
 - **Preact**
   - **Only a serialiser**: `preact-render-to-string` turns static elements into HTML. No hooks, no state, no hydration. Its value is that JSX escapes content, so there is no raw-HTML path.
   - **Why not React**: not for a reason that binds. Preact ships its own types and installs a third of the size, which is enough when the job is serialising static elements.
-  - **Consumers can still use React types**: since `jsxImportSource` is forced at build time, none of it reaches the consumer: they can typecheck against React and still render here, as long as they write `className` and import no React values.
+  - **Consumers can typecheck against React**: `jsxTsconfig` pins `jsxImportSource` to Preact only when loading their document, so their own tsconfig can point it at React for their editor and `tsc`. That holds while they write `className` (React's types reject `class`) and import React types but no React values, which would produce elements Preact cannot render. The README's "Using React types" section is the consumer-facing version.
   - **Either runtime, later**: letting them peer install *either* runtime is a plausible future — nothing in the renderer depends on which one it is.
 - **Markdown is a derivative, not a third render.**
   - **Why**: the PDF and the preview are the same render; the `.md` cannot be, because everything this package exists to control — the sheet, the columns, the alignment, the spacing — lives in classes Markdown has no way to say. It is node-html-markdown over the rendered page, off by default, and documented as the document's text rather than the document.
