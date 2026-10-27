@@ -39,8 +39,8 @@ Synced from https://github.com/bvandrc/bvandrc-conventions — follow all of the
   - **Why not React**: nothing binding. Preact ships its own types at a third of the install size, which is enough for serialising static elements.
   - **Consumers can typecheck against React**: `jsxTsconfig` pins `jsxImportSource` to Preact only when loading their document, so their own tsconfig can point it at React. They write `className` (React's types reject `class`) and import React types but no React values, which would produce elements Preact cannot render. See the README's "Using React types".
   - **Either runtime, later**: letting consumers peer install *either* runtime is a plausible future; nothing in the renderer depends on which one it is.
-- **Markdown is a derivative, not a third render.**
-  - **Why**: the PDF and preview are one render; the `.md` cannot be, because what this package controls (the sheet, columns, alignment, spacing) lives in classes Markdown cannot express. It is `node-html-markdown` over the rendered page, off by default, and documented as the document's text rather than the document.
+- **Markdown is converted from the rendered HTML**, not rendered from the JSX itself.
+  - **Why**: the PDF and preview are the same render; the `.md` cannot be, because what this package controls (the sheet, columns, alignment, spacing) lives in classes Markdown cannot express. So it is `node-html-markdown` run over the HTML, off by default, and documented as the document's text rather than the document.
   - **No `Config` key**: like `pdf`, it is a per-build choice, not a property of the document, so `build()`'s `markdown` option and the CLI's `--md` are the only ways to ask for it.
   - **A regular dependency**: imported directly, not lazily like Playwright. It is small (`node-html-parser` and an entity decoder, no DOM, unlike the ~9 MB `@mixmark-io/domino` under Turndown, used before), so an optional peer dependency bought consumers nothing.
   - **Options**: only `codeBlockStyle: 'fenced'`. Prettier rewrites bullet markers and emphasis afterwards regardless, and the library only emits ATX headings.
