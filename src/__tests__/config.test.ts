@@ -71,8 +71,10 @@ describe('loadConfig', () => {
       // The entry's basename, so `doc.tsx` writes `doc.pdf`.
       name: 'doc',
       page: PAGE_SIZES.letter,
-      port: 4000,
+      margin: 1,
+      checkPdfFontTypes: true,
       setDate: true,
+      port: 4000,
     })
   })
 

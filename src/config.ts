@@ -129,15 +129,18 @@ export type Config = {
   port?: number
 }
 
-/**
- * Paths resolved, and the defaults more than one caller needs filled in.
- *
- * The rest are defaulted where they are read, against the same value `Config`
- * documents.
- */
+/** The keys the schema fills with their documented `@default` when left out. */
+type DefaultedKey =
+  | 'pageSize'
+  | 'margin'
+  | 'checkPdfFontTypes'
+  | 'setDate'
+  | 'port'
+
+/** Paths resolved, and every documented default filled in. */
 export type ResolvedConfig = SetRequired<
   Omit<Config, 'assets' | 'pageSize'>,
-  'name' | 'port' | 'setDate'
+  'name' | Exclude<DefaultedKey, 'pageSize'>
 > & {
   /** The config file's directory. Relative paths resolve against it. */
   root: string
@@ -189,9 +192,13 @@ const INCHES = pipe(number(), minValue(0))
  * Typed as a schema *for* `Config` rather than the source of it, so the type
  * stays hand-written and keeps the per-property JSDoc an inferred one would
  * lose. They cannot drift either: a key added to one and not the other is a
- * type error here.
+ * type error here. Its output has every default filled, so nothing downstream
+ * repeats one.
  */
-const CONFIG_SCHEMA: GenericSchema<Config> = object({
+const CONFIG_SCHEMA: GenericSchema<
+  Config,
+  SetRequired<Config, DefaultedKey>
+> = object({
   entry: string(),
   styles: optional(string()),
   assets: optional(string()),
@@ -204,7 +211,8 @@ const CONFIG_SCHEMA: GenericSchema<Config> = object({
         object({ width: string(), height: string() }),
       ],
       `Expected ${PAGE_SIZE_NAMES.join(', ')}, or { width, height } as CSS lengths`
-    )
+    ),
+    'letter'
   ),
   margin: optional(
     union(
@@ -221,23 +229,26 @@ const CONFIG_SCHEMA: GenericSchema<Config> = object({
         }),
       ],
       'Expected inches as a number, or { top, right, bottom, left }'
-    )
+    ),
+    // What Word, Google Docs, and Pages all give a document.
+    1
   ),
   maxPages: optional(pipe(number(), integer(), minValue(1))),
-  checkPdfFontTypes: optional(boolean()),
+  checkPdfFontTypes: optional(boolean(), true),
   author: optional(string()),
   setDate: optional(
     union(
       [boolean(), instance(Date)],
       'Expected a boolean, or a Date to set it to'
-    )
+    ),
+    true
   ),
-  port: optional(pipe(number(), integer())),
+  port: optional(pipe(number(), integer()), 4000),
 })
 
 /** `letter` and the rest resolved to the lengths the stylesheet is built from. */
 const toDimensions = (
-  pageSize: Config['pageSize'] = 'letter'
+  pageSize: NonNullable<Config['pageSize']>
 ): PageDimensions =>
   typeof pageSize === 'string' ? PAGE_SIZES[pageSize] : pageSize
 
@@ -287,7 +298,5 @@ export const loadConfig = async (path: string): Promise<ResolvedConfig> => {
     // `resume.tsx` gives `resume.pdf`, which is what you would have named it.
     name: config.name ?? basename(config.entry, extname(config.entry)),
     page: toDimensions(config.pageSize),
-    port: config.port ?? 4000,
-    setDate: config.setDate ?? true,
   }
 }

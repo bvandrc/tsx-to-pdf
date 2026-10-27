@@ -73,8 +73,10 @@ const buildResolvedConfig = (
   outDir: join(root, DIRS.OUTPUTS),
   name: MOCK_FILE_NAME,
   page: PAGE_SIZES.letter,
-  port: 4000,
+  margin: 1,
+  checkPdfFontTypes: true,
   setDate: true,
+  port: 4000,
   ...overrides,
 })
 

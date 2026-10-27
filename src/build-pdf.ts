@@ -52,13 +52,7 @@ const getFontSubtypes = (pdf: PDFDocument): string[] =>
  */
 export const buildPdf = async (
   page: Page,
-  {
-    maxPages,
-    page: sheet,
-    checkPdfFontTypes = true,
-    author,
-    setDate,
-  }: ResolvedConfig
+  { maxPages, page: sheet, checkPdfFontTypes, author, setDate }: ResolvedConfig
 ): Promise<Uint8Array> => {
   const pdf = await PDFDocument.load(
     await page.pdf({

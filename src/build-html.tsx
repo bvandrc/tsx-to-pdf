@@ -34,14 +34,11 @@ export const copyAssets = async (
 /** Copied beside the compiled output, so this resolves inside `dist/` too. */
 const PAGE_CSS = join(import.meta.dirname, 'page.css')
 
-/** What Word, Google Docs, and Pages all give a document. */
-const DEFAULT_MARGIN = 1
-
 /** CSS padding order, which is also the order the sides are emitted in. */
 const MARGIN_SIDES = ['top', 'right', 'bottom', 'left'] as const
 
 /** A number or the four sides alike become the padding the sheet is given. */
-const toMargin = (margin: Margin = DEFAULT_MARGIN): string =>
+const toMargin = (margin: Margin): string =>
   typeof margin === 'number'
     ? `${margin}in`
     : MARGIN_SIDES.map((side) => `${margin[side]}in`).join(' ')
