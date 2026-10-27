@@ -40,3 +40,14 @@ npm i
 `)
   })
 })
+
+describe('buildMarkdown with NBSP', () => {
+  it('keeps a run of NBSP as entities', async () => {
+    const markdown = await buildMarkdown(
+      '<body><h2>A\u00A0\u00A0\u00A0B</h2></body>'
+    )
+
+    // Collapsed to one plain space, the heading would lose its spacing.
+    expect(markdown).toBe('## A&nbsp;&nbsp;&nbsp;B\n')
+  })
+})
