@@ -39,7 +39,11 @@ const BLOCK_TAGS = new Set(
     .split(/\s+/)
 )
 
-/** Where Markdown prints text literally, so `&nbsp;` would show as typed. */
+/**
+ * Where Markdown prints text literally, so `&nbsp;` would show as typed.
+ *
+ * Upper case, as node-html-parser's `tagName` gives it, like the DOM's.
+ */
 const LITERAL_TEXT = new Set(['PRE', 'CODE', 'SCRIPT', 'STYLE', 'TEXTAREA'])
 
 const isMarkdownMode = (value: string): value is MarkdownMode =>
