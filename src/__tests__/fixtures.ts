@@ -8,13 +8,7 @@ export const MOCK_FILE_NAME = 'doc'
 export const ENTRY_FILE = `${MOCK_FILE_NAME}.tsx`
 export const OUTPUTS_DIR = 'outputs'
 
-/** What `loadConfig` fills in for every key a config leaves out. */
-export const DEFAULTS = {
-  ...omit(CONFIG_DEFAULTS, ['pageSize']),
-  page: PAGE_SIZES[CONFIG_DEFAULTS.pageSize],
-}
-
-/** A resolved config for a document at `root`, with every default in place. */
+/** What `loadConfig` resolves a minimal config at `root` to, every default in place. */
 export const buildResolvedConfig = (
   root: string,
   overrides: Partial<ResolvedConfig> = {}
@@ -24,6 +18,7 @@ export const buildResolvedConfig = (
   entryPath: join(root, ENTRY_FILE),
   outDir: join(root, OUTPUTS_DIR),
   name: MOCK_FILE_NAME,
-  ...DEFAULTS,
+  ...omit(CONFIG_DEFAULTS, ['pageSize']),
+  page: PAGE_SIZES[CONFIG_DEFAULTS.pageSize],
   ...overrides,
 })
