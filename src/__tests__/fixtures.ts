@@ -1,6 +1,5 @@
 import { join } from 'node:path'
 import { isUndefined, omitBy } from 'es-toolkit'
-import type { ConditionalExcept } from 'type-fest'
 import { getDefaults } from 'valibot'
 
 import { CONFIG_SCHEMA, PAGE_SIZES, type ResolvedConfig } from '../config.ts'
@@ -10,31 +9,25 @@ export const MOCK_FILE_NAME = 'doc'
 export const ENTRY_FILE = `${MOCK_FILE_NAME}.tsx`
 export const OUTPUTS_DIR = 'outputs'
 
-const SCHEMA_DEFAULTS = getDefaults(CONFIG_SCHEMA)
-
-// `getDefaults` lists every key, `undefined` where the schema has no default.
-// Its type already says which, and `omitBy` would widen it to `Partial`.
-const { pageSize, ...DEFAULTED } = omitBy(
-  SCHEMA_DEFAULTS,
-  isUndefined
-) as ConditionalExcept<typeof SCHEMA_DEFAULTS, undefined>
+const { pageSize, ...SCHEMA_DEFAULTS } = getDefaults(CONFIG_SCHEMA)
 
 /** What `loadConfig` fills in for every key a config leaves out. */
 export const DEFAULTS = {
-  ...DEFAULTED,
+  ...omitBy(SCHEMA_DEFAULTS, isUndefined),
   page: PAGE_SIZES[pageSize],
-} satisfies Partial<ResolvedConfig>
+}
 
 /** A resolved config for a document at `root`, with every default in place. */
 export const buildResolvedConfig = (
   root: string,
   overrides: Partial<ResolvedConfig> = {}
 ): ResolvedConfig => ({
+  ...SCHEMA_DEFAULTS,
   root,
   entry: ENTRY_FILE,
   entryPath: join(root, ENTRY_FILE),
   outDir: join(root, OUTPUTS_DIR),
   name: MOCK_FILE_NAME,
-  ...DEFAULTS,
+  page: DEFAULTS.page,
   ...overrides,
 })
