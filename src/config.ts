@@ -9,7 +9,7 @@ import {
 } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { omit } from 'es-toolkit'
-import type { OptionalKeysOf, SetRequired } from 'type-fest'
+import type { IsEqual, OptionalKeysOf, SetRequired } from 'type-fest'
 import {
   boolean,
   type GenericSchema,
@@ -173,10 +173,16 @@ export type Config = {
 }
 
 /** The keys the schema fills with their documented `@default` when left out. */
-type DefaultedKey = Exclude<
-  OptionalKeysOf<Config>,
-  OptionalKeysOf<InferOutput<typeof CONFIG_SCHEMA>>
->
+type DefaultedKey =
+  | 'pageSize'
+  | 'margin'
+  | 'checkPdfFontTypes'
+  | 'setDate'
+  | 'pdf'
+  | 'markdown'
+  | 'png'
+  | 'jpg'
+  | 'port'
 
 /** Paths resolved, and every documented default filled in. */
 export type ResolvedConfig = SetRequired<
@@ -231,10 +237,10 @@ const INCHES = pipe(number(), minValue(0))
  * `Config` as a runtime check, its output with every default filled so nothing
  * downstream repeats one.
  *
- * Checked against `Config` rather than the source of it, so the type stays
- * hand-written and keeps the per-property JSDoc an inferred one would lose.
+ * Checked against `Config` rather than the source of it, so the published
+ * types don't need valibot's, which are bundled and would be inlined.
  */
-const CONFIG_SCHEMA = object({
+export const CONFIG_SCHEMA = object({
   entry: string(),
   styles: optional(string()),
   assets: optional(string()),
@@ -266,8 +272,7 @@ const CONFIG_SCHEMA = object({
       ],
       'Expected inches as a number, or { top, right, bottom, left }'
     ),
-    // What Word, Google Docs, and Pages all give a document.
-    1
+    1 // What Word, Google Docs, and Pages all give a document.
   ),
   maxPages: optional(pipe(number(), integer(), minValue(1))),
   checkPdfFontTypes: optional(boolean(), true),
@@ -288,6 +293,17 @@ const CONFIG_SCHEMA = object({
 } satisfies Record<keyof Config, GenericSchema>) satisfies GenericSchema<
   Config,
   Config
+>
+
+// `DefaultedKey` is written out rather than derived, so the published
+// `ResolvedConfig` doesn't carry the schema's type and valibot's with it. This
+// fails to compile when the list and the schema's defaults disagree.
+true satisfies IsEqual<
+  DefaultedKey,
+  Exclude<
+    OptionalKeysOf<Config>,
+    OptionalKeysOf<InferOutput<typeof CONFIG_SCHEMA>>
+  >
 >
 
 /** `letter` and the rest resolved to the lengths the stylesheet is built from. */
