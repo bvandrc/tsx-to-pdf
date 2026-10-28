@@ -167,6 +167,9 @@ const CONFIG_SCHEMA = object({
 /** Which document to render and how. Paths are relative to the config file. */
 export type Config = InferInput<typeof CONFIG_SCHEMA>
 
+/** `Config` as the schema hands it back once it has checked it. */
+type ParsedConfig = InferOutput<typeof CONFIG_SCHEMA>
+
 /**
  * Paths resolved, and the defaults more than one caller needs filled in.
  *
@@ -174,7 +177,7 @@ export type Config = InferInput<typeof CONFIG_SCHEMA>
  * documents.
  */
 export type ResolvedConfig = SetRequired<
-  Omit<InferOutput<typeof CONFIG_SCHEMA>, 'assets' | 'pageSize'>,
+  Omit<ParsedConfig, 'assets' | 'pageSize'>,
   'name' | 'port' | 'setDate'
 > & {
   /** The config file's directory. Relative paths resolve against it. */
