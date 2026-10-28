@@ -84,8 +84,6 @@ export type Margin = InferOutput<typeof MARGIN_SCHEMA>
  * The config as a runtime check, with every default filled so nothing
  * downstream repeats one.
  */
-// The source of `Config` and `ResolvedConfig`, so each entry's JSDoc is what a
-// consumer's editor shows on that key.
 export const CONFIG_SCHEMA = object({
   /** A module default-exporting the component, and exporting a `title`. */
   entry: string(),
