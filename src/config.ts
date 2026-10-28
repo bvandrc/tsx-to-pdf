@@ -9,12 +9,11 @@ import {
 } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { omit } from 'es-toolkit'
-import type { IsEqual, OptionalKeysOf, SetRequired } from 'type-fest'
+import type { SetRequired } from 'type-fest'
 import {
   boolean,
   type GenericSchema,
   getDotPath,
-  type InferOutput,
   instance,
   integer,
   minValue,
@@ -295,17 +294,6 @@ const CONFIG_SCHEMA = object({
 } satisfies Record<keyof Config, GenericSchema>) satisfies GenericSchema<
   Config,
   Config
->
-
-// `DefaultedKey` comes from `CONFIG_DEFAULTS` rather than the schema, so the
-// published `ResolvedConfig` doesn't carry the schema's type and valibot's with
-// it. This fails to compile when a schema default doesn't come from there.
-true satisfies IsEqual<
-  DefaultedKey,
-  Exclude<
-    OptionalKeysOf<Config>,
-    OptionalKeysOf<InferOutput<typeof CONFIG_SCHEMA>>
-  >
 >
 
 /** `letter` and the rest resolved to the lengths the stylesheet is built from. */

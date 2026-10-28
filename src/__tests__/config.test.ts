@@ -4,12 +4,7 @@ import { join } from 'node:path'
 import { vol } from 'memfs'
 
 import { type Config, findConfig, loadConfig } from '../config.ts'
-import {
-  DEFAULTS,
-  ENTRY_FILE,
-  MOCK_FILE_NAME,
-  OUTPUTS_DIR,
-} from './fixtures.ts'
+import { buildResolvedConfig, ENTRY_FILE, OUTPUTS_DIR } from './fixtures.ts'
 
 vi.mock('node:fs', async () => {
   const { fs } = await import('memfs')
@@ -70,14 +65,12 @@ describe('loadConfig', () => {
     })
   })
 
-  it('fills the defaults a caller would otherwise have to know', async () => {
-    const { config } = await loadFrom(buildConfigModule(MINIMAL))
+  it('fills the documented defaults, and no others', async () => {
+    const { dir, config } = await loadFrom(buildConfigModule(MINIMAL))
 
-    expect(config).toMatchObject({
-      // The entry's basename, so `doc.tsx` writes `doc.pdf`.
-      name: MOCK_FILE_NAME,
-      ...DEFAULTS,
-    })
+    // Whole-object, so a default the schema sets but `CONFIG_DEFAULTS` lacks
+    // fails too. `name` is the entry's basename: `doc.tsx` writes `doc.pdf`.
+    expect(config).toEqual(buildResolvedConfig(dir))
   })
 
   it('takes explicit dimensions as the sheet', async () => {
