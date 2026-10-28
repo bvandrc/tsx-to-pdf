@@ -188,12 +188,11 @@ export const findConfig = (explicit?: string, from = process.cwd()): string => {
 const INCHES = pipe(number(), minValue(0))
 
 /**
- * `Config` as a runtime check, its output with every default filled so nothing
- * downstream repeats one.
- *
- * Checked against `Config` rather than the source of it, so the published
- * types don't need valibot's, which are bundled and would be inlined.
+ * `Config` as a runtime check, with every default filled so nothing downstream
+ * repeats one.
  */
+// Checked against `Config` rather than the source of it, so the published types
+// don't need valibot's, which are bundled and would be inlined.
 export const CONFIG_SCHEMA = object({
   entry: string(),
   styles: optional(string()),
