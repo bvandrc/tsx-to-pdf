@@ -53,33 +53,6 @@ export type PageSize = keyof typeof PAGE_SIZES
 /** The names, as a value, so the schema and its message can both read them. */
 const PAGE_SIZE_NAMES = typedKeys(PAGE_SIZES)
 
-const PAGE_SIZE_SCHEMA = union(
-  [picklist(PAGE_SIZE_NAMES), PAGE_DIMENSIONS_SCHEMA],
-  `Expected ${PAGE_SIZE_NAMES.join(', ')}, or { width, height } as CSS lengths`
-)
-
-/** A named page size, or explicit CSS dimensions. */
-type PageSizeArg = InferOutput<typeof PAGE_SIZE_SCHEMA>
-
-const MARGIN_SCHEMA = union(
-  [
-    INCHES_SCHEMA,
-    // All four required, and strict: naming some sides but not others reads
-    // as "the rest are zero" as easily as "the rest are the default", so it
-    // is an error rather than a guess. A misspelled side fails here too.
-    strictObject({
-      top: INCHES_SCHEMA,
-      right: INCHES_SCHEMA,
-      bottom: INCHES_SCHEMA,
-      left: INCHES_SCHEMA,
-    }),
-  ],
-  'Expected inches as a number, or { top, right, bottom, left }'
-)
-
-/** White space around the document, in inches: one value, or all four sides. */
-export type Margin = InferOutput<typeof MARGIN_SCHEMA>
-
 /**
  * The config as a runtime check, with every default filled so nothing
  * downstream repeats one.
@@ -109,7 +82,13 @@ export const CONFIG_SCHEMA = object({
    *
    * @default 'letter'
    */
-  pageSize: optional(PAGE_SIZE_SCHEMA, 'letter'),
+  pageSize: optional(
+    union(
+      [picklist(PAGE_SIZE_NAMES), PAGE_DIMENSIONS_SCHEMA],
+      `Expected ${PAGE_SIZE_NAMES.join(', ')}, or { width, height } as CSS lengths`
+    ),
+    'letter'
+  ),
   /**
    * White space around the document, in inches — one number for all four sides,
    * or an object giving every side.
@@ -119,7 +98,21 @@ export const CONFIG_SCHEMA = object({
    * @default 1
    */
   margin: optional(
-    MARGIN_SCHEMA,
+    union(
+      [
+        INCHES_SCHEMA,
+        // All four required, and strict: naming some sides but not others reads
+        // as "the rest are zero" as easily as "the rest are the default", so it
+        // is an error rather than a guess. A misspelled side fails here too.
+        strictObject({
+          top: INCHES_SCHEMA,
+          right: INCHES_SCHEMA,
+          bottom: INCHES_SCHEMA,
+          left: INCHES_SCHEMA,
+        }),
+      ],
+      'Expected inches as a number, or { top, right, bottom, left }'
+    ),
     1 // What Word, Google Docs, and Pages all give a document.
   ),
   /**
@@ -213,6 +206,12 @@ export const CONFIG_SCHEMA = object({
 
 /** Which document to render and how. Paths are relative to the config file. */
 export type Config = InferInput<typeof CONFIG_SCHEMA>
+
+/** White space around the document, in inches: one value, or all four sides. */
+export type Margin = NonNullable<Config['margin']>
+
+/** A named page size, or explicit CSS dimensions. */
+type PageSizeArg = NonNullable<Config['pageSize']>
 
 /**
  * `Config` as the schema hands it back once it has checked it, every default
