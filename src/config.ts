@@ -130,13 +130,16 @@ export type Config = {
   port?: number
 }
 
-/** The keys the schema fills with their documented `@default` when left out. */
-type DefaultedKey =
-  | 'pageSize'
-  | 'margin'
-  | 'checkPdfFontTypes'
-  | 'setDate'
-  | 'port'
+/** The documented `@default` of each key that has one, which the schema fills in. */
+export const CONFIG_DEFAULTS = {
+  pageSize: 'letter',
+  margin: 1, // What Word, Google Docs, and Pages all give a document.
+  checkPdfFontTypes: true,
+  setDate: true,
+  port: 4000,
+} satisfies Partial<Config>
+
+type DefaultedKey = keyof typeof CONFIG_DEFAULTS
 
 /** Paths resolved, and every documented default filled in. */
 export type ResolvedConfig = SetRequired<
@@ -193,7 +196,7 @@ const INCHES = pipe(number(), minValue(0))
  */
 // Checked against `Config` rather than the source of it, so the published types
 // don't need valibot's, which are bundled and would be inlined.
-export const CONFIG_SCHEMA = object({
+const CONFIG_SCHEMA = object({
   entry: string(),
   styles: optional(string()),
   assets: optional(string()),
@@ -207,7 +210,7 @@ export const CONFIG_SCHEMA = object({
       ],
       `Expected ${PAGE_SIZE_NAMES.join(', ')}, or { width, height } as CSS lengths`
     ),
-    'letter'
+    CONFIG_DEFAULTS.pageSize
   ),
   margin: optional(
     union(
@@ -225,28 +228,28 @@ export const CONFIG_SCHEMA = object({
       ],
       'Expected inches as a number, or { top, right, bottom, left }'
     ),
-    1 // What Word, Google Docs, and Pages all give a document.
+    CONFIG_DEFAULTS.margin
   ),
   maxPages: optional(pipe(number(), integer(), minValue(1))),
-  checkPdfFontTypes: optional(boolean(), true),
+  checkPdfFontTypes: optional(boolean(), CONFIG_DEFAULTS.checkPdfFontTypes),
   author: optional(string()),
   setDate: optional(
     union(
       [boolean(), instance(Date)],
       'Expected a boolean, or a Date to set it to'
     ),
-    true
+    CONFIG_DEFAULTS.setDate
   ),
-  port: optional(pipe(number(), integer()), 4000),
+  port: optional(pipe(number(), integer()), CONFIG_DEFAULTS.port),
   // Every key of `Config` and no other, so the two cannot drift.
 } satisfies Record<keyof Config, GenericSchema>) satisfies GenericSchema<
   Config,
   Config
 >
 
-// `DefaultedKey` is written out rather than derived, so the published
-// `ResolvedConfig` doesn't carry the schema's type and valibot's with it. This
-// fails to compile when the list and the schema's defaults disagree.
+// `DefaultedKey` comes from `CONFIG_DEFAULTS` rather than the schema, so the
+// published `ResolvedConfig` doesn't carry the schema's type and valibot's with
+// it. This fails to compile when a schema default doesn't come from there.
 true satisfies IsEqual<
   DefaultedKey,
   Exclude<
