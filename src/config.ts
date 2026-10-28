@@ -168,7 +168,7 @@ const CONFIG_SCHEMA = object({
 export type Config = InferInput<typeof CONFIG_SCHEMA>
 
 /** `Config` as the schema hands it back once it has checked it. */
-type ParsedConfig = InferOutput<typeof CONFIG_SCHEMA>
+export type ParsedConfig = InferOutput<typeof CONFIG_SCHEMA>
 
 /**
  * Paths resolved, and the defaults more than one caller needs filled in.
