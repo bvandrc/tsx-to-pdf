@@ -9,7 +9,7 @@ import {
 } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { omit } from 'es-toolkit'
-import type { OptionalKeysOf, SetRequired } from 'type-fest'
+import type { IsEqual, OptionalKeysOf, SetRequired } from 'type-fest'
 import {
   boolean,
   type GenericSchema,
@@ -131,10 +131,12 @@ export type Config = {
 }
 
 /** The keys the schema fills with their documented `@default` when left out. */
-type DefaultedKey = Exclude<
-  OptionalKeysOf<Config>,
-  OptionalKeysOf<InferOutput<typeof CONFIG_SCHEMA>>
->
+type DefaultedKey =
+  | 'pageSize'
+  | 'margin'
+  | 'checkPdfFontTypes'
+  | 'setDate'
+  | 'port'
 
 /** Paths resolved, and every documented default filled in. */
 export type ResolvedConfig = SetRequired<
@@ -192,7 +194,7 @@ const INCHES = pipe(number(), minValue(0))
  * Checked against `Config` rather than the source of it, so the type stays
  * hand-written and keeps the per-property JSDoc an inferred one would lose.
  */
-const CONFIG_SCHEMA = object({
+export const CONFIG_SCHEMA = object({
   entry: string(),
   styles: optional(string()),
   assets: optional(string()),
@@ -242,6 +244,17 @@ const CONFIG_SCHEMA = object({
 } satisfies Record<keyof Config, GenericSchema>) satisfies GenericSchema<
   Config,
   Config
+>
+
+// `DefaultedKey` is written out rather than derived, so the published
+// `ResolvedConfig` doesn't carry the schema's type and valibot's with it. This
+// fails to compile when the list and the schema's defaults disagree.
+true satisfies IsEqual<
+  DefaultedKey,
+  Exclude<
+    OptionalKeysOf<Config>,
+    OptionalKeysOf<InferOutput<typeof CONFIG_SCHEMA>>
+  >
 >
 
 /** `letter` and the rest resolved to the lengths the stylesheet is built from. */
