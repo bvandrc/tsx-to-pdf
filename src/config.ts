@@ -32,7 +32,7 @@ import {
 import { typedKeys } from './utils/index.ts'
 
 /** A length in inches. Zero is a legitimate margin; negative is not. */
-const INCHES = pipe(number(), minValue(0))
+const INCHES_SCHEMA = pipe(number(), minValue(0))
 
 const PAGE_DIMENSIONS_SCHEMA = object({ width: string(), height: string() })
 
@@ -63,15 +63,15 @@ type PageSizeArg = InferOutput<typeof PAGE_SIZE_SCHEMA>
 
 const MARGIN_SCHEMA = union(
   [
-    INCHES,
+    INCHES_SCHEMA,
     // All four required, and strict: naming some sides but not others reads
     // as "the rest are zero" as easily as "the rest are the default", so it
     // is an error rather than a guess. A misspelled side fails here too.
     strictObject({
-      top: INCHES,
-      right: INCHES,
-      bottom: INCHES,
-      left: INCHES,
+      top: INCHES_SCHEMA,
+      right: INCHES_SCHEMA,
+      bottom: INCHES_SCHEMA,
+      left: INCHES_SCHEMA,
     }),
   ],
   'Expected inches as a number, or { top, right, bottom, left }'
