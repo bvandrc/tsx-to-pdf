@@ -24,12 +24,29 @@ const outputFiles = ({ outDir, name }: ResolvedConfig) =>
       )
   )
 
+/** Which outputs to write for this call, overriding the config's choice. */
+type BuildOptions = Partial<
+  Pick<ResolvedConfig, 'pdf' | 'markdown' | 'png' | 'jpg'>
+>
+
 /**
  * Renders the configured document to `outDir`, writing the outputs the config
  * asks for, and returns what it wrote.
+ *
+ * @param options Deprecated, and dropped in the next major: spread the config
+ * instead, `build({ ...config, pdf: false })`.
  */
-export const build = async (config: ResolvedConfig): Promise<string[]> => {
-  const { pdf, markdown, png, jpg } = config
+export const build = async (
+  config: ResolvedConfig,
+  options: BuildOptions = {}
+): Promise<string[]> => {
+  // An option left out, or `undefined`, keeps the config's choice.
+  const {
+    pdf = config.pdf,
+    markdown = config.markdown,
+    png = config.png,
+    jpg = config.jpg,
+  } = options
   const paths = outputFiles(config)
 
   // Everywhere this call might write, so their directories exist up front —
