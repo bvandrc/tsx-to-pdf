@@ -191,8 +191,8 @@ const INCHES = pipe(number(), minValue(0))
  * `Config` as a runtime check, its output with every default filled so nothing
  * downstream repeats one.
  *
- * Checked against `Config` rather than the source of it, so the type stays
- * hand-written and keeps the per-property JSDoc an inferred one would lose.
+ * Checked against `Config` rather than the source of it, so the published
+ * types don't need valibot's, which are bundled and would be inlined.
  */
 export const CONFIG_SCHEMA = object({
   entry: string(),
