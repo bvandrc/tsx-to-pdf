@@ -3,8 +3,8 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { vol } from 'memfs'
 
-import { type Config, findConfig, loadConfig } from '../config.ts'
-import { buildResolvedConfig, ENTRY_FILE, OUTPUTS_DIR } from './fixtures.ts'
+import { type Config, findConfig, loadConfig, PAGE_SIZES } from '../config.ts'
+import { ENTRY_FILE, MOCK_FILE_NAME, OUTPUTS_DIR } from './fixtures.ts'
 
 vi.mock('node:fs', async () => {
   const { fs } = await import('memfs')
@@ -68,9 +68,20 @@ describe('loadConfig', () => {
   it('fills the documented defaults, and no others', async () => {
     const { dir, config } = await loadFrom(buildConfigModule(MINIMAL))
 
-    // Whole-object, so a key resolved wrongly, or one left over, fails too.
-    // `name` is the entry's basename: `doc.tsx` writes `doc.pdf`.
-    expect(config).toEqual(buildResolvedConfig(dir))
+    // Whole-object, so a default added, dropped, or changed fails it.
+    expect(config).toEqual({
+      root: dir,
+      entry: ENTRY_FILE,
+      entryPath: join(dir, ENTRY_FILE),
+      outDir: join(dir, OUTPUTS_DIR),
+      // The entry's basename, so `doc.tsx` writes `doc.pdf`.
+      name: MOCK_FILE_NAME,
+      page: PAGE_SIZES.letter,
+      margin: 1,
+      checkPdfFontTypes: true,
+      setDate: true,
+      port: 4000,
+    })
   })
 
   it('takes explicit dimensions as the sheet', async () => {
