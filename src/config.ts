@@ -220,7 +220,7 @@ export type Config = InferInput<typeof CONFIG_SCHEMA>
  * `Config` as the schema hands it back once it has checked it, every default
  * filled in.
  */
-type ParsedConfig = InferOutput<typeof CONFIG_SCHEMA>
+export type ParsedConfig = InferOutput<typeof CONFIG_SCHEMA>
 
 /** Paths resolved, and every documented default filled in. */
 export type ResolvedConfig = SetRequired<
