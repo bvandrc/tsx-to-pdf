@@ -226,8 +226,7 @@ export const CONFIG_SCHEMA = object({
       ],
       'Expected inches as a number, or { top, right, bottom, left }'
     ),
-    // What Word, Google Docs, and Pages all give a document.
-    1
+    1 // What Word, Google Docs, and Pages all give a document.
   ),
   maxPages: optional(pipe(number(), integer(), minValue(1))),
   checkPdfFontTypes: optional(boolean(), true),
