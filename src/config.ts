@@ -53,6 +53,14 @@ export type PageSize = keyof typeof PAGE_SIZES
 /** The names, as a value, so the schema and its message can both read them. */
 const PAGE_SIZE_NAMES = typedKeys(PAGE_SIZES)
 
+const PAGE_SIZE_SCHEMA = union(
+  [picklist(PAGE_SIZE_NAMES), PAGE_DIMENSIONS_SCHEMA],
+  `Expected ${PAGE_SIZE_NAMES.join(', ')}, or { width, height } as CSS lengths`
+)
+
+/** A named page size, or explicit CSS dimensions. */
+type PageSizeArg = InferOutput<typeof PAGE_SIZE_SCHEMA>
+
 const MARGIN_SCHEMA = union(
   [
     INCHES,
@@ -103,13 +111,7 @@ export const CONFIG_SCHEMA = object({
    *
    * @default 'letter'
    */
-  pageSize: optional(
-    union(
-      [picklist(PAGE_SIZE_NAMES), PAGE_DIMENSIONS_SCHEMA],
-      `Expected ${PAGE_SIZE_NAMES.join(', ')}, or { width, height } as CSS lengths`
-    ),
-    'letter'
-  ),
+  pageSize: optional(PAGE_SIZE_SCHEMA, 'letter'),
   /**
    * White space around the document, in inches — one number for all four sides,
    * or an object giving every side.
@@ -261,9 +263,7 @@ export const findConfig = (explicit?: string, from = process.cwd()): string => {
 }
 
 /** `letter` and the rest resolved to the lengths the stylesheet is built from. */
-const toDimensions = (
-  pageSize: NonNullable<Config['pageSize']>
-): PageDimensions =>
+const toDimensions = (pageSize: PageSizeArg): PageDimensions =>
   typeof pageSize === 'string' ? PAGE_SIZES[pageSize] : pageSize
 
 /**
