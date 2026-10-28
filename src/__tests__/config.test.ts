@@ -68,8 +68,8 @@ describe('loadConfig', () => {
   it('fills the documented defaults, and no others', async () => {
     const { dir, config } = await loadFrom(buildConfigModule(MINIMAL))
 
-    // Whole-object, so a default the schema sets but `CONFIG_DEFAULTS` lacks
-    // fails too. `name` is the entry's basename: `doc.tsx` writes `doc.pdf`.
+    // Whole-object, so a key resolved wrongly, or one left over, fails too.
+    // `name` is the entry's basename: `doc.tsx` writes `doc.pdf`.
     expect(config).toEqual(buildResolvedConfig(dir))
   })
 

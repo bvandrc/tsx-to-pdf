@@ -12,8 +12,9 @@ import { omit } from 'es-toolkit'
 import type { SetRequired } from 'type-fest'
 import {
   boolean,
-  type GenericSchema,
   getDotPath,
+  type InferInput,
+  type InferOutput,
   instance,
   integer,
   minValue,
@@ -30,8 +31,13 @@ import {
 
 import { typedKeys } from './utils/index.ts'
 
+/** A length in inches. Zero is a legitimate margin; negative is not. */
+const INCHES = pipe(number(), minValue(0))
+
+const PAGE_DIMENSIONS_SCHEMA = object({ width: string(), height: string() })
+
 /** A sheet, as CSS lengths. */
-export type PageDimensions = { width: string; height: string }
+export type PageDimensions = InferOutput<typeof PAGE_DIMENSIONS_SCHEMA>
 
 export const PAGE_SIZES = {
   letter: { width: '8.5in', height: '11in' },
@@ -47,38 +53,63 @@ export type PageSize = keyof typeof PAGE_SIZES
 /** The names, as a value, so the schema and its message can both read them. */
 const PAGE_SIZE_NAMES = typedKeys(PAGE_SIZES)
 
-/** White space around the document, in inches: one value, or all four sides. */
-export type Margin =
-  | number
-  | { top: number; right: number; bottom: number; left: number }
+const MARGIN_SCHEMA = union(
+  [
+    INCHES,
+    // All four required, and strict: naming some sides but not others reads
+    // as "the rest are zero" as easily as "the rest are the default", so it
+    // is an error rather than a guess. A misspelled side fails here too.
+    strictObject({
+      top: INCHES,
+      right: INCHES,
+      bottom: INCHES,
+      left: INCHES,
+    }),
+  ],
+  'Expected inches as a number, or { top, right, bottom, left }'
+)
 
-/** Which document to render and how. Paths are relative to the config file. */
-export type Config = {
+/** White space around the document, in inches: one value, or all four sides. */
+export type Margin = InferOutput<typeof MARGIN_SCHEMA>
+
+/**
+ * The config as a runtime check, with every default filled so nothing
+ * downstream repeats one.
+ */
+// The source of `Config` and `ResolvedConfig`, so each entry's JSDoc is what a
+// consumer's editor shows on that key.
+export const CONFIG_SCHEMA = object({
   /** A module default-exporting the component, and exporting a `title`. */
-  entry: string
+  entry: string(),
   /**
    * The document's stylesheet, imported into the page's own CSS.
    *
    * Not required — Tailwind's utilities and the sheet itself are there either
    * way, so a document that only uses classes needs no stylesheet of its own.
    */
-  styles?: string
+  styles: optional(string()),
   /** Directory copied in beside the rendered page. */
-  assets?: string
+  assets: optional(string()),
   /** Where the rendered files land. */
-  outDir: string
+  outDir: string(),
   /**
    * Basename they are given: `<name>.pdf`, `<name>.html`, `<name>.css`.
    *
    * @default the basename of `entry`
    */
-  name?: string
+  name: optional(string()),
   /**
    * A named page size, or explicit CSS dimensions.
    *
    * @default 'letter'
    */
-  pageSize?: PageSize | PageDimensions
+  pageSize: optional(
+    union(
+      [picklist(PAGE_SIZE_NAMES), PAGE_DIMENSIONS_SCHEMA],
+      `Expected ${PAGE_SIZE_NAMES.join(', ')}, or { width, height } as CSS lengths`
+    ),
+    'letter'
+  ),
   /**
    * White space around the document, in inches — one number for all four sides,
    * or an object giving every side.
@@ -87,13 +118,16 @@ export type Config = {
    *
    * @default 1
    */
-  margin?: Margin
+  margin: optional(
+    MARGIN_SCHEMA,
+    1 // What Word, Google Docs, and Pages all give a document.
+  ),
   /**
    * Trigger failure if the build exceeds this many pages.
    *
    * @default undefined — the length is not checked
    */
-  maxPages?: number
+  maxPages: optional(pipe(number(), integer(), minValue(1))),
   /**
    * Fail when a font is embedded as Type3, which text extractors read poorly.
    *
@@ -102,13 +136,13 @@ export type Config = {
    *
    * @default true
    */
-  checkPdfFontTypes?: boolean
+  checkPdfFontTypes: optional(boolean(), true),
   /**
    * `/Author` in the PDF: the person who wrote the document.
    *
    * Left unset by default.
    */
-  author?: string
+  author: optional(string()),
   /**
    * Stamp `/CreationDate` and `/ModDate`:
    * - `true` — the time of the build
@@ -119,7 +153,13 @@ export type Config = {
    *
    * @default true
    */
-  setDate?: boolean | Date
+  setDate: optional(
+    union(
+      [boolean(), instance(Date)],
+      'Expected a boolean, or a Date to set it to'
+    ),
+    true
+  ),
   /**
    * Generate `<name>.pdf`.
    *
@@ -129,7 +169,7 @@ export type Config = {
    * @cli `--no-pdf`
    * @default true
    */
-  pdf?: boolean
+  pdf: optional(boolean(), true),
   /**
    * Also write the document's text as `<name>.md`.
    *
@@ -139,7 +179,7 @@ export type Config = {
    * @cli `--md`
    * @default false
    */
-  markdown?: boolean
+  markdown: optional(boolean(), false),
   /**
    * Also write `<name>.png`, a full-page screenshot of the same render the PDF
    * is generated from.
@@ -150,7 +190,7 @@ export type Config = {
    * @cli `--png`
    * @default false
    */
-  png?: boolean
+  png: optional(boolean(), false),
   /**
    * Also write `<name>.jpg`, a full-page screenshot of the same render the PDF
    * is generated from.
@@ -161,35 +201,23 @@ export type Config = {
    * @cli `--jpg`
    * @default false
    */
-  jpg?: boolean
+  jpg: optional(boolean(), false),
   /**
    * Port for `tsx-to-pdf dev`.
    *
    * @cli `--port`
    * @default 4000
    */
-  port?: number
-}
+  port: optional(pipe(number(), integer()), 4000),
+})
 
-/** The documented `@default` of each key that has one, which the schema fills in. */
-export const CONFIG_DEFAULTS = {
-  pageSize: 'letter',
-  margin: 1, // What Word, Google Docs, and Pages all give a document.
-  checkPdfFontTypes: true,
-  setDate: true,
-  pdf: true,
-  markdown: false,
-  png: false,
-  jpg: false,
-  port: 4000,
-} satisfies Partial<Config>
-
-type DefaultedKey = keyof typeof CONFIG_DEFAULTS
+/** Which document to render and how. Paths are relative to the config file. */
+export type Config = InferInput<typeof CONFIG_SCHEMA>
 
 /** Paths resolved, and every documented default filled in. */
 export type ResolvedConfig = SetRequired<
-  Omit<Config, 'assets' | 'pageSize'>,
-  'name' | Exclude<DefaultedKey, 'pageSize'>
+  Omit<InferOutput<typeof CONFIG_SCHEMA>, 'assets' | 'pageSize'>,
+  'name'
 > & {
   /** The config file's directory. Relative paths resolve against it. */
   root: string
@@ -231,70 +259,6 @@ export const findConfig = (explicit?: string, from = process.cwd()): string => {
 
   return found
 }
-
-/** A length in inches. Zero is a legitimate margin; negative is not. */
-const INCHES = pipe(number(), minValue(0))
-
-/**
- * `Config` as a runtime check, with every default filled so nothing downstream
- * repeats one.
- */
-// Checked against `Config` rather than the source of it, so the published types
-// don't need valibot's, which are bundled and would be inlined.
-const CONFIG_SCHEMA = object({
-  entry: string(),
-  styles: optional(string()),
-  assets: optional(string()),
-  outDir: string(),
-  name: optional(string()),
-  pageSize: optional(
-    union(
-      [
-        picklist(PAGE_SIZE_NAMES),
-        object({ width: string(), height: string() }),
-      ],
-      `Expected ${PAGE_SIZE_NAMES.join(', ')}, or { width, height } as CSS lengths`
-    ),
-    CONFIG_DEFAULTS.pageSize
-  ),
-  margin: optional(
-    union(
-      [
-        INCHES,
-        // All four required, and strict: naming some sides but not others reads
-        // as "the rest are zero" as easily as "the rest are the default", so it
-        // is an error rather than a guess. A misspelled side fails here too.
-        strictObject({
-          top: INCHES,
-          right: INCHES,
-          bottom: INCHES,
-          left: INCHES,
-        }),
-      ],
-      'Expected inches as a number, or { top, right, bottom, left }'
-    ),
-    CONFIG_DEFAULTS.margin
-  ),
-  maxPages: optional(pipe(number(), integer(), minValue(1))),
-  checkPdfFontTypes: optional(boolean(), CONFIG_DEFAULTS.checkPdfFontTypes),
-  author: optional(string()),
-  setDate: optional(
-    union(
-      [boolean(), instance(Date)],
-      'Expected a boolean, or a Date to set it to'
-    ),
-    CONFIG_DEFAULTS.setDate
-  ),
-  pdf: optional(boolean(), CONFIG_DEFAULTS.pdf),
-  markdown: optional(boolean(), CONFIG_DEFAULTS.markdown),
-  png: optional(boolean(), CONFIG_DEFAULTS.png),
-  jpg: optional(boolean(), CONFIG_DEFAULTS.jpg),
-  port: optional(pipe(number(), integer()), CONFIG_DEFAULTS.port),
-  // Every key of `Config` and no other, so the two cannot drift.
-} satisfies Record<keyof Config, GenericSchema>) satisfies GenericSchema<
-  Config,
-  Config
->
 
 /** `letter` and the rest resolved to the lengths the stylesheet is built from. */
 const toDimensions = (
