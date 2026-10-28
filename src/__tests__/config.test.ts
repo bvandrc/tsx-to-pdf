@@ -80,6 +80,10 @@ describe('loadConfig', () => {
       margin: 1,
       checkPdfFontTypes: true,
       setDate: true,
+      pdf: true,
+      markdown: false,
+      png: false,
+      jpg: false,
       port: 4000,
     })
   })
