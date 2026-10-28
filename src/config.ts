@@ -81,8 +81,6 @@ const MARGIN_SCHEMA = union(
 export type Margin = InferOutput<typeof MARGIN_SCHEMA>
 
 /** The config as a runtime check. */
-// The source of `Config` and `ResolvedConfig`, so each entry's JSDoc is what a
-// consumer's editor shows on that key.
 const CONFIG_SCHEMA = object({
   /** A module default-exporting the component, and exporting a `title`. */
   entry: string(),
