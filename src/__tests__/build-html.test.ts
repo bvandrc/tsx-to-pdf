@@ -1,14 +1,11 @@
 import { mkdir, mkdtemp, readdir, rm, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
+import { omit } from 'es-toolkit'
+import { getDefaults } from 'valibot'
 
 import { buildStylesheet, copyAssets } from '../build-html.tsx'
-import { PAGE_SIZES } from '../config.ts'
-import {
-  buildResolvedConfig,
-  ENTRY_FILE,
-  MOCK_FILE_NAME,
-  OUTPUTS_DIR,
-} from './fixtures.ts'
+import { CONFIG_SCHEMA, PAGE_SIZES, type ResolvedConfig } from '../config.ts'
+import { ENTRY_FILE, MOCK_FILE_NAME, OUTPUTS_DIR } from './fixtures.ts'
 
 /** The three the build names after the document, and one asset to copy. */
 const FILENAMES = {
@@ -64,6 +61,21 @@ const createDirTree = async (files: Record<string, string>) => {
 
   return dir
 }
+
+/** A resolved config for a document at `root`, every default in place. */
+const buildResolvedConfig = (
+  root: string,
+  overrides: Partial<ResolvedConfig> = {}
+): ResolvedConfig => ({
+  ...omit(getDefaults(CONFIG_SCHEMA), ['pageSize']),
+  root,
+  entry: FILENAMES.ENTRY,
+  entryPath: join(root, FILENAMES.ENTRY),
+  outDir: join(root, DIRS.OUTPUTS),
+  name: MOCK_FILE_NAME,
+  page: PAGE_SIZES.letter,
+  ...overrides,
+})
 
 describe('copyAssets', () => {
   /** A build that has written its page, which is the state a copy runs after. */
