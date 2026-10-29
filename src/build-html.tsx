@@ -168,8 +168,7 @@ export const buildPage = async ({
       error.message.includes('React is not defined')
     ) {
       throw new Error(
-        'The document renders JSX compiled for React, from a package it ' +
-          'imports. Only React types can be used here, not React components.',
+        'The document renders JSX compiled for React, from a package it imports. Only React types can be used here, not React components.',
         { cause: error }
       )
     }
