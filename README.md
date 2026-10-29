@@ -72,9 +72,7 @@ export default {
 
 ### Project config
 
-None needed. **You do not need a `tsconfig.json` at all**, and if you have one, nothing in it has to be right: the JSX is always compiled for Preact as the document loads, whatever your tsconfig says, while its `paths` still resolve. You also never compile your document yourself.
-
-A tsconfig is exported if you want your editor to match, but extending it is optional:
+None, not even a tsconfig: the JSX compiles for Preact as the document loads, whatever your tsconfig says, and its `paths` still resolve. To have your editor match, extend the one this package exports:
 
 ```jsonc
 // tsconfig.json — optional
