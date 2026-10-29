@@ -1,7 +1,7 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { basename, dirname, join } from 'node:path'
 import { pathToFileURL } from 'node:url'
-import { mapValues } from 'es-toolkit'
+import { compact, mapValues } from 'es-toolkit'
 
 import { buildPage, copyAssets } from './build-html.tsx'
 import { buildImage } from './build-image.ts'
@@ -33,14 +33,14 @@ export const build = async (config: ResolvedConfig): Promise<string[]> => {
 
   // Everywhere this call might write, so their directories exist up front —
   // the page and its stylesheet always, the rest only when asked for.
-  const outputs = [
+  const outputs = compact([
     paths.HTML,
     paths.CSS,
-    ...(config.markdown ? [paths.MD] : []),
-    ...(config.pdf ? [paths.PDF] : []),
-    ...(config.png ? [paths.PNG] : []),
-    ...(config.jpg ? [paths.JPG] : []),
-  ]
+    config.markdown && paths.MD,
+    config.pdf && paths.PDF,
+    config.png && paths.PNG,
+    config.jpg && paths.JPG,
+  ])
 
   // Read ahead of overwriting them, to tell if the source changed and a PDF rebuild is needed.
   const [previousHtml, previousCss] = await Promise.all(
