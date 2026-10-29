@@ -64,17 +64,20 @@ const createDirTree = async (files: Record<string, string>) => {
   return dir
 }
 
+const DEFAULTS = getDefaults(CONFIG_SCHEMA)
+
 const buildResolvedConfig = (
   root: string,
   overrides: Partial<ResolvedConfig> = {}
 ): ResolvedConfig => ({
-  ...getDefaults(CONFIG_SCHEMA),
+  ...DEFAULTS,
   root,
   entry: FILENAMES.ENTRY,
   entryPath: join(root, FILENAMES.ENTRY),
   outDir: join(root, DIRS.OUTPUTS),
   name: MOCK_FILE_NAME,
-  page: PAGE_SIZES.letter,
+  // The default `pageSize`, as `loadConfig` resolves it.
+  page: PAGE_SIZES[DEFAULTS.pageSize],
   ...overrides,
 })
 

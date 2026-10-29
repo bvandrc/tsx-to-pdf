@@ -74,10 +74,11 @@ describe('loadConfig', () => {
 
   it("fills the schema's defaults, and no others", async () => {
     const { dir, config } = await loadFrom(buildConfigModule(MINIMAL))
+    const DEFAULTS = getDefaults(CONFIG_SCHEMA)
 
     // Whole-object, so a default dropped or a key added on the way fails it.
     expect(config).toEqual({
-      ...omit(getDefaults(CONFIG_SCHEMA), ['pageSize']),
+      ...omit(DEFAULTS, ['pageSize']),
       root: dir,
       entry: 'doc.tsx',
       entryPath: join(dir, 'doc.tsx'),
@@ -85,7 +86,7 @@ describe('loadConfig', () => {
       // The entry's basename, so `doc.tsx` writes `doc.pdf`.
       name: 'doc',
       // The default `pageSize`, as the dimensions it names.
-      page: PAGE_SIZES.letter,
+      page: PAGE_SIZES[DEFAULTS.pageSize],
     })
   })
 
