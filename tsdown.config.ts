@@ -12,9 +12,8 @@ export default defineConfig({
     // Naming each bundled package means something heavier cannot be swallowed
     // by accident: it has to be added here first.
     onlyBundle: [
-      // Only `debounce`, `mapValues`, `noop`, and `omit` are used, which is all
-      // tree-shaking keeps, so it is a devDependency bundled in rather than
-      // installed by everyone.
+      // Only a few small functions are used, which is all tree-shaking keeps,
+      // so it is a devDependency bundled in rather than installed by everyone.
       'es-toolkit',
     ],
   },
