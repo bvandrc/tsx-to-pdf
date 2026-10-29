@@ -7,7 +7,6 @@ import {
   join,
   resolve,
 } from 'node:path'
-import { pathToFileURL } from 'node:url'
 import { omit } from 'es-toolkit'
 import type { SetRequired } from 'type-fest'
 import {
@@ -29,6 +28,7 @@ import {
   union,
 } from 'valibot'
 
+import { createImporter } from './load-module.ts'
 import { typedKeys } from './utils/index.ts'
 
 /** A length in inches. Zero is a legitimate margin; negative is not. */
@@ -227,17 +227,11 @@ export const findConfig = (explicit?: string, from = process.cwd()): string => {
 const toDimensions = (pageSize: PageSizeArg): PageDimensions =>
   typeof pageSize === 'string' ? PAGE_SIZES[pageSize] : pageSize
 
-/**
- * Reads the config at `path`, resolves its paths, and fills in its defaults.
- *
- * Loading a TypeScript config needs `tsx` registered first, which the CLI does
- * — hence taking the path rather than finding it here, so registration can
- * happen in between.
- */
+/** Reads the config at `path`, resolves its paths, and fills in its defaults. */
 export const loadConfig = async (path: string): Promise<ResolvedConfig> => {
   const root = dirname(path)
 
-  const module = (await import(pathToFileURL(path).href)) as {
+  const module = (await createImporter(root)(path)) as {
     default?: Partial<Config>
   }
 

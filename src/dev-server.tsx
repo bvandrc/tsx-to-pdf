@@ -3,11 +3,10 @@ import { readdir, readFile, stat } from 'node:fs/promises'
 import { createServer, type ServerResponse } from 'node:http'
 import { dirname, extname, join, sep } from 'node:path'
 import { debounce } from 'es-toolkit'
-import { type NamespacedUnregister, register } from 'tsx/esm/api'
 
 import { buildPage, buildStylesheet } from './build-html.tsx'
 import type { ResolvedConfig } from './config.ts'
-import { jsxTsconfig } from './merge-tsconfig.ts'
+import { createImporter } from './load-module.ts'
 
 /** Shared by the route and the client that subscribes to it. */
 const LIVERELOAD = '/livereload'
@@ -57,32 +56,23 @@ export const serve = (config: ResolvedConfig): void => {
     return Math.max(...stats.map(({ mtimeMs }) => mtimeMs))
   }
 
-  // Started once rather than per request, since it writes the file `tsx` reads.
-  const tsconfig = jsxTsconfig(config.root)
+  // Fresh, so an edited component is re-read along with the entry that imports
+  // it, rather than served from the module cache.
+  const importFresh = createImporter(config.root, { fresh: true })
 
-  let scope: { revision: number; tsx: NamespacedUnregister } | undefined
+  let loaded: { revision: number; module: Promise<unknown> } | undefined
 
   /** Imports the document afresh whenever a file beside it has changed. */
-  const importDocument = async (url: string): Promise<unknown> => {
+  const importDocument = async (path: string): Promise<unknown> => {
     const revision = await contentRevision()
 
-    // A query on the entry's URL would only refresh the entry: the components
-    // it imports resolve to their plain URLs, which Node's module cache never
-    // evicts. A `tsx` namespace is carried down to every import beneath it, so
-    // each revision gets a module graph of its own. Swapped per revision rather
-    // than per request, so reloading an unchanged document adds no new hook.
-    if (scope?.revision !== revision) {
-      await scope?.tsx.unregister()
-      scope = {
-        revision,
-        tsx: register({
-          namespace: String(revision),
-          tsconfig: await tsconfig,
-        }),
-      }
+    // Kept per revision rather than imported per request, so reloading an
+    // unchanged document does not re-evaluate it.
+    if (loaded?.revision !== revision) {
+      loaded = { revision, module: importFresh(path) }
     }
 
-    return scope.tsx.import(url, import.meta.url)
+    return loaded.module
   }
 
   const server = createServer((req, res) => {
