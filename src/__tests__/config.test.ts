@@ -1,9 +1,17 @@
 import { mkdtemp, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { omit } from 'es-toolkit'
 import { vol } from 'memfs'
+import { getDefaults } from 'valibot'
 
-import { type Config, findConfig, loadConfig, PAGE_SIZES } from '../config.ts'
+import {
+  CONFIG_SCHEMA,
+  type Config,
+  findConfig,
+  loadConfig,
+  PAGE_SIZES,
+} from '../config.ts'
 
 vi.mock('node:fs', async () => {
   const { fs } = await import('memfs')
@@ -64,26 +72,20 @@ describe('loadConfig', () => {
     })
   })
 
-  it('fills the documented defaults, and no others', async () => {
+  it("fills the schema's defaults, and no others", async () => {
     const { dir, config } = await loadFrom(buildConfigModule(MINIMAL))
 
-    // Whole-object, so a default added, dropped, or changed fails it.
+    // Whole-object, so a default dropped or a key added on the way fails it.
     expect(config).toEqual({
+      ...omit(getDefaults(CONFIG_SCHEMA), ['pageSize']),
       root: dir,
       entry: 'doc.tsx',
       entryPath: join(dir, 'doc.tsx'),
       outDir: join(dir, 'outputs'),
       // The entry's basename, so `doc.tsx` writes `doc.pdf`.
       name: 'doc',
+      // The default `pageSize`, as the dimensions it names.
       page: PAGE_SIZES.letter,
-      margin: 1,
-      checkPdfFontTypes: true,
-      port: 4000,
-      setDate: true,
-      pdf: true,
-      markdown: false,
-      png: false,
-      jpg: false,
     })
   })
 
