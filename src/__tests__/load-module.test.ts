@@ -78,6 +78,30 @@ export default () => <p><Name /></p>`,
     expect(await getMarkup(join(root, 'app'))).toBe('<p><b>Ada</b></p>')
   })
 
+  it("resolves a pattern whose prefix doesn't end in a slash", async () => {
+    const root = await createProject({
+      'tsconfig.json': JSON.stringify({
+        compilerOptions: { paths: { '#*': ['./src/*'] } },
+      }),
+      'src/name.tsx': 'export const Name = () => <b>Ada</b>',
+      [ENTRY]: `import { Name } from '#name'
+export default () => <p><Name /></p>`,
+    })
+
+    expect(await getMarkup(root)).toBe('<p><b>Ada</b></p>')
+  })
+
+  it('resolves a bare import against baseUrl alone', async () => {
+    const root = await createProject({
+      'tsconfig.json': JSON.stringify({ compilerOptions: { baseUrl: '.' } }),
+      'lib/name.tsx': 'export const Name = () => <b>Ada</b>',
+      [ENTRY]: `import { Name } from 'lib/name'
+export default () => <p><Name /></p>`,
+    })
+
+    expect(await getMarkup(root)).toBe('<p><b>Ada</b></p>')
+  })
+
   it('compiles JSX for Preact whatever the tsconfig asks for', async () => {
     const root = await createProject({
       'tsconfig.json': JSON.stringify({

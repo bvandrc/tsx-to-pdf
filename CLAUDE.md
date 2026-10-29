@@ -31,7 +31,7 @@ Synced from https://github.com/bvandrc/bvandrc-conventions — follow all of the
 ## Repo conventions
 
 - **Package manager**: pnpm. `npm install` writes a competing lockfile CI ignores.
-- **The consumer's tsconfig is not trusted to set JSX.** `createImporter` loads their config and document through `jiti`, with Preact's JSX pinned in its options, so their tsconfig only contributes its `paths`, read with `get-tsconfig` and mapped to `jiti` aliases.
+- **The consumer's tsconfig is not trusted to set JSX.** `createImporter` loads their config and document through `jiti`, with Preact's JSX pinned in its options, so their tsconfig only contributes its `paths` and `baseUrl`, which `jiti`'s `tsconfigPaths` resolves from the tsconfig nearest each file.
 - **No subprocesses.** Tailwind runs through `@tailwindcss/node`'s `compile()` and `@tailwindcss/oxide`'s `Scanner`, not its CLI: Windows `.bin` shims are shell scripts, and spawning them has broken before.
 - **`jiti` is a loader, not the bundler.** It is a runtime dependency only for loading the _consumer's_ config and document, since Node strips types natively but cannot parse JSX. It is plain JS with no native binary, and `@tailwindcss/node` depends on it already. `tsdown` builds this package.
 - **Preact**

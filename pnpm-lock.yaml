@@ -213,11 +213,8 @@ importers:
       "@tailwindcss/oxide":
         specifier: ^4
         version: 4.3.3
-      get-tsconfig:
-        specifier: ^4
-        version: 4.14.3
       jiti:
-        specifier: ^2
+        specifier: ^2.7
         version: 2.7.0
       node-html-markdown:
         specifier: ^2
@@ -1758,12 +1755,6 @@ packages:
     engines: { node: ^8.16.0 || ^10.6.0 || >=11.0.0 }
     os: [darwin]
 
-  get-tsconfig@4.14.3:
-    resolution:
-      {
-        integrity: sha512-++QEw4DIY7WGoukz+/+A/8dGYPT9l9yIadnmSgZ8Rjr3YVSVDipQSO9CdnJo9ePqFqUUqh+wk9uIaoiAwsiPkA==,
-      }
-
   get-tsconfig@5.0.0-beta.5:
     resolution:
       {
@@ -3169,10 +3160,6 @@ snapshots:
 
   fsevents@2.3.3:
     optional: true
-
-  get-tsconfig@4.14.3:
-    dependencies:
-      resolve-pkg-maps: 1.0.0
 
   get-tsconfig@5.0.0-beta.5:
     dependencies:
