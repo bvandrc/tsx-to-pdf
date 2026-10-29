@@ -46,5 +46,9 @@ Synced from https://github.com/bvandrc/bvandrc-conventions — follow all of the
   - **Options**: only `codeBlockStyle: 'fenced'`. Prettier rewrites bullet markers and emphasis afterwards regardless, and the library only emits ATX headings.
 - **Playwright is imported lazily** inside `getBrowser` (`src/get-browser.ts`), so a build that skips `pdf`, `png`, and `jpg` works with no browser installed.
 - **Point-based measurements**: sizes are in points because the output is paper, not a screen. `html { font-size: 12pt }` makes Tailwind's `0.25rem` spacing unit exactly `3pt`, so scale classes land on whole points.
-- **`tsdown` builds the package**, configured in `tsdown.config.ts`. `es-toolkit` and `valibot` are inlined rather than installed by every consumer, because the package uses only a few small functions from each, and those are all that tree-shaking keeps. `deps.onlyBundle` names only those two, so nothing heavier is swallowed by accident; `type-fest` stays a real dependency because bundling it inlined 33 kB of types into the declarations.
+- **`tsdown` builds the package**, configured in `tsdown.config.ts`.
+  - **Bundled**: `es-toolkit` is inlined rather than installed by every consumer, because the package uses only a few small functions from it, and those are all that tree-shaking keeps.
+  - **`deps.onlyBundle`** names only `es-toolkit`, so nothing heavier is swallowed by accident.
+  - **Real dependencies**: `type-fest` and `valibot`, because their types reach the declarations, where bundling inlines them: 33 kB for `type-fest`, and 55 kB for `valibot`, which `Config` is inferred from.
+- **`CONFIG_SCHEMA` is the source of `Config`**: each key's type and JSDoc live on its entry in the valibot schema, and `Config` and `ResolvedConfig` are inferred from it, so the JSDoc there is what a consumer's editor shows.
 - **Typed `Object` walks**: `typedKeys`, `typedEntries`, and `typedFromEntries` (`src/utils/index.ts`) are the builtins plus the cast a call site would otherwise write by hand. Use them instead of asserting the result, and keep the builtins where the widened type is what's wanted.
