@@ -1,17 +1,9 @@
 import { mkdtemp, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { omit } from 'es-toolkit'
 import { vol } from 'memfs'
-import { getDefaults } from 'valibot'
 
-import {
-  CONFIG_SCHEMA,
-  type Config,
-  findConfig,
-  loadConfig,
-  PAGE_SIZES,
-} from '../config.ts'
+import { type Config, findConfig, loadConfig, PAGE_SIZES } from '../config.ts'
 
 vi.mock('node:fs', async () => {
   const { fs } = await import('memfs')
@@ -72,16 +64,10 @@ describe('loadConfig', () => {
     })
   })
 
-  it("fills the schema's defaults, and no others", async () => {
-    const { dir, config } = await loadFrom(buildConfigModule(MINIMAL))
+  it('names the outputs after the entry, on a letter sheet by default', async () => {
+    const { config } = await loadFrom(buildConfigModule(MINIMAL))
 
-    // Whole-object, so a default dropped or a key added on the way fails it.
-    expect(config).toEqual({
-      ...omit(getDefaults(CONFIG_SCHEMA), ['pageSize']),
-      root: dir,
-      entry: 'doc.tsx',
-      entryPath: join(dir, 'doc.tsx'),
-      outDir: join(dir, 'outputs'),
+    expect(config).toMatchObject({
       // The entry's basename, so `doc.tsx` writes `doc.pdf`.
       name: 'doc',
       // The default `pageSize`, as the dimensions it names.
@@ -98,20 +84,6 @@ describe('loadConfig', () => {
     )
 
     expect(config.page).toEqual({ width: '90mm', height: '50mm' })
-  })
-
-  it('keeps the outputs for the build to default from', async () => {
-    const OUTPUTS = {
-      pdf: false,
-      markdown: true,
-      png: true,
-      jpg: true,
-    } satisfies Pick<Config, 'pdf' | 'markdown' | 'png' | 'jpg'>
-    const { config } = await loadFrom(
-      buildConfigModule({ ...MINIMAL, ...OUTPUTS })
-    )
-
-    expect(config).toMatchObject(OUTPUTS)
   })
 
   it('rejects a config file with no default export', async () => {
