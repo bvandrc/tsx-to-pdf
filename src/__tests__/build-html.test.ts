@@ -1,6 +1,5 @@
 import { mkdir, mkdtemp, readdir, rm, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
-import { omit } from 'es-toolkit'
 import { getDefaults } from 'valibot'
 
 import { buildStylesheet, copyAssets } from '../build-html.tsx'
@@ -69,7 +68,7 @@ const buildResolvedConfig = (
   root: string,
   overrides: Partial<ResolvedConfig> = {}
 ): ResolvedConfig => ({
-  ...omit(getDefaults(CONFIG_SCHEMA), ['pageSize']),
+  ...getDefaults(CONFIG_SCHEMA),
   root,
   entry: FILENAMES.ENTRY,
   entryPath: join(root, FILENAMES.ENTRY),
