@@ -11,5 +11,6 @@ export {
   type PageSizeName,
   type ParsedConfig,
   type ResolvedConfig,
+  resolveConfig,
 } from './config.ts'
 export { serve } from './dev-server.tsx'

@@ -191,6 +191,14 @@ await build(await loadConfig(findConfig()))
 
 `findConfig` looks for `tsx-to-pdf.config.{ts,mts,js,mjs}` in the cwd, or takes an explicit path. `build` writes the outputs the config's `pdf`, `markdown`, `png`, and `jpg` ask for. To change them for one call, spread the config: `build({ ...config, pdf: false })` is the equivalent of `--no-pdf`.
 
+Without a config file, `resolveConfig` checks a config written in code and fills in its defaults, the same as `loadConfig` does for a file. Its paths resolve against the second argument, or the cwd if there isn't one:
+
+```ts
+import { build, resolveConfig } from 'tsx-to-pdf'
+
+await build(resolveConfig({ entry: './resume.tsx', outDir: './outputs' }))
+```
+
 ## Notes
 
 - Chromium is installed separately (`playwright install chromium`), since the browser is large and yours to manage. The full browser is pinned rather than the `chromium-headless-shell` a headless launch would otherwise pick: the shell lays text out about 1.7% taller, which is enough to push a full page onto a second one on one machine and not the next. Don't install with `--only-shell`.
