@@ -186,11 +186,8 @@ export const CONFIG_SCHEMA = object({
    */
   png: optional(boolean(), false),
   /**
-   * Also write `<name>.jpg`, a full-page screenshot of the same render the PDF
-   * is generated from.
-   *
-   * Needs Playwright and its Chromium, like {@link Config.pdf}, and shares the
-   * one browser with it when both are on.
+   * Also write `<name>.jpg`: the screenshot {@link Config.png} describes, as a
+   * JPG.
    *
    * @cli `--jpg`
    * @default false
