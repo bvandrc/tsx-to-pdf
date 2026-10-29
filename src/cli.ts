@@ -15,38 +15,44 @@ Commands:
 
 Options:
   --config <path>  Config file. Defaults to tsx-to-pdf.config.ts in the cwd
-  --no-pdf         build only: skip the PDF, so no browser is needed
-  --md             build only: also write the Markdown
-  --png            build only: also write a full-page PNG screenshot
-  --jpg            build only: also write a full-page JPG screenshot
-  --port <n>       dev only: overrides the configured port
+  --[no-]pdf       Write the PDF. --no-pdf needs no browser
+  --[no-]markdown  Write the Markdown
+  --[no-]png       Write a full-page PNG screenshot
+  --[no-]jpg       Write a full-page JPG screenshot
+  --port <n>       The port dev serves on
+
+Each of the last five sets the config key it is named after, for this run.
 `
 
 const main = async (args: string[]): Promise<void> => {
   const { values, positionals } = parseArgs({
     args,
     allowPositionals: true,
+    // `--no-pdf` and the rest, for every boolean.
+    allowNegative: true,
     options: {
       config: { type: 'string' },
-      'no-pdf': { type: 'boolean' },
-      md: { type: 'boolean' },
+      help: { type: 'boolean', short: 'h' },
+      // Named after the config keys they set.
+      pdf: { type: 'boolean' },
+      markdown: { type: 'boolean' },
       png: { type: 'boolean' },
       jpg: { type: 'boolean' },
       port: { type: 'string' },
-      help: { type: 'boolean', short: 'h' },
     },
   })
 
   const [command] = positionals
+  const { config: configFlag, help, port, ...outputs } = values
 
-  if (!command || values.help) {
+  if (!command || help) {
     console.info(USAGE)
     return
   }
 
   // Found before registering, since locating it only touches the filesystem
   // while loading it may need TypeScript.
-  const configPath = findConfig(values.config)
+  const configPath = findConfig(configFlag)
 
   // Lets the config and the document be TypeScript without the project having
   // to compile them first. Node strips type annotations natively but cannot
@@ -56,24 +62,22 @@ const main = async (args: string[]): Promise<void> => {
   // a project needs no tsconfig, and nothing in an existing one has to be right.
   register({ tsconfig: await jsxTsconfig(dirname(configPath)) })
 
-  const config = await loadConfig(configPath)
+  // Checked by the config's own schema, so `--port abc` fails the way
+  // `port: 'abc'` would. A flag left off leaves the config's choice as it is.
+  const config = await loadConfig(configPath, {
+    ...outputs,
+    ...(port !== undefined && { port: Number(port) }),
+  })
 
   switch (command) {
     case 'build': {
-      const written = await build({
-        ...config,
-        // A flag left off leaves the config's choice as it is.
-        ...(values['no-pdf'] && { pdf: false }),
-        ...(values.md && { markdown: true }),
-        ...(values.png && { png: true }),
-        ...(values.jpg && { jpg: true }),
-      })
+      const written = await build(config)
       console.info(`Wrote ${written.join(', ')}`)
       return
     }
 
     case 'dev': {
-      serve(values.port ? { ...config, port: Number(values.port) } : config)
+      serve(config)
       return
     }
 

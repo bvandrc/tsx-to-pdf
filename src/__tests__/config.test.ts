@@ -132,11 +132,11 @@ describe('loadConfig', () => {
    * `loadConfig` reaches its file through `import()`, which goes to the real
    * loader rather than the mocked `node:fs` the rest of this file installs.
    */
-  const loadFrom = async (source: string) => {
+  const loadFrom = async (source: string, overrides?: Partial<Config>) => {
     const dir = await mkdtemp(join(tmpdir(), 'tsx-to-pdf-'))
     const path = join(dir, 'tsx-to-pdf.config.mjs')
     await writeFile(path, source)
-    return { dir, config: await loadConfig(path) }
+    return { dir, config: await loadConfig(path, overrides) }
   }
 
   const buildConfigModule = (config: Config) =>
@@ -157,6 +157,22 @@ describe('loadConfig', () => {
   it('rejects a config file with no default export', async () => {
     await expect(loadFrom('export const title = "doc"')).rejects.toThrow(
       'no default export'
+    )
+  })
+
+  it("lets overrides replace the file's keys, and checks them alike", async () => {
+    const MODULE = buildConfigModule({
+      entry: 'doc.tsx',
+      outDir: 'outputs',
+      pdf: false,
+      port: 3000,
+    })
+
+    const { config } = await loadFrom(MODULE, { pdf: true, markdown: true })
+    expect(config).toMatchObject({ pdf: true, markdown: true, port: 3000 })
+
+    await expect(loadFrom(MODULE, { port: Number.NaN })).rejects.toThrow(
+      /config\.mjs with its overrides is invalid:\n {2}port: /
     )
   })
 

@@ -160,7 +160,7 @@ export const CONFIG_SCHEMA = object({
    * Needs Playwright, and Chromium installed through it (`playwright install
    * chromium`).
    *
-   * @cli `--no-pdf`
+   * @cli `--[no-]pdf`
    * @default true
    */
   pdf: optional(boolean(), true),
@@ -170,7 +170,7 @@ export const CONFIG_SCHEMA = object({
    * Content only: layout set by classes has no Markdown equivalent, so it is
    * dropped.
    *
-   * @cli `--md`
+   * @cli `--[no-]markdown`
    * @default false
    */
   markdown: optional(boolean(), false),
@@ -181,7 +181,7 @@ export const CONFIG_SCHEMA = object({
    * Needs Playwright and its Chromium, like {@link Config.pdf}, and shares the
    * one browser with it when both are on.
    *
-   * @cli `--png`
+   * @cli `--[no-]png`
    * @default false
    */
   png: optional(boolean(), false),
@@ -189,7 +189,7 @@ export const CONFIG_SCHEMA = object({
    * Also write `<name>.jpg`: the screenshot {@link Config.png} describes, as a
    * JPG.
    *
-   * @cli `--jpg`
+   * @cli `--[no-]jpg`
    * @default false
    */
   jpg: optional(boolean(), false),
@@ -320,18 +320,27 @@ export const resolveConfig = (
  * Reads the config at `path`, fills in its defaults, and resolves its paths
  * against the file's directory.
  *
+ * `overrides` replace the file's keys before the check, as the CLI's flags do.
  * Loading a TypeScript config needs `tsx` registered first, which the CLI does
  * — hence taking the path rather than finding it here, so registration can
  * happen in between.
  */
-export const loadConfig = async (path: string): Promise<ResolvedConfig> => {
+export const loadConfig = async (
+  path: string,
+  overrides: Partial<Config> = {}
+): Promise<ResolvedConfig> => {
   const module = (await import(pathToFileURL(path).href)) as {
-    default?: unknown
+    default?: Partial<Config>
   }
 
   if (!module.default) {
     throw new Error(`${path} has no default export.`)
   }
 
-  return checkAndResolve(module.default, dirname(path), path)
+  return checkAndResolve(
+    { ...module.default, ...overrides },
+    dirname(path),
+    // So a bad override isn't blamed on the file alone.
+    Object.keys(overrides).length ? `${path} with its overrides` : path
+  )
 }
