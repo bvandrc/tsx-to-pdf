@@ -91,7 +91,8 @@
     "prettier": "^3",
     "tailwindcss": "^4",
     "tsx": "^4",
-    "type-fest": ">=3"
+    "type-fest": ">=3",
+    "valibot": "^1"
   },
   "peerDependencies": {
     "playwright": "^1",
@@ -112,7 +113,6 @@
     "preact": "^11",
     "tsdown": "^0.22",
     "typescript": "^7",
-    "valibot": "^1",
     "vitest": "^5"
   }
 }
