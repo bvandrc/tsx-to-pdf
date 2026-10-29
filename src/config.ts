@@ -8,7 +8,7 @@ import {
   resolve,
 } from 'node:path'
 import { pathToFileURL } from 'node:url'
-import { isEmptyObject, omit } from 'es-toolkit'
+import { omit } from 'es-toolkit'
 import type { SetRequired } from 'type-fest'
 import {
   boolean,
@@ -341,6 +341,6 @@ export const loadConfig = async (
     { ...module.default, ...overrides },
     dirname(path),
     // So a bad override isn't blamed on the file alone.
-    isEmptyObject(overrides) ? path : `${path} with its overrides`
+    Object.keys(overrides).length ? `${path} with its overrides` : path
   )
 }
