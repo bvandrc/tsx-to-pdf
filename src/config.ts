@@ -57,7 +57,7 @@ const PAGE_SIZE_NAMES = typedKeys(PAGE_SIZES)
  * The config as a runtime check, with every default filled so nothing
  * downstream repeats one.
  */
-export const CONFIG_SCHEMA = object({
+const CONFIG_SCHEMA = object({
   /** A module default-exporting the component, and exporting a `title`. */
   entry: string(),
   /**

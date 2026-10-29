@@ -1,15 +1,16 @@
 import { mkdir, mkdtemp, readdir, rm, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
-import { omit } from 'es-toolkit'
-import { getDefaults } from 'valibot'
 
 import { buildStylesheet, copyAssets } from '../build-html.tsx'
-import { CONFIG_SCHEMA, PAGE_SIZES, type ResolvedConfig } from '../config.ts'
-import { ENTRY_FILE, MOCK_FILE_NAME, OUTPUTS_DIR } from './fixtures.ts'
+import { PAGE_SIZES, type ResolvedConfig } from '../config.ts'
+
+/** The document a build is pointed at, and the directory it writes into. */
+const MOCK_FILE_NAME = 'doc'
+const OUTPUTS = 'outputs'
 
 /** The three the build names after the document, and one asset to copy. */
 const FILENAMES = {
-  ENTRY: ENTRY_FILE,
+  ENTRY: `${MOCK_FILE_NAME}.tsx`,
   PAGE: `${MOCK_FILE_NAME}.html`,
   SHEET: `${MOCK_FILE_NAME}.css`,
   LOGO: 'logo.svg',
@@ -17,8 +18,8 @@ const FILENAMES = {
 
 const DIRS = {
   ASSETS: 'assets',
-  OUTPUTS: OUTPUTS_DIR,
-  HTML: join(OUTPUTS_DIR, 'html'),
+  OUTPUTS,
+  HTML: join(OUTPUTS, 'html'),
 }
 
 /** Contents nothing under test reads — only whether the file is there. */
@@ -62,18 +63,20 @@ const createDirTree = async (files: Record<string, string>) => {
   return dir
 }
 
-/** A resolved config for a document at `root`, every default in place. */
 const buildResolvedConfig = (
   root: string,
   overrides: Partial<ResolvedConfig> = {}
 ): ResolvedConfig => ({
-  ...omit(getDefaults(CONFIG_SCHEMA), ['pageSize']),
   root,
   entry: FILENAMES.ENTRY,
   entryPath: join(root, FILENAMES.ENTRY),
   outDir: join(root, DIRS.OUTPUTS),
   name: MOCK_FILE_NAME,
   page: PAGE_SIZES.letter,
+  margin: 1,
+  checkPdfFontTypes: true,
+  port: 4000,
+  setDate: true,
   ...overrides,
 })
 
