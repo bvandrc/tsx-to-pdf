@@ -268,28 +268,19 @@ const toDimensions = (pageSize: PageSize): PageDimensions =>
   typeof pageSize === 'string' ? PAGE_SIZES[pageSize] : pageSize
 
 /**
- * Reads the config at `path`, resolves its paths, and fills in its defaults.
- *
- * Loading a TypeScript config needs `tsx` registered first, which the CLI does
- * — hence taking the path rather than finding it here, so registration can
- * happen in between.
+ * Checks `input` against the schema, fills in its defaults, and resolves its
+ * paths against `root`, naming `source` in the error when it is invalid.
  */
-export const loadConfig = async (path: string): Promise<ResolvedConfig> => {
-  const root = dirname(path)
-
-  const module = (await import(pathToFileURL(path).href)) as {
-    default?: Partial<Config>
-  }
-
-  if (!module.default) {
-    throw new Error(`${path} has no default export.`)
-  }
-
-  const result = safeParse(CONFIG_SCHEMA, module.default)
+const checkAndResolve = (
+  input: unknown,
+  root: string,
+  source: string
+): ResolvedConfig => {
+  const result = safeParse(CONFIG_SCHEMA, input)
 
   if (!result.success) {
     throw new Error(
-      `${path} is invalid:\n${result.issues
+      `${source} is invalid:\n${result.issues
         .map(
           (issue) => `  ${getDotPath(issue) ?? '(config)'}: ${issue.message}`
         )
@@ -314,4 +305,33 @@ export const loadConfig = async (path: string): Promise<ResolvedConfig> => {
     name: config.name ?? basename(config.entry, extname(config.entry)),
     page: toDimensions(config.pageSize),
   }
+}
+
+/**
+ * Checks a config written in code, fills in its defaults, and resolves its
+ * paths against `root`, for `build()` or `serve()` without a config file.
+ */
+export const resolveConfig = (
+  config: Config,
+  root: string = process.cwd()
+): ResolvedConfig => checkAndResolve(config, root, 'The config')
+
+/**
+ * Reads the config at `path`, fills in its defaults, and resolves its paths
+ * against the file's directory.
+ *
+ * Loading a TypeScript config needs `tsx` registered first, which the CLI does
+ * — hence taking the path rather than finding it here, so registration can
+ * happen in between.
+ */
+export const loadConfig = async (path: string): Promise<ResolvedConfig> => {
+  const module = (await import(pathToFileURL(path).href)) as {
+    default?: unknown
+  }
+
+  if (!module.default) {
+    throw new Error(`${path} has no default export.`)
+  }
+
+  return checkAndResolve(module.default, dirname(path), path)
 }
