@@ -189,7 +189,7 @@ register() // needed only if your config or document is TypeScript
 await build(await loadConfig(findConfig()))
 ```
 
-`findConfig` looks for `tsx-to-pdf.config.{ts,mts,js,mjs}` in the cwd, or takes an explicit path. `build` writes the outputs the config's `pdf`, `markdown`, `png`, and `jpg` ask for. To change them for one call, spread the config: `build({ ...config, pdf: false })` is the equivalent of `--no-pdf`. The older second argument, `build(config, { pdf: false })`, still works but is deprecated, and goes in the next major.
+`findConfig` looks for `tsx-to-pdf.config.{ts,mts,js,mjs}` in the cwd, or takes an explicit path. `build` writes the outputs the config's `pdf`, `markdown`, `png`, and `jpg` ask for. To change them for one call, spread the config: `build({ ...config, pdf: false })` is the equivalent of `--no-pdf`.
 
 ## Notes
 
