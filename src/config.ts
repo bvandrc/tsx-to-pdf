@@ -48,7 +48,8 @@ export const PAGE_SIZES = {
   a5: { width: '148mm', height: '210mm' },
 } as const satisfies Record<string, PageDimensions>
 
-export type PageSize = keyof typeof PAGE_SIZES
+/** The named sheets `pageSize` accepts. */
+export type PageSizeName = keyof typeof PAGE_SIZES
 
 /** The names, as a value, so the schema and its message can both read them. */
 const PAGE_SIZE_NAMES = typedKeys(PAGE_SIZES)
@@ -57,7 +58,7 @@ const PAGE_SIZE_NAMES = typedKeys(PAGE_SIZES)
  * The config as a runtime check, with every default filled so nothing
  * downstream repeats one.
  */
-const CONFIG_SCHEMA = object({
+export const CONFIG_SCHEMA = object({
   /** A module default-exporting the component, and exporting a `title`. */
   entry: string(),
   /**
@@ -154,6 +155,45 @@ const CONFIG_SCHEMA = object({
     true
   ),
   /**
+   * Generate `<name>.pdf`.
+   *
+   * Needs Playwright, and Chromium installed through it (`playwright install
+   * chromium`).
+   *
+   * @cli `--no-pdf`
+   * @default true
+   */
+  pdf: optional(boolean(), true),
+  /**
+   * Also write the document's text as `<name>.md`.
+   *
+   * Content only: layout set by classes has no Markdown equivalent, so it is
+   * dropped.
+   *
+   * @cli `--md`
+   * @default false
+   */
+  markdown: optional(boolean(), false),
+  /**
+   * Also write `<name>.png`, a full-page screenshot of the same render the PDF
+   * is generated from.
+   *
+   * Needs Playwright and its Chromium, like {@link Config.pdf}, and shares the
+   * one browser with it when both are on.
+   *
+   * @cli `--png`
+   * @default false
+   */
+  png: optional(boolean(), false),
+  /**
+   * Also write `<name>.jpg`: the screenshot {@link Config.png} describes, as a
+   * JPG.
+   *
+   * @cli `--jpg`
+   * @default false
+   */
+  jpg: optional(boolean(), false),
+  /**
    * Port for `tsx-to-pdf dev`.
    *
    * @cli `--port`
@@ -169,7 +209,7 @@ export type Config = InferInput<typeof CONFIG_SCHEMA>
 export type Margin = NonNullable<Config['margin']>
 
 /** A named page size, or explicit CSS dimensions. */
-type PageSizeArg = NonNullable<Config['pageSize']>
+export type PageSize = NonNullable<Config['pageSize']>
 
 /**
  * `Config` as the schema hands it back once it has checked it, every default
@@ -224,7 +264,7 @@ export const findConfig = (explicit?: string, from = process.cwd()): string => {
 }
 
 /** `letter` and the rest resolved to the lengths the stylesheet is built from. */
-const toDimensions = (pageSize: PageSizeArg): PageDimensions =>
+const toDimensions = (pageSize: PageSize): PageDimensions =>
   typeof pageSize === 'string' ? PAGE_SIZES[pageSize] : pageSize
 
 /**
