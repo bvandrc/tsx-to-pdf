@@ -29,7 +29,6 @@ const outputFiles = ({ outDir, name }: ResolvedConfig) =>
  * asks for, and returns what it wrote.
  */
 export const build = async (config: ResolvedConfig): Promise<string[]> => {
-  const { pdf, markdown, png, jpg } = config
   const paths = outputFiles(config)
 
   // Everywhere this call might write, so their directories exist up front —
@@ -37,10 +36,10 @@ export const build = async (config: ResolvedConfig): Promise<string[]> => {
   const outputs = [
     paths.HTML,
     paths.CSS,
-    ...(markdown ? [paths.MD] : []),
-    ...(pdf ? [paths.PDF] : []),
-    ...(png ? [paths.PNG] : []),
-    ...(jpg ? [paths.JPG] : []),
+    ...(config.markdown ? [paths.MD] : []),
+    ...(config.pdf ? [paths.PDF] : []),
+    ...(config.png ? [paths.PNG] : []),
+    ...(config.jpg ? [paths.JPG] : []),
   ]
 
   // Read ahead of overwriting them, to tell if the source changed and a PDF rebuild is needed.
@@ -71,14 +70,14 @@ export const build = async (config: ResolvedConfig): Promise<string[]> => {
     basename(paths.CSS),
   ])
 
-  if (markdown) {
+  if (config.markdown) {
     await writeFile(paths.MD, await buildMarkdown(html))
   }
 
-  let pdfNeeded = pdf
+  let pdfNeeded = config.pdf
   let pdfSetDate = config.setDate
 
-  if (pdf) {
+  if (config.pdf) {
     const previousPdf = await loadPreviousPdf(paths.PDF)
     const prevDate = previousPdf?.getCreationDate()
 
@@ -115,7 +114,7 @@ export const build = async (config: ResolvedConfig): Promise<string[]> => {
 
   // One browser for PDF (when it actually needs regenerating) and both image
   // formats, so asking for more than one doesn't pay for a second Chromium launch.
-  if (pdfNeeded || png || jpg) {
+  if (pdfNeeded || config.png || config.jpg) {
     const { browser, page } = await getBrowser({
       pageUrl: pathToFileURL(paths.HTML).href,
     })
@@ -128,11 +127,11 @@ export const build = async (config: ResolvedConfig): Promise<string[]> => {
         )
       }
 
-      if (png) {
+      if (config.png) {
         await writeFile(paths.PNG, await buildImage(page, 'png'))
       }
 
-      if (jpg) {
+      if (config.jpg) {
         await writeFile(paths.JPG, await buildImage(page, 'jpg'))
       }
     } finally {
