@@ -50,5 +50,5 @@ Synced from https://github.com/bvandrc/bvandrc-conventions — follow all of the
   - **Bundled**: `es-toolkit` is inlined rather than installed by every consumer, because the package uses only a few small functions from it, and those are all that tree-shaking keeps.
   - **`deps.onlyBundle`** names only `es-toolkit`, so nothing heavier is swallowed by accident.
   - **Real dependencies**: `type-fest` and `valibot`, because their types reach the declarations, where bundling inlines them: 33 kB for `type-fest`, and 55 kB for `valibot`, which `Config` is inferred from.
-- **`CONFIG_SCHEMA` is the source of `Config`**: each key's type and JSDoc live on its entry in the valibot schema, and `Config` and `ResolvedConfig` are inferred from it, so the JSDoc there is what a consumer's editor shows.
+- **`CONFIG_SCHEMA` is the source of `Config`**: each key's type, default, and JSDoc live on its entry in the valibot schema, and `Config` and `ResolvedConfig` are inferred from it, so the JSDoc there is what a consumer's editor shows.
 - **Typed `Object` walks**: `typedKeys`, `typedEntries`, and `typedFromEntries` (`src/utils/index.ts`) are the builtins plus the cast a call site would otherwise write by hand. Use them instead of asserting the result, and keep the builtins where the widened type is what's wanted.

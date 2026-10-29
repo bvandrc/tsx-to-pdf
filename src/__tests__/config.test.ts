@@ -64,13 +64,20 @@ describe('loadConfig', () => {
     })
   })
 
-  it('fills the defaults a caller would otherwise have to know', async () => {
-    const { config } = await loadFrom(buildConfigModule(MINIMAL))
+  it('fills the documented defaults, and no others', async () => {
+    const { dir, config } = await loadFrom(buildConfigModule(MINIMAL))
 
-    expect(config).toMatchObject({
+    // Whole-object, so a default added, dropped, or changed fails it.
+    expect(config).toEqual({
+      root: dir,
+      entry: 'doc.tsx',
+      entryPath: join(dir, 'doc.tsx'),
+      outDir: join(dir, 'outputs'),
       // The entry's basename, so `doc.tsx` writes `doc.pdf`.
       name: 'doc',
       page: PAGE_SIZES.letter,
+      margin: 1,
+      checkPdfFontTypes: true,
       port: 4000,
       setDate: true,
     })
