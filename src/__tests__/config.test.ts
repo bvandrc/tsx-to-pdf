@@ -4,7 +4,6 @@ import { join } from 'node:path'
 import { vol } from 'memfs'
 
 import { type Config, findConfig, loadConfig, PAGE_SIZES } from '../config.ts'
-import { ENTRY_FILE, MOCK_FILE_NAME, OUTPUTS_DIR } from './fixtures.ts'
 
 vi.mock('node:fs', async () => {
   const { fs } = await import('memfs')
@@ -34,7 +33,7 @@ describe('findConfig', () => {
 
 describe('loadConfig', () => {
   /** A minimal valid config, as the object a config file default-exports. */
-  const MINIMAL = { entry: ENTRY_FILE, outDir: OUTPUTS_DIR } satisfies Config
+  const MINIMAL = { entry: 'doc.tsx', outDir: 'outputs' } satisfies Config
 
   /**
    * Writes a config to a real directory and loads it.
@@ -59,8 +58,8 @@ describe('loadConfig', () => {
 
     expect(config).toMatchObject({
       root: dir,
-      entryPath: join(dir, ENTRY_FILE),
-      outDir: join(dir, OUTPUTS_DIR),
+      entryPath: join(dir, 'doc.tsx'),
+      outDir: join(dir, 'outputs'),
       assetsDir: join(dir, '../shared/assets'),
     })
   })
@@ -71,20 +70,20 @@ describe('loadConfig', () => {
     // Whole-object, so a default added, dropped, or changed fails it.
     expect(config).toEqual({
       root: dir,
-      entry: ENTRY_FILE,
-      entryPath: join(dir, ENTRY_FILE),
-      outDir: join(dir, OUTPUTS_DIR),
+      entry: 'doc.tsx',
+      entryPath: join(dir, 'doc.tsx'),
+      outDir: join(dir, 'outputs'),
       // The entry's basename, so `doc.tsx` writes `doc.pdf`.
-      name: MOCK_FILE_NAME,
+      name: 'doc',
       page: PAGE_SIZES.letter,
       margin: 1,
       checkPdfFontTypes: true,
+      port: 4000,
       setDate: true,
       pdf: true,
       markdown: false,
       png: false,
       jpg: false,
-      port: 4000,
     })
   })
 
