@@ -55,6 +55,6 @@ jobs:
       - name: Compare bundle size
         uses: preactjs/compressed-size-action@v2
         with:
-          pattern: "dist/**/*.{js,mjs,cjs,css}"
+          pattern: 'dist/**/*.{js,mjs,cjs,css}'
           minimum-change-threshold: 100
-          sort-by: "Change:desc"
+          sort-by: 'Change:desc'

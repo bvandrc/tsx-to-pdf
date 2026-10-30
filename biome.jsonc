@@ -1,6 +1,6 @@
 {
   "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
-  "extends": ["./conventions/biome.base.json"],
+  "extends": ["./conventions/biome.base.jsonc"],
   "files": {
     "includes": [
       "**",
@@ -10,7 +10,7 @@
       "!!dist",
       "!!example/outputs",
       // Synced from upstream and overwritten on every sync.
-      "!!conventions/*.md"
+      "!!conventions"
     ]
   },
   "css": {
