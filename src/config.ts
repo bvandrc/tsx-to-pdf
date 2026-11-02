@@ -334,7 +334,9 @@ export const loadConfigFile = async (
   path: string,
   overrides: Partial<Config> = {}
 ): Promise<ResolvedConfig> => {
-  const module = (await createImporter(dirname(path))(path)) as {
+  const module = (await createImporter(dirname(path), { cacheModules: true })(
+    path
+  )) as {
     default?: Partial<Config>
   }
 

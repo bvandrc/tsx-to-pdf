@@ -59,7 +59,7 @@ export const serve = (config: ResolvedConfig): void => {
   const importFresh = createImporter(config.root, {
     // So an edited component is re-read along with the entry that imports it,
     // rather than served from the module cache.
-    fresh: true,
+    cacheModules: false,
   })
 
   let loaded: { revision: number; module: Promise<unknown> } | undefined

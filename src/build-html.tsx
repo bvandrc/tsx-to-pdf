@@ -103,7 +103,7 @@ export const buildPage = async ({
   config,
   head,
   stylesheet,
-  importDocument = createImporter(config.root),
+  importDocument = createImporter(config.root, { cacheModules: true }),
 }: {
   config: ResolvedConfig
   /** Extra `<head>` content. (The dev server passes its preview styling here.) */

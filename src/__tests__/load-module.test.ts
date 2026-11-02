@@ -37,7 +37,9 @@ const createProject = async (files: Record<string, string>) => {
 
 /** The document at `ENTRY` in `root`, imported and rendered to markup. */
 const getMarkup = async (root: string, entry = ENTRY) => {
-  const module = (await createImporter(root)(join(root, entry))) as {
+  const module = (await createImporter(root, { cacheModules: true })(
+    join(root, entry)
+  )) as {
     default: () => null
   }
 
