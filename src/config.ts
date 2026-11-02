@@ -170,7 +170,7 @@ export const CONFIG_SCHEMA = object({
    * Content only: layout set by classes has no Markdown equivalent, so it is
    * dropped.
    *
-   * @cli `--[no-]markdown`
+   * @cli `--[no-]md`
    * @default false
    */
   markdown: optional(boolean(), false),

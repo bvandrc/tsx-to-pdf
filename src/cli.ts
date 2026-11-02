@@ -16,12 +16,13 @@ Commands:
 Options:
   --config <path>  Config file. Defaults to tsx-to-pdf.config.ts in the cwd
   --[no-]pdf       Write the PDF. --no-pdf needs no browser
-  --[no-]markdown  Write the Markdown. --md and --no-md work too
+  --[no-]md        Write the Markdown
   --[no-]png       Write a full-page PNG screenshot
   --[no-]jpg       Write a full-page JPG screenshot
   --port <n>       The port dev serves on
 
-Each of the last five sets the config key it is named after, for this run.
+Each of the last five sets its config key for this run: pdf, markdown, png,
+jpg, or port.
 `
 
 const main = async (args: string[]): Promise<void> => {
@@ -32,10 +33,8 @@ const main = async (args: string[]): Promise<void> => {
     options: {
       config: { type: 'string' },
       help: { type: 'boolean', short: 'h' },
-      // Named after the config keys they set.
+      // The outputs, each named for the extension it writes.
       pdf: { type: 'boolean' },
-      markdown: { type: 'boolean' },
-      // `--markdown`'s short form, kept from before the flags matched the keys.
       md: { type: 'boolean' },
       png: { type: 'boolean' },
       jpg: { type: 'boolean' },
@@ -66,9 +65,9 @@ const main = async (args: string[]): Promise<void> => {
   // Checked by the config's own schema, so `--port abc` fails the way
   // `port: 'abc'` would. A flag left off leaves the config's choice as it is.
   const config = await loadConfig(configPath, {
-    // Under `outputs`, so `--markdown` wins if both are given.
-    ...(md !== undefined && { markdown: md }),
     ...outputs,
+    // The one flag not named after its key.
+    ...(md !== undefined && { markdown: md }),
     ...(port !== undefined && { port: Number(port) }),
   })
 
