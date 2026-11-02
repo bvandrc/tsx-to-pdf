@@ -48,13 +48,17 @@ export const PAGE_SIZES = {
   a5: { width: '148mm', height: '210mm' },
 } as const satisfies Record<string, PageDimensions>
 
-export type PageSize = keyof typeof PAGE_SIZES
+/** The named sheets `pageSize` accepts. */
+export type PageSizeName = keyof typeof PAGE_SIZES
 
 /** The names, as a value, so the schema and its message can both read them. */
 const PAGE_SIZE_NAMES = typedKeys(PAGE_SIZES)
 
-/** The config as a runtime check. */
-const CONFIG_SCHEMA = object({
+/**
+ * The config as a runtime check, with every default filled so nothing
+ * downstream repeats one.
+ */
+export const CONFIG_SCHEMA = object({
   /** A module default-exporting the component, and exporting a `title`. */
   entry: string(),
   /**
@@ -83,7 +87,8 @@ const CONFIG_SCHEMA = object({
     union(
       [picklist(PAGE_SIZE_NAMES), PAGE_DIMENSIONS_SCHEMA],
       `Expected ${PAGE_SIZE_NAMES.join(', ')}, or { width, height } as CSS lengths`
-    )
+    ),
+    'letter'
   ),
   /**
    * White space around the document, in inches — one number for all four sides,
@@ -108,7 +113,8 @@ const CONFIG_SCHEMA = object({
         }),
       ],
       'Expected inches as a number, or { top, right, bottom, left }'
-    )
+    ),
+    1 // What Word, Google Docs, and Pages all give a document.
   ),
   /**
    * Trigger failure if the build exceeds this many pages.
@@ -124,7 +130,7 @@ const CONFIG_SCHEMA = object({
    *
    * @default true
    */
-  checkPdfFontTypes: optional(boolean()),
+  checkPdfFontTypes: optional(boolean(), true),
   /**
    * `/Author` in the PDF: the person who wrote the document.
    *
@@ -145,15 +151,55 @@ const CONFIG_SCHEMA = object({
     union(
       [boolean(), instance(Date)],
       'Expected a boolean, or a Date to set it to'
-    )
+    ),
+    true
   ),
+  /**
+   * Generate `<name>.pdf`.
+   *
+   * Needs Playwright, and Chromium installed through it (`playwright install
+   * chromium`).
+   *
+   * @cli `--no-pdf`
+   * @default true
+   */
+  pdf: optional(boolean(), true),
+  /**
+   * Also write the document's text as `<name>.md`.
+   *
+   * Content only: layout set by classes has no Markdown equivalent, so it is
+   * dropped.
+   *
+   * @cli `--md`
+   * @default false
+   */
+  markdown: optional(boolean(), false),
+  /**
+   * Also write `<name>.png`, a full-page screenshot of the same render the PDF
+   * is generated from.
+   *
+   * Needs Playwright and its Chromium, like {@link Config.pdf}, and shares the
+   * one browser with it when both are on.
+   *
+   * @cli `--png`
+   * @default false
+   */
+  png: optional(boolean(), false),
+  /**
+   * Also write `<name>.jpg`: the screenshot {@link Config.png} describes, as a
+   * JPG.
+   *
+   * @cli `--jpg`
+   * @default false
+   */
+  jpg: optional(boolean(), false),
   /**
    * Port for `tsx-to-pdf dev`.
    *
    * @cli `--port`
    * @default 4000
    */
-  port: optional(pipe(number(), integer())),
+  port: optional(pipe(number(), integer()), 4000),
 })
 
 /** Which document to render and how. Paths are relative to the config file. */
@@ -163,20 +209,18 @@ export type Config = InferInput<typeof CONFIG_SCHEMA>
 export type Margin = NonNullable<Config['margin']>
 
 /** A named page size, or explicit CSS dimensions. */
-type PageSizeArg = NonNullable<Config['pageSize']>
-
-/** `Config` as the schema hands it back once it has checked it. */
-export type ParsedConfig = InferOutput<typeof CONFIG_SCHEMA>
+export type PageSize = NonNullable<Config['pageSize']>
 
 /**
- * Paths resolved, and the defaults more than one caller needs filled in.
- *
- * The rest are defaulted where they are read, against the same value `Config`
- * documents.
+ * `Config` as the schema hands it back once it has checked it, every default
+ * filled in.
  */
+export type ParsedConfig = InferOutput<typeof CONFIG_SCHEMA>
+
+/** Paths resolved, and every documented default filled in. */
 export type ResolvedConfig = SetRequired<
   Omit<ParsedConfig, 'assets' | 'pageSize'>,
-  'name' | 'port' | 'setDate'
+  'name'
 > & {
   /** The config file's directory. Relative paths resolve against it. */
   root: string
@@ -220,7 +264,7 @@ export const findConfig = (explicit?: string, from = process.cwd()): string => {
 }
 
 /** `letter` and the rest resolved to the lengths the stylesheet is built from. */
-const toDimensions = (pageSize: PageSizeArg = 'letter'): PageDimensions =>
+const toDimensions = (pageSize: PageSize): PageDimensions =>
   typeof pageSize === 'string' ? PAGE_SIZES[pageSize] : pageSize
 
 /**
@@ -269,7 +313,5 @@ export const loadConfig = async (path: string): Promise<ResolvedConfig> => {
     // `resume.tsx` gives `resume.pdf`, which is what you would have named it.
     name: config.name ?? basename(config.entry, extname(config.entry)),
     page: toDimensions(config.pageSize),
-    port: config.port ?? 4000,
-    setDate: config.setDate ?? true,
   }
 }

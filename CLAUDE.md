@@ -19,12 +19,12 @@ What to render comes from the consuming project's `tsx-to-pdf.config.ts`; this r
 
 Synced from https://github.com/bvandrc/bvandrc-conventions — follow all of them:
 
-@conventions/typescript.md — language-level TypeScript/JavaScript rules
-@conventions/react.md — component and JSX rules; they apply to the Preact renderer even though nothing here runs in a browser
-@conventions/ts-testing-all.md — testing rules shared by every TypeScript suite: test IDs, naming, assertions
-@conventions/ts-unit-testing.md — TypeScript unit test layout, naming, fixtures, and assertions
-@conventions/all.md — practice for every repo: branches, formatting, markdown, PR reviews
-@conventions/npm-publishing.md — releasing, trusted publishing, `package.json` publish fields, versioning
+- @conventions/typescript.md — language-level TypeScript/JavaScript rules
+- @conventions/react.md — component and JSX rules; they apply to the Preact renderer even though nothing here runs in a browser
+- @conventions/ts-testing-all.md — testing rules shared by every TypeScript suite: test IDs, naming, assertions
+- @conventions/ts-unit-testing.md — TypeScript unit test layout, naming, fixtures, and assertions
+- @conventions/all.md — practice for every repo: branches, formatting, writing, PR reviews
+- @conventions/npm-publishing.md — releasing, trusted publishing, `package.json` publish fields, versioning
 
 `conventions/` is overwritten on every sync. Edit a rule upstream, never here.
 
@@ -41,7 +41,6 @@ Synced from https://github.com/bvandrc/bvandrc-conventions — follow all of the
   - **Either runtime, later**: letting consumers peer install _either_ runtime is a plausible future; nothing in the renderer depends on which one it is.
 - **Markdown output**
   - **Text only**: the layout (the sheet, columns, alignment, spacing) lives in classes Markdown cannot express, so the `.md` is documented as the document's text rather than the document.
-  - **No `Config` key**: like `pdf`, it is a per-build choice, not a property of the document, so `build()`'s `markdown` option and the CLI's `--md` are the only ways to ask for it.
   - **A regular dependency**: `node-html-markdown` is imported directly, not lazily like Playwright. It is small (`node-html-parser` and an entity decoder, no DOM), so an optional peer dependency bought consumers nothing.
   - **Options**: only `codeBlockStyle: 'fenced'`. Prettier rewrites bullet markers and emphasis afterwards regardless, and the library only emits ATX headings.
 - **Playwright is imported lazily** inside `getBrowser` (`src/get-browser.ts`), so a build that skips `pdf`, `png`, and `jpg` works with no browser installed.
@@ -50,5 +49,5 @@ Synced from https://github.com/bvandrc/bvandrc-conventions — follow all of the
   - **Bundled**: `es-toolkit` is inlined rather than installed by every consumer, because the package uses only a few small functions from it, and those are all that tree-shaking keeps.
   - **`deps.onlyBundle`** names only `es-toolkit`, so nothing heavier is swallowed by accident.
   - **Real dependencies**: `type-fest` and `valibot`, because their types reach the declarations, where bundling inlines them: 33 kB for `type-fest`, and 55 kB for `valibot`, which `Config` is inferred from.
-- **`CONFIG_SCHEMA` is the source of `Config`**: each key's type and JSDoc live on its entry in the valibot schema, and `Config` and `ResolvedConfig` are inferred from it, so the JSDoc there is what a consumer's editor shows.
+- **`CONFIG_SCHEMA` is the source of `Config`**: each key's type, default, and JSDoc live on its entry in the valibot schema, and `Config` and `ResolvedConfig` are inferred from it, so the JSDoc there is what a consumer's editor shows.
 - **Typed `Object` walks**: `typedKeys`, `typedEntries`, and `typedFromEntries` (`src/utils/index.ts`) are the builtins plus the cast a call site would otherwise write by hand. Use them instead of asserting the result, and keep the builtins where the widened type is what's wanted.

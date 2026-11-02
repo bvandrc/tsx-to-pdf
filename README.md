@@ -15,10 +15,10 @@ npx playwright install chromium
 
 ### Peer dependencies
 
-| package      | required | why it is yours                                                                                                                                                                                                                                |
-| ------------ | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `preact`     | yes      | The JSX runtime your document compiles against, and where its types come from (`ComponentChildren` and friends). A lightweight alternative to React, which suits a page that is static — no hooks, no providers, nothing shipped to a browser. |
-| `playwright` | no       | PDF, PNG, and JPG output — omit it if you only want the HTML and CSS outputs (via `--no-pdf`). Can't be a dep of ours anyways — CLI has to be on _your_ `node_modules/.bin`; it cannot run from a nested copy                                  |
+| package | required | why it is yours |
+| --- | --- | --- |
+| `preact` | yes | The JSX runtime your document compiles against, and where its types come from (`ComponentChildren` and friends). A lightweight alternative to React, which suits a page that is static — no hooks, no providers, nothing shipped to a browser. |
+| `playwright` | no | PDF, PNG, and JPG output — omit it if you only want the HTML and CSS outputs (via `--no-pdf`). Can't be a dep of ours anyways — CLI has to be on _your_ `node_modules/.bin`; it cannot run from a nested copy |
 
 ## Getting started
 
@@ -92,33 +92,36 @@ tsx-to-pdf build    # writes outputs/html/, outputs/{name}.pdf (and .md/.png/.jp
 
 ## Config
 
-| key                 | default            | what it does                                                                                                                                                                                                                                                   |
-| ------------------- | ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `entry`             | required           | `.tsx` module that default-exports the component and exports `title`                                                                                                                                                                                           |
-| `outDir`            | required           | Where the rendered files land                                                                                                                                                                                                                                  |
-| `styles`            | —                  | The document's stylesheet. Tailwind and the sheet are there without one                                                                                                                                                                                        |
-| `assets`            | —                  | Directory copied in beside the rendered page                                                                                                                                                                                                                   |
-| `name`              | `entry`'s basename | Their basename: `<name>.pdf`, `<name>.html`, `<name>.css`                                                                                                                                                                                                      |
-| `pageSize`          | `'letter'`         | `letter`, `legal`, `tabloid`, `a3`, `a4`, `a5`, or `{ width, height }` as CSS lengths                                                                                                                                                                          |
-| `margin`            | `1`                | White space around the document, **in inches**: one number, or `{ top, right, bottom, left }` with every side given                                                                                                                                            |
-| `maxPages`          | unlimited          | Building past this many pages fails. Set to `1` for a one-pager                                                                                                                                                                                                |
-| `checkPdfFontTypes` | `true`             | Fail when a font embeds as Type3, which extractors read poorly                                                                                                                                                                                                 |
-| `author`            | —                  | `/Author` in the PDF: the person who wrote the document. This is where your own name goes                                                                                                                                                                      |
-| `setDate`           | `true`             | Stamp `/CreationDate` and `/ModDate` with the build time, a given `Date`, or `false` to omit them for a reproducible build. A rebuild that renders identical HTML and CSS skips printing altogether — no browser launch — and leaves the existing PDF as it is |
-| `port`              | `4000`             | For `tsx-to-pdf dev`                                                                                                                                                                                                                                           |
+| key | default | what it does |
+| --- | --- | --- |
+| `entry` | required | `.tsx` module that default-exports the component and exports `title` |
+| `outDir` | required | Where the rendered files land |
+| `styles` | — | The document's stylesheet. Tailwind and the sheet are there without one |
+| `assets` | — | Directory copied in beside the rendered page |
+| `name` | `entry`'s basename | Their basename: `<name>.pdf`, `<name>.html`, `<name>.css` |
+| `pageSize` | `'letter'` | `letter`, `legal`, `tabloid`, `a3`, `a4`, `a5`, or `{ width, height }` as CSS lengths |
+| `margin` | `1` | White space around the document, **in inches**: one number, or `{ top, right, bottom, left }` with every side given |
+| `maxPages` | unlimited | Building past this many pages fails. Set to `1` for a one-pager |
+| `checkPdfFontTypes` | `true` | Fail when a font embeds as Type3, which extractors read poorly |
+| `author` | — | `/Author` in the PDF: the person who wrote the document. This is where your own name goes |
+| `setDate` | `true` | Stamp `/CreationDate` and `/ModDate` with the build time, a given `Date`, or `false` to omit them for a reproducible build. A rebuild that renders identical HTML and CSS skips printing altogether — no browser launch — and leaves the existing PDF as it is |
+| `pdf` | `true` | Generate `<name>.pdf`. `false` skips it, and with it the browser, as `--no-pdf` does for one build |
+| `markdown` | `false` | Also write `<name>.md`, as `--md` does for one build |
+| `png` / `jpg` | `false` | Also write `<name>.png` / `<name>.jpg`, as `--png` / `--jpg` do for one build |
+| `port` | `4000` | For `tsx-to-pdf dev` |
 
 ```
 tsx-to-pdf build [--no-pdf] [--md] [--png] [--jpg] [--config <path>]
 tsx-to-pdf dev   [--port <n>] [--config <path>]
 ```
 
-`--md`, `--png`, and `--jpg` each write an extra output alongside the rest for that build.
+`--md`, `--png`, and `--jpg` each write an extra output alongside the rest for that build, and `--no-pdf` skips the PDF, whatever the config says.
 
 `--no-pdf` never launches a browser on its own: it writes the HTML and CSS, and the Markdown too if `--md` is also given. Those are a pure function of your sources, so rebuilding them is a fast, browserless way for CI to ask whether the document actually changed.
 
 ## Markdown output
 
-`--md` — or `{ markdown: true }` to `build()` — writes `<name>.md` beside the rest, converted from the same HTML the PDF is generated from. **It is the document's text, not the document.** Headings, lists, links, and emphasis survive because they are elements; everything this package exists to control does not, because it lives in classes Markdown cannot express — the sheet, the margins, columns, alignment, spacing, colour. A row that puts a job title on the left and its dates on the right comes out as two stacked blocks.
+`--md` — or `markdown: true` in the config — writes `<name>.md` beside the rest, converted from the same HTML the PDF is generated from. **It is the document's text, not the document.** Headings, lists, links, and emphasis survive because they are elements; everything this package exists to control does not, because it lives in classes Markdown cannot express — the sheet, the margins, columns, alignment, spacing, colour. A row that puts a job title on the left and its dates on the right comes out as two stacked blocks.
 
 That makes it useful for the things that read text and ignore layout — a diff that shows what changed in the wording, an ATS or an LLM being handed a resume, a `grep` — and not for anything that has to look right. The PDF and the preview are the same render; the Markdown is a derivative of it.
 
@@ -143,7 +146,7 @@ The attribute itself is removed from the Markdown; the HTML and PDF are unaffect
 
 ## Image output
 
-`--png`/`--jpg` — or `{ png: true, jpg: true }` to `build()` — write `<name>.png`/`<name>.jpg` beside the rest, a screenshot of the `.page` element from the same render the PDF is generated from, so it is pixel-for-pixel the page, not an approximation. A multi-page document — anything past `maxPages: 1` — comes out as one tall image, the same way `--md` writes one file regardless of page count. It needs Playwright, same as `pdf` — no separate install.
+`--png`/`--jpg` — or `png`/`jpg: true` in the config — write `<name>.png`/`<name>.jpg` beside the rest, a screenshot of the `.page` element from the same render the PDF is generated from, so it is pixel-for-pixel the page, not an approximation. A multi-page document — anything past `maxPages: 1` — comes out as one tall image, the same way `--md` writes one file regardless of page count. It needs Playwright, same as `pdf` — no separate install.
 
 ## Do you need to know React or Preact?
 
@@ -205,7 +208,7 @@ register() // needed only if your config or document is TypeScript
 await build(await loadConfig(findConfig()))
 ```
 
-`findConfig` looks for `tsx-to-pdf.config.{ts,mts,js,mjs}` in the cwd, or takes an explicit path. `build` accepts `{ pdf, markdown, png, jpg }` as a second argument — `pdf: false` is the equivalent of `--no-pdf`, `markdown: true` of `--md`, `png`/`jpg: true` of `--png`/`--jpg`.
+`findConfig` looks for `tsx-to-pdf.config.{ts,mts,js,mjs}` in the cwd, or takes an explicit path. `build` writes the outputs the config's `pdf`, `markdown`, `png`, and `jpg` ask for. To change them for one call, spread the config: `build({ ...config, pdf: false })` is the equivalent of `--no-pdf`.
 
 ## Notes
 

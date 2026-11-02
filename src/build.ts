@@ -1,7 +1,7 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { basename, dirname, join } from 'node:path'
 import { pathToFileURL } from 'node:url'
-import { mapValues } from 'es-toolkit'
+import { compact, mapValues } from 'es-toolkit'
 
 import { buildPage, copyAssets } from './build-html.tsx'
 import { buildImage } from './build-image.ts'
@@ -24,58 +24,23 @@ const outputFiles = ({ outDir, name }: ResolvedConfig) =>
       )
   )
 
-/** Which optional outputs to also write, beyond the page and its stylesheet. */
-type BuildOptions = {
-  /**
-   * Generate the PDF. Needs a browser.
-   * @default true
-   */
-  pdf?: boolean
-  /**
-   * Also write the document's text as Markdown.
-   *
-   * Content only — the layout the classes describe has no equivalent and is
-   * dropped.
-   * @default false
-   */
-  markdown?: boolean
-  /**
-   * Also write a full-page PNG screenshot of the same render the PDF is
-   * generated from.
-   *
-   * Needs a browser, shared with `pdf` when both are on.
-   * @default false
-   */
-  png?: boolean
-  /**
-   * Also write a full-page JPG screenshot of the same render the PDF is
-   * generated from.
-   *
-   * Needs a browser, shared with `pdf` when both are on.
-   * @default false
-   */
-  jpg?: boolean
-}
-
 /**
- * Renders the configured document to `outDir`, and returns what it wrote.
+ * Renders the configured document to `outDir`, writing the outputs the config
+ * asks for, and returns what it wrote.
  */
-export const build = async (
-  config: ResolvedConfig,
-  { pdf = true, markdown = false, png = false, jpg = false }: BuildOptions = {}
-): Promise<string[]> => {
+export const build = async (config: ResolvedConfig): Promise<string[]> => {
   const paths = outputFiles(config)
 
   // Everywhere this call might write, so their directories exist up front —
   // the page and its stylesheet always, the rest only when asked for.
-  const outputs = [
+  const outputs = compact([
     paths.HTML,
     paths.CSS,
-    ...(markdown ? [paths.MD] : []),
-    ...(pdf ? [paths.PDF] : []),
-    ...(png ? [paths.PNG] : []),
-    ...(jpg ? [paths.JPG] : []),
-  ]
+    config.markdown && paths.MD,
+    config.pdf && paths.PDF,
+    config.png && paths.PNG,
+    config.jpg && paths.JPG,
+  ])
 
   // Read ahead of overwriting them, to tell if the source changed and a PDF rebuild is needed.
   const [previousHtml, previousCss] = await Promise.all(
@@ -105,14 +70,14 @@ export const build = async (
     basename(paths.CSS),
   ])
 
-  if (markdown) {
+  if (config.markdown) {
     await writeFile(paths.MD, await buildMarkdown(html))
   }
 
-  let pdfNeeded = pdf
+  let pdfNeeded = config.pdf
   let pdfSetDate = config.setDate
 
-  if (pdf) {
+  if (config.pdf) {
     const previousPdf = await loadPreviousPdf(paths.PDF)
     const prevDate = previousPdf?.getCreationDate()
 
@@ -149,7 +114,7 @@ export const build = async (
 
   // One browser for PDF (when it actually needs regenerating) and both image
   // formats, so asking for more than one doesn't pay for a second Chromium launch.
-  if (pdfNeeded || png || jpg) {
+  if (pdfNeeded || config.png || config.jpg) {
     const { browser, page } = await getBrowser({
       pageUrl: pathToFileURL(paths.HTML).href,
     })
@@ -162,11 +127,11 @@ export const build = async (
         )
       }
 
-      if (png) {
+      if (config.png) {
         await writeFile(paths.PNG, await buildImage(page, 'png'))
       }
 
-      if (jpg) {
+      if (config.jpg) {
         await writeFile(paths.JPG, await buildImage(page, 'jpg'))
       }
     } finally {
