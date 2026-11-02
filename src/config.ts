@@ -239,7 +239,10 @@ const CONFIG_NAMES = CONFIG_EXTENSIONS.map(
 )
 
 /** Where the config lives: `--config` if given, else the nearest one at `from`. */
-export const findConfig = (explicit?: string, from = process.cwd()): string => {
+export const findConfigFile = (
+  explicit?: string,
+  from = process.cwd()
+): string => {
   if (explicit) {
     const path = isAbsolute(explicit) ? explicit : resolve(from, explicit)
 
@@ -267,23 +270,24 @@ export const findConfig = (explicit?: string, from = process.cwd()): string => {
 const toDimensions = (pageSize: PageSize): PageDimensions =>
   typeof pageSize === 'string' ? PAGE_SIZES[pageSize] : pageSize
 
-/** Reads the config at `path`, resolves its paths, and fills in its defaults. */
-export const loadConfig = async (path: string): Promise<ResolvedConfig> => {
-  const root = dirname(path)
-
-  const module = (await createImporter(root)(path)) as {
-    default?: Partial<Config>
-  }
-
-  if (!module.default) {
-    throw new Error(`${path} has no default export.`)
-  }
-
-  const result = safeParse(CONFIG_SCHEMA, module.default)
+/**
+ * Checks `input` against the schema, fills in its defaults, and resolves its
+ * paths against `root`, naming `source` in the error when it is invalid.
+ */
+const checkAndResolve = ({
+  input,
+  root,
+  source,
+}: {
+  input: unknown
+  root: string
+  source: string
+}): ResolvedConfig => {
+  const result = safeParse(CONFIG_SCHEMA, input)
 
   if (!result.success) {
     throw new Error(
-      `${path} is invalid:\n${result.issues
+      `${source} is invalid:\n${result.issues
         .map(
           (issue) => `  ${getDotPath(issue) ?? '(config)'}: ${issue.message}`
         )
@@ -308,4 +312,34 @@ export const loadConfig = async (path: string): Promise<ResolvedConfig> => {
     name: config.name ?? basename(config.entry, extname(config.entry)),
     page: toDimensions(config.pageSize),
   }
+}
+
+/**
+ * Checks a config written in code, fills in its defaults, and resolves its
+ * paths against `root`, for `build()` or `serve()` without a config file.
+ */
+export const resolveConfig = (
+  config: Config,
+  root: string = process.cwd()
+): ResolvedConfig =>
+  checkAndResolve({ input: config, root, source: 'The config' })
+
+/**
+ * Reads the config at `path`, fills in its defaults, and resolves its paths
+ * against the file's directory.
+ */
+export const loadConfigFile = async (path: string): Promise<ResolvedConfig> => {
+  const module = (await createImporter(dirname(path))(path)) as {
+    default?: unknown
+  }
+
+  if (!module.default) {
+    throw new Error(`${path} has no default export.`)
+  }
+
+  return checkAndResolve({
+    input: module.default,
+    root: dirname(path),
+    source: path,
+  })
 }

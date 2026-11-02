@@ -1,7 +1,7 @@
 import { parseArgs } from 'node:util'
 
 import { build } from './build.ts'
-import { findConfig, loadConfig } from './config.ts'
+import { findConfigFile, loadConfigFile } from './config.ts'
 import { serve } from './dev-server.tsx'
 
 const USAGE = `tsx-to-pdf <command>
@@ -41,7 +41,7 @@ const main = async (args: string[]): Promise<void> => {
     return
   }
 
-  const config = await loadConfig(findConfig(values.config))
+  const config = await loadConfigFile(findConfigFile(values.config))
 
   switch (command) {
     case 'build': {

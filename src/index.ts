@@ -2,8 +2,8 @@
 export { build } from './build.ts'
 export {
   type Config,
-  findConfig,
-  loadConfig,
+  findConfigFile,
+  loadConfigFile,
   type Margin,
   PAGE_SIZES,
   type PageDimensions,
@@ -11,5 +11,6 @@ export {
   type PageSizeName,
   type ParsedConfig,
   type ResolvedConfig,
+  resolveConfig,
 } from './config.ts'
 export { serve } from './dev-server.tsx'

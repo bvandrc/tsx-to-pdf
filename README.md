@@ -72,7 +72,11 @@ export default {
 
 ### Project config
 
-None, not even a tsconfig: the JSX compiles for Preact as the document loads, whatever your tsconfig says, and its `paths` still resolve. To have your editor match, extend the one this package exports:
+**`"type": "module"` in `package.json`.** Without it your `.tsx` document is treated as CommonJS and fails with `ERR_REQUIRE_CYCLE_MODULE`.
+
+That's it. **You do not need a `tsconfig.json` at all**, and if you have one, nothing in it has to be right: the JSX settings are layered on top at build time, so your `paths`, `target`, and everything else still apply while `jsxImportSource` is taken care of. You also never compile your document — it is transformed as it loads.
+
+A tsconfig is exported if you want your editor to match, but extending it is optional:
 
 ```jsonc
 // tsconfig.json — optional
@@ -178,18 +182,24 @@ Two things worth doing yourself afterwards, since they are easy to get subtly wr
 The CLI is a thin wrapper around `build` and `serve`.
 
 ```ts
-import { build, findConfig, loadConfig } from 'tsx-to-pdf'
+import {
+  build,
+  findConfigFile,
+  loadConfigFile,
+  resolveConfig,
+} from 'tsx-to-pdf'
 
-await build(await loadConfig(findConfig()))
+await build(await loadConfigFile(findConfigFile()))
+// Or with no config file, its paths resolved against the cwd or a second argument:
+await build(resolveConfig({ entry: './resume.tsx', outDir: './outputs' }))
 ```
 
-`findConfig` looks for `tsx-to-pdf.config.{ts,mts,js,mjs}` in the cwd, or takes an explicit path. `build` writes the outputs the config's `pdf`, `markdown`, `png`, and `jpg` ask for. To change them for one call, spread the config: `build({ ...config, pdf: false })` is the equivalent of `--no-pdf`.
+`findConfigFile` looks for `tsx-to-pdf.config.{ts,mts,js,mjs}` in the cwd, or takes an explicit path. `build` writes the outputs the config's `pdf`, `markdown`, `png`, and `jpg` ask for. To change them for one call, spread the config: `build({ ...config, pdf: false })` is the equivalent of `--no-pdf`.
 
 ## Notes
 
 - Chromium is installed separately (`playwright install chromium`), since the browser is large and yours to manage. The full browser is pinned rather than the `chromium-headless-shell` a headless launch would otherwise pick: the shell lays text out about 1.7% taller, which is enough to push a full page onto a second one on one machine and not the next. Don't install with `--only-shell`.
 - `CHROMIUM_EXECUTABLE_PATH` overrides which browser is launched.
-- `tsx-to-pdf dev` reloads an edited `.ts`, `.tsx`, or `.js` file, except one Node loads and caches itself as an ES module: a `.mjs`, or a `.js` in a `"type": "module"` package. Restart it after editing one of those.
 - Tailwind scans every `.tsx`/`.ts`/`.jsx`/`.js` file in the entry's directory (recursively), not just the entry itself, so that a component split into its own file is still picked up. This also means that unrelated file in the dir gets scanned too— harmless to the PDF or HTML, since an unused class is just dead weight in the stylesheet, but worth knowing if looking at the output CSS file.
 - JSX escapes content by construction, so there is no raw-HTML path into the document. See [Do you need to know React or Preact?](#do-you-need-to-know-react-or-preact) for what the renderer is and isn't.
 
