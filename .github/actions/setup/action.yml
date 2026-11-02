@@ -1,0 +1,24 @@
+name: Setup
+description: pnpm, Node.js, and the installed dependencies, which builds the package through `prepare`.
+
+runs:
+  using: composite
+  steps:
+    # Before setup-node, which needs pnpm on the path to find its store for
+    # `cache: pnpm`. The other order fails with "Unable to locate executable".
+    - name: Setup pnpm
+      uses: pnpm/action-setup@v6
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v7
+      with:
+        node-version: 24.x
+        # Replaces a manual `pnpm store path` + actions/cache pair: it keys on
+        # the lockfile and restores the store itself.
+        cache: pnpm
+
+    # Runs `prepare`, which builds the package, so later steps exercise `dist/`
+    # exactly as a consumer installing from npm would get it.
+    - name: Install dependencies
+      shell: bash
+      run: pnpm install --frozen-lockfile

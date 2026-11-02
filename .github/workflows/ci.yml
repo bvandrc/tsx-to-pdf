@@ -1,4 +1,4 @@
-name: Lint, Test & Render
+name: CI
 
 on:
   push:
@@ -7,41 +7,43 @@ on:
     branches: [main]
 
 jobs:
-  build:
-    name: Lint, Test & Render
+  lint:
+    name: Lint
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v7
-
-      # Before setup-node, which needs pnpm on the path to find its store for
-      # `cache: pnpm`. The other order fails with "Unable to locate executable".
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v6
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v7
-        with:
-          node-version: 24.x
-          # Replaces a manual `pnpm store path` + actions/cache pair: it keys on
-          # the lockfile and restores the store itself.
-          cache: pnpm
 
       # Key order, required fields, sorted dependencies. Before install, so it
       # fails fast and never walks node_modules.
       - name: Lint package.json
         uses: bvandrc/lint-package-json@v2
 
-      # Runs `prepare`, which builds the package — so the steps below exercise
-      # `dist/` exactly as a consumer installing from npm would get it.
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      - uses: ./.github/actions/setup
 
       - name: Lint & Type Check
         run: pnpm run check
 
+  test:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: ./.github/actions/setup
+
       - name: Unit Tests
         run: pnpm run test:unit
+
+  render:
+    name: Render
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: ./.github/actions/setup
 
       # No browser needed, so this fails fast on anything wrong with the
       # renderer, the config, or the stylesheet.
