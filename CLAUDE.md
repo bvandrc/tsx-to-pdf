@@ -4,7 +4,15 @@ A generator: a document written as JSX, styled with Tailwind, rendered to HTML, 
 
 What to render comes from the consuming project's `tsx-to-pdf.config.ts`; this repo's own config points at `example/`, so the package always has something to build and consumers have something to copy.
 
-- **`src/`** is the package. `config.ts` owns the `Config` type, the named page sizes, and config discovery; `build-html.tsx` renders and compiles the stylesheet; `build-pdf.ts` generates the PDF and asserts; `build-markdown.ts` converts the rendered page for the optional `.md`; `build.ts` writes the outputs; `load-module.ts` imports the consumer's config and document; `dev-server.tsx` serves the live preview; `cli.ts` is the entry point behind the `tsx-to-pdf` bin.
+- **`src/`** is the package:
+  - `config.ts` owns the `Config` type, the named page sizes, and config discovery.
+  - `load-module.ts` imports the consumer's config and document.
+  - `build-html.tsx` renders and compiles the stylesheet.
+  - `build-pdf.ts` generates the PDF and asserts.
+  - `build-markdown.ts` converts the rendered page for the optional `.md`.
+  - `build.ts` writes the outputs.
+  - `dev-server.tsx` serves the live preview.
+  - `cli.ts` is the entry point behind the `tsx-to-pdf` bin.
 - **`page.css`** holds the sheet and nothing document-specific. `buildStylesheet` injects its geometry as `--page-width` / `--page-height` / `--page-margin`, beside an `@page` rule with the dimensions written literally, since Chromium rejects `var()` in `size`. That block comes _after_ the document's stylesheet, so the config beats a `--page-margin` the consumer declares.
 - **`example/`** is a complete document: the README's worked example, CI's end-to-end fixture, and the only proof the package works from outside, so keep it building. Its `outputs/` are committed so the result is readable without cloning; `pnpm example` regenerates them, and nothing checks they are current.
 
