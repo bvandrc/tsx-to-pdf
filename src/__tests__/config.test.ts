@@ -103,21 +103,19 @@ describe('resolveConfig', () => {
         resolveConfig({ ...MINIMAL, pageSize: 'a6' })
       ).toThrow('or { width, height } as CSS lengths')
     })
+  })
 
-    describe('margin', () => {
-      it('rejects a margin naming some sides but not all four', () => {
-        expect(() =>
-          // @ts-expect-error -- two sides where the object form needs all four
-          resolveConfig({ ...MINIMAL, margin: { top: 1, bottom: 1 } })
-        ).toThrow('{ top, right, bottom, left }')
-      })
+  describe('margin', () => {
+    it('rejects a margin naming some sides but not all four', () => {
+      expect(() =>
+        // @ts-expect-error -- two sides where the object form needs all four
+        resolveConfig({ ...MINIMAL, margin: { top: 1, bottom: 1 } })
+      ).toThrow('{ top, right, bottom, left }')
+    })
 
-      it('rejects a negative margin, while allowing zero', () => {
-        expect(() => resolveConfig({ ...MINIMAL, margin: -1 })).toThrow(
-          /margin/
-        )
-        expect(resolveConfig({ ...MINIMAL, margin: 0 }).margin).toBe(0)
-      })
+    it('rejects a negative margin, while allowing zero', () => {
+      expect(() => resolveConfig({ ...MINIMAL, margin: -1 })).toThrow(/margin/)
+      expect(resolveConfig({ ...MINIMAL, margin: 0 }).margin).toBe(0)
     })
   })
 
