@@ -115,7 +115,7 @@ tsx-to-pdf build [--[no-]pdf] [--[no-]markdown] [--[no-]png] [--[no-]jpg] [--con
 tsx-to-pdf dev   [--port <n>] [--config <path>]
 ```
 
-Each flag is named after the config key it sets, for that run only and whatever the config says: `--markdown` turns an output on, `--no-pdf` turns one off, and `--port 3000` sets the port. They go through the same check as the config, so `--port abc` fails the way `port: 'abc'` would.
+Each flag is named after the config key it sets, for that run only and whatever the config says: `--markdown` turns an output on, `--no-pdf` turns one off, and `--port 3000` sets the port. They go through the same check as the config, so `--port abc` fails the way `port: 'abc'` would. `--md` and `--no-md` still work, as short for `--markdown`.
 
 `--no-pdf` never launches a browser on its own: it writes the HTML and CSS, and the Markdown too if `--markdown` is also given. Those are a pure function of your sources, so rebuilding them is a fast, browserless way for CI to ask whether the document actually changed.
 

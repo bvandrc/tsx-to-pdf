@@ -16,7 +16,7 @@ Commands:
 Options:
   --config <path>  Config file. Defaults to tsx-to-pdf.config.ts in the cwd
   --[no-]pdf       Write the PDF. --no-pdf needs no browser
-  --[no-]markdown  Write the Markdown
+  --[no-]markdown  Write the Markdown. --md and --no-md work too
   --[no-]png       Write a full-page PNG screenshot
   --[no-]jpg       Write a full-page JPG screenshot
   --port <n>       The port dev serves on
@@ -35,6 +35,8 @@ const main = async (args: string[]): Promise<void> => {
       // Named after the config keys they set.
       pdf: { type: 'boolean' },
       markdown: { type: 'boolean' },
+      // `--markdown`'s short form, kept from before the flags matched the keys.
+      md: { type: 'boolean' },
       png: { type: 'boolean' },
       jpg: { type: 'boolean' },
       port: { type: 'string' },
@@ -42,7 +44,7 @@ const main = async (args: string[]): Promise<void> => {
   })
 
   const [command] = positionals
-  const { config: configFlag, help, port, ...outputs } = values
+  const { config: configOption, help, port, md, ...outputs } = values
 
   if (!command || help) {
     console.info(USAGE)
@@ -51,7 +53,7 @@ const main = async (args: string[]): Promise<void> => {
 
   // Found before registering, since locating it only touches the filesystem
   // while loading it may need TypeScript.
-  const configPath = findConfig(configFlag)
+  const configPath = findConfig(configOption)
 
   // Lets the config and the document be TypeScript without the project having
   // to compile them first. Node strips type annotations natively but cannot
@@ -64,6 +66,8 @@ const main = async (args: string[]): Promise<void> => {
   // Checked by the config's own schema, so `--port abc` fails the way
   // `port: 'abc'` would. A flag left off leaves the config's choice as it is.
   const config = await loadConfig(configPath, {
+    // Under `outputs`, so `--markdown` wins if both are given.
+    ...(md !== undefined && { markdown: md }),
     ...outputs,
     ...(port !== undefined && { port: Number(port) }),
   })
