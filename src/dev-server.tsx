@@ -56,9 +56,11 @@ export const serve = (config: ResolvedConfig): void => {
     return Math.max(...stats.map(({ mtimeMs }) => mtimeMs))
   }
 
-  // Fresh, so an edited component is re-read along with the entry that imports
-  // it, rather than served from the module cache.
-  const importFresh = createImporter(config.root, { fresh: true })
+  const importFresh = createImporter(config.root, {
+    // So an edited component is re-read along with the entry that imports it,
+    // rather than served from the module cache.
+    fresh: true,
+  })
 
   let loaded: { revision: number; module: Promise<unknown> } | undefined
 
