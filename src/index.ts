@@ -8,6 +8,7 @@ export {
   PAGE_SIZES,
   type PageDimensions,
   type PageSize,
+  type PageSizeName,
   type ParsedConfig,
   type ResolvedConfig,
 } from './config.ts'

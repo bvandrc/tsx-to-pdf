@@ -1,8 +1,8 @@
 allowBuilds:
-  "@biomejs/biome": true
+  '@biomejs/biome': true
   # Only reached by Tailwind's own watch mode; the dev server watches via node:fs.
-  "@parcel/watcher": false
-  "@tailwindcss/oxide": true
+  '@parcel/watcher': false
+  '@tailwindcss/oxide': true
   # Only reached by the dev tooling, tsdown and Vitest; the package loads the
   # project's config and document with jiti.
   esbuild: true

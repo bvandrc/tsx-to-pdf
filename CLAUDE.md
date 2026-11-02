@@ -19,12 +19,12 @@ What to render comes from the consuming project's `tsx-to-pdf.config.ts`; this r
 
 Synced from https://github.com/bvandrc/bvandrc-conventions — follow all of them:
 
-@conventions/typescript.md — language-level TypeScript/JavaScript rules
-@conventions/react.md — component and JSX rules; they apply to the Preact renderer even though nothing here runs in a browser
-@conventions/ts-testing-all.md — testing rules shared by every TypeScript suite: test IDs, naming, assertions
-@conventions/ts-unit-testing.md — TypeScript unit test layout, naming, fixtures, and assertions
-@conventions/all.md — practice for every repo: branches, formatting, markdown, PR reviews
-@conventions/npm-publishing.md — releasing, trusted publishing, `package.json` publish fields, versioning
+- @conventions/typescript.md — language-level TypeScript/JavaScript rules
+- @conventions/react.md — component and JSX rules; they apply to the Preact renderer even though nothing here runs in a browser
+- @conventions/ts-testing-all.md — testing rules shared by every TypeScript suite: test IDs, naming, assertions
+- @conventions/ts-unit-testing.md — TypeScript unit test layout, naming, fixtures, and assertions
+- @conventions/all.md — practice for every repo: branches, formatting, writing, PR reviews
+- @conventions/npm-publishing.md — releasing, trusted publishing, `package.json` publish fields, versioning
 
 `conventions/` is overwritten on every sync. Edit a rule upstream, never here.
 
@@ -41,7 +41,6 @@ Synced from https://github.com/bvandrc/bvandrc-conventions — follow all of the
   - **Either runtime, later**: letting consumers peer install _either_ runtime is a plausible future; nothing in the renderer depends on which one it is.
 - **Markdown output**
   - **Text only**: the layout (the sheet, columns, alignment, spacing) lives in classes Markdown cannot express, so the `.md` is documented as the document's text rather than the document.
-  - **No `Config` key**: like `pdf`, it is a per-build choice, not a property of the document, so `build()`'s `markdown` option and the CLI's `--md` are the only ways to ask for it.
   - **A regular dependency**: `node-html-markdown` is imported directly, not lazily like Playwright. It is small (`node-html-parser` and an entity decoder, no DOM), so an optional peer dependency bought consumers nothing.
   - **Options**: only `codeBlockStyle: 'fenced'`. Prettier rewrites bullet markers and emphasis afterwards regardless, and the library only emits ATX headings.
 - **Playwright is imported lazily** inside `getBrowser` (`src/get-browser.ts`), so a build that skips `pdf`, `png`, and `jpg` works with no browser installed.
