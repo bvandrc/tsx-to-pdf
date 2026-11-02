@@ -5,6 +5,7 @@ import { getDefaults } from 'valibot'
 import { buildStylesheet, copyAssets } from '../build-html.tsx'
 import { CONFIG_SCHEMA, PAGE_SIZES, type ResolvedConfig } from '../config.ts'
 import { createDirTree } from './helpers/create-dir-tree.ts'
+import { buildDocument } from './helpers/fixtures.ts'
 
 /** The document a build is pointed at, and the directory it writes into. */
 const MOCK_FILE_NAME = 'doc'
@@ -103,7 +104,7 @@ describe('copyAssets', () => {
 describe('buildStylesheet', () => {
   /** A document whose classes are what Tailwind has to be given to emit. */
   const createDocumentDir = (contents = '<div className="flex" />') =>
-    createDirTree({ [FILENAMES.ENTRY]: `export default () => ${contents}` })
+    createDirTree({ [FILENAMES.ENTRY]: buildDocument(contents) })
 
   it('carries the sheet as variables and in the `@page` rule alike', async () => {
     const root = await createDocumentDir()
@@ -144,7 +145,7 @@ describe('buildStylesheet', () => {
 
   it('scans a component beside the entry, not just the entry itself', async () => {
     const root = await createDirTree({
-      [FILENAMES.ENTRY]: 'export default () => null',
+      [FILENAMES.ENTRY]: buildDocument('null'),
       'parts/Header.tsx':
         'export const Header = () => <h1 className="italic" />',
     })
