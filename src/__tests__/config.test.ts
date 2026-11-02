@@ -80,15 +80,6 @@ describe('resolveConfig', () => {
     })
   })
 
-  it('takes explicit dimensions as the sheet', () => {
-    expect(
-      resolveConfig({
-        ...MINIMAL,
-        pageSize: { width: '90mm', height: '50mm' },
-      }).page
-    ).toEqual({ width: '90mm', height: '50mm' })
-  })
-
   it('names the offending key when a value is the wrong type', () => {
     expect(() =>
       // @ts-expect-error -- a string port, which only the runtime check can catch in a JS config
@@ -96,32 +87,49 @@ describe('resolveConfig', () => {
     ).toThrow(/The config is invalid:\n {2}port: /)
   })
 
-  it('rejects a page size that is neither a name nor dimensions', () => {
-    expect(() =>
-      // @ts-expect-error -- a size that is not one of the named sheets
-      resolveConfig({ ...MINIMAL, pageSize: 'a6' })
-    ).toThrow('or { width, height } as CSS lengths')
-  })
-
-  it('rejects a margin naming some sides but not all four', () => {
-    expect(() =>
-      // @ts-expect-error -- two sides where the object form needs all four
-      resolveConfig({ ...MINIMAL, margin: { top: 1, bottom: 1 } })
-    ).toThrow('{ top, right, bottom, left }')
-  })
-
-  it('rejects a negative margin, while allowing zero', () => {
-    expect(() => resolveConfig({ ...MINIMAL, margin: -1 })).toThrow(/margin/)
-    expect(resolveConfig({ ...MINIMAL, margin: 0 }).margin).toBe(0)
-  })
-
-  it('rejects a maxPages that is not a whole page count', () => {
-    for (const maxPages of [0, 1.5]) {
+  describe('pageSize', () => {
+    it('takes explicit dimensions as the sheet', () => {
       expect(
-        () => resolveConfig({ ...MINIMAL, maxPages }),
-        String(maxPages)
-      ).toThrow(/maxPages/)
-    }
+        resolveConfig({
+          ...MINIMAL,
+          pageSize: { width: '90mm', height: '50mm' },
+        }).page
+      ).toEqual({ width: '90mm', height: '50mm' })
+    })
+
+    it('rejects a page size that is neither a name nor dimensions', () => {
+      expect(() =>
+        // @ts-expect-error -- a size that is not one of the named sheets
+        resolveConfig({ ...MINIMAL, pageSize: 'a6' })
+      ).toThrow('or { width, height } as CSS lengths')
+    })
+
+    describe('margin', () => {
+      it('rejects a margin naming some sides but not all four', () => {
+        expect(() =>
+          // @ts-expect-error -- two sides where the object form needs all four
+          resolveConfig({ ...MINIMAL, margin: { top: 1, bottom: 1 } })
+        ).toThrow('{ top, right, bottom, left }')
+      })
+
+      it('rejects a negative margin, while allowing zero', () => {
+        expect(() => resolveConfig({ ...MINIMAL, margin: -1 })).toThrow(
+          /margin/
+        )
+        expect(resolveConfig({ ...MINIMAL, margin: 0 }).margin).toBe(0)
+      })
+    })
+  })
+
+  describe('maxPages', () => {
+    it('rejects a maxPages that is not a whole page count', () => {
+      for (const maxPages of [0, 1.5]) {
+        expect(
+          () => resolveConfig({ ...MINIMAL, maxPages }),
+          String(maxPages)
+        ).toThrow(/maxPages/)
+      }
+    })
   })
 })
 
