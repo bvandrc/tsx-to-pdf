@@ -4,7 +4,7 @@ import { render } from 'preact-render-to-string'
 
 import { createImporter } from '../load-module.ts'
 import { createDirTree } from './helpers/create-dir-tree.ts'
-import { buildDocument, COMPONENTS } from './helpers/fixtures.ts'
+import { buildEntry, COMPONENTS } from './helpers/fixtures.ts'
 
 const ENTRY = 'doc.tsx'
 const { NAME, LOGO } = COMPONENTS
@@ -30,7 +30,7 @@ describe('createImporter', () => {
       }),
       'src/parts/name.tsx': NAME.SOURCE,
       'src/logo.tsx': LOGO.SOURCE,
-      [ENTRY]: buildDocument('<p><Name /><Logo /></p>', [
+      [ENTRY]: buildEntry('<p><Name /><Logo /></p>', [
         "import { Name } from '@/parts/name'",
         "import { Logo } from '~logo'",
       ]),
@@ -48,7 +48,7 @@ describe('createImporter', () => {
       }),
       'lib/name.tsx': NAME.SOURCE,
       'app/tsconfig.json': JSON.stringify({ extends: '../tsconfig.base.json' }),
-      [join('app', ENTRY)]: buildDocument('<p><Name /></p>', [
+      [join('app', ENTRY)]: buildEntry('<p><Name /></p>', [
         "import { Name } from '#/name'",
       ]),
     })
@@ -62,9 +62,7 @@ describe('createImporter', () => {
         compilerOptions: { paths: { '#*': ['./src/*'] } },
       }),
       'src/name.tsx': NAME.SOURCE,
-      [ENTRY]: buildDocument('<p><Name /></p>', [
-        "import { Name } from '#name'",
-      ]),
+      [ENTRY]: buildEntry('<p><Name /></p>', ["import { Name } from '#name'"]),
     })
 
     expect(await getMarkup(root)).toBe(`<p>${NAME.MARKUP}</p>`)
@@ -74,7 +72,7 @@ describe('createImporter', () => {
     const root = await createDirTree({
       'tsconfig.json': JSON.stringify({ compilerOptions: { baseUrl: '.' } }),
       'lib/name.tsx': NAME.SOURCE,
-      [ENTRY]: buildDocument('<p><Name /></p>', [
+      [ENTRY]: buildEntry('<p><Name /></p>', [
         "import { Name } from 'lib/name'",
       ]),
     })
@@ -87,7 +85,7 @@ describe('createImporter', () => {
       'tsconfig.json': JSON.stringify({
         compilerOptions: { jsx: 'react-jsx', jsxImportSource: 'react' },
       }),
-      [ENTRY]: buildDocument(`<p>${NAME.MARKUP}</p>`),
+      [ENTRY]: buildEntry(`<p>${NAME.MARKUP}</p>`),
     })
 
     expect(await getMarkup(root)).toBe(`<p>${NAME.MARKUP}</p>`)
