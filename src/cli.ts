@@ -66,8 +66,7 @@ const main = async (args: string[]): Promise<void> => {
   // `port: 'abc'` would. A flag left off leaves the config's choice as it is.
   const config = await loadConfigFile(configPath, {
     ...outputs,
-    // The one flag not named after its key.
-    ...(md !== undefined && { markdown: md }),
+    ...(md !== undefined && { markdown: md }), // The one flag not named after its key.
     ...(port !== undefined && { port: Number(port) }),
   })
 
