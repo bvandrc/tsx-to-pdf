@@ -1,9 +1,10 @@
-import { mkdir, mkdtemp, readdir, rm, writeFile } from 'node:fs/promises'
+import { readdir } from 'node:fs/promises'
 import { join } from 'node:path'
 import { getDefaults } from 'valibot'
 
 import { buildStylesheet, copyAssets } from '../build-html.tsx'
 import { CONFIG_SCHEMA, PAGE_SIZES, type ResolvedConfig } from '../config.ts'
+import { createDirTree } from './create-dir-tree.ts'
 
 /** The document a build is pointed at, and the directory it writes into. */
 const MOCK_FILE_NAME = 'doc'
@@ -27,41 +28,6 @@ const DIRS = {
 const MOCK_HTML = {
   SVG: '<svg />',
   HTML: '<html></html>',
-}
-
-const roots: string[] = []
-
-afterAll(async () => {
-  await Promise.all(
-    roots.map((dir) => rm(dir, { recursive: true, force: true }))
-  )
-})
-
-/**
- * A real directory tree, since these functions are the ones that touch disk.
- *
- * Keys are paths relative to the directory; a key ending in `/` is an empty
- * folder. Built inside this package's `node_modules` rather than the system
- * temp dir, because Tailwind resolves `@import "tailwindcss"` from the root it
- * is given and only a directory under one can reach it.
- */
-const createDirTree = async (files: Record<string, string>) => {
-  const dir = await mkdtemp(
-    join(import.meta.dirname, '../../node_modules/.tsx-to-pdf-test-')
-  )
-  roots.push(dir)
-
-  for (const [path, contents] of Object.entries(files)) {
-    const full = join(dir, path)
-    if (path.endsWith('/')) {
-      await mkdir(full, { recursive: true })
-      continue
-    }
-    await mkdir(join(full, '..'), { recursive: true })
-    await writeFile(full, contents)
-  }
-
-  return dir
 }
 
 const DEFAULTS = getDefaults(CONFIG_SCHEMA)

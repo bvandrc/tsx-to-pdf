@@ -1,39 +1,11 @@
-import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
-import { dirname, join } from 'node:path'
+import { join } from 'node:path'
 import { h } from 'preact'
 import { render } from 'preact-render-to-string'
 
 import { createImporter } from '../load-module.ts'
+import { createDirTree } from './create-dir-tree.ts'
 
 const ENTRY = 'doc.tsx'
-
-const roots: string[] = []
-
-afterAll(async () => {
-  await Promise.all(
-    roots.map((dir) => rm(dir, { recursive: true, force: true }))
-  )
-})
-
-/**
- * A project on disk, keyed by path relative to its root.
- *
- * Inside this package's `node_modules` rather than the system temp dir, so the
- * `preact` its JSX compiles to resolves the way it does in a consumer's project.
- */
-const createProject = async (files: Record<string, string>) => {
-  const root = await mkdtemp(
-    join(import.meta.dirname, '../../node_modules/.tsx-to-pdf-test-')
-  )
-  roots.push(root)
-
-  for (const [path, contents] of Object.entries(files)) {
-    await mkdir(dirname(join(root, path)), { recursive: true })
-    await writeFile(join(root, path), contents)
-  }
-
-  return root
-}
 
 /** The document at `ENTRY` in `root`, imported and rendered to markup. */
 const getMarkup = async (root: string, entry = ENTRY) => {
@@ -48,7 +20,7 @@ const getMarkup = async (root: string, entry = ENTRY) => {
 
 describe('createImporter', () => {
   it("resolves the tsconfig's paths, by prefix and exactly", async () => {
-    const root = await createProject({
+    const root = await createDirTree({
       'tsconfig.json': JSON.stringify({
         compilerOptions: {
           paths: { '@/*': ['./src/*'], '~logo': ['./src/logo.tsx'] },
@@ -67,7 +39,7 @@ export default () => <p><Name /><Logo /></p>`,
   it('resolves paths an extended tsconfig declares, against its baseUrl', async () => {
     // `paths` and `baseUrl` live in the base, so they resolve against the base's
     // directory, not the extending tsconfig's.
-    const root = await createProject({
+    const root = await createDirTree({
       'tsconfig.base.json': JSON.stringify({
         compilerOptions: { baseUrl: './lib', paths: { '#/*': ['*'] } },
       }),
@@ -81,7 +53,7 @@ export default () => <p><Name /></p>`,
   })
 
   it("resolves a pattern whose prefix doesn't end in a slash", async () => {
-    const root = await createProject({
+    const root = await createDirTree({
       'tsconfig.json': JSON.stringify({
         compilerOptions: { paths: { '#*': ['./src/*'] } },
       }),
@@ -94,7 +66,7 @@ export default () => <p><Name /></p>`,
   })
 
   it('resolves a bare import against baseUrl alone', async () => {
-    const root = await createProject({
+    const root = await createDirTree({
       'tsconfig.json': JSON.stringify({ compilerOptions: { baseUrl: '.' } }),
       'lib/name.tsx': 'export const Name = () => <b>Ada</b>',
       [ENTRY]: `import { Name } from 'lib/name'
@@ -105,7 +77,7 @@ export default () => <p><Name /></p>`,
   })
 
   it('compiles JSX for Preact whatever the tsconfig asks for', async () => {
-    const root = await createProject({
+    const root = await createDirTree({
       'tsconfig.json': JSON.stringify({
         compilerOptions: { jsx: 'react-jsx', jsxImportSource: 'react' },
       }),
