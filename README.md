@@ -111,11 +111,11 @@ tsx-to-pdf build    # writes outputs/html/, outputs/{name}.pdf (and .md/.png/.jp
 | `port` | `4000` | For `tsx-to-pdf dev` |
 
 ```
-tsx-to-pdf build [--no-pdf] [--md] [--png] [--jpg] [--config <path>]
+tsx-to-pdf build [--[no-]pdf] [--[no-]md] [--[no-]png] [--[no-]jpg] [--config <path>]
 tsx-to-pdf dev   [--port <n>] [--config <path>]
 ```
 
-`--md`, `--png`, and `--jpg` each write an extra output alongside the rest for that build, and `--no-pdf` skips the PDF, whatever the config says.
+Each flag overrides its config key: `--md` and `--no-md` turn the Markdown on and off, and `--port 3000` sets the port. Of the outputs, only the PDF is on by default.
 
 `--no-pdf` never launches a browser on its own: it writes the HTML and CSS, and the Markdown too if `--md` is also given. Those are a pure function of your sources, so rebuilding them is a fast, browserless way for CI to ask whether the document actually changed.
 
@@ -201,14 +201,21 @@ Two things worth doing yourself afterwards, since they are easy to get subtly wr
 The CLI is a thin wrapper around `build` and `serve`.
 
 ```ts
-import { build, findConfig, loadConfig } from 'tsx-to-pdf'
+import {
+  build,
+  findConfigFile,
+  loadConfigFile,
+  resolveConfig,
+} from 'tsx-to-pdf'
 import { register } from 'tsx/esm/api'
 
 register() // needed only if your config or document is TypeScript
-await build(await loadConfig(findConfig()))
+await build(await loadConfigFile(findConfigFile()))
+// Or with no config file, its paths resolved against the cwd or a second argument:
+await build(resolveConfig({ entry: './resume.tsx', outDir: './outputs' }))
 ```
 
-`findConfig` looks for `tsx-to-pdf.config.{ts,mts,js,mjs}` in the cwd, or takes an explicit path. `build` writes the outputs the config's `pdf`, `markdown`, `png`, and `jpg` ask for. To change them for one call, spread the config: `build({ ...config, pdf: false })` is the equivalent of `--no-pdf`.
+`findConfigFile` looks for `tsx-to-pdf.config.{ts,mts,js,mjs}` in the cwd, or takes an explicit path. `build` writes the outputs the config's `pdf`, `markdown`, `png`, and `jpg` ask for. To change them for one call, spread the config: `build({ ...config, pdf: false })` is the equivalent of `--no-pdf`.
 
 ## Notes
 

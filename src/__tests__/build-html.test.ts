@@ -76,7 +76,7 @@ const buildResolvedConfig = (
   entryPath: join(root, FILENAMES.ENTRY),
   outDir: join(root, DIRS.OUTPUTS),
   name: MOCK_FILE_NAME,
-  // The default `pageSize`, as `loadConfig` resolves it.
+  // The default `pageSize`, as `resolveConfig` resolves it.
   page: PAGE_SIZES[DEFAULTS.pageSize],
   ...overrides,
 })

@@ -8,9 +8,10 @@ import { getDefaults } from 'valibot'
 import {
   CONFIG_SCHEMA,
   type Config,
-  findConfig,
-  loadConfig,
+  findConfigFile,
+  loadConfigFile,
   PAGE_SIZES,
+  resolveConfig,
 } from '../config.ts'
 
 vi.mock('node:fs', async () => {
@@ -18,7 +19,7 @@ vi.mock('node:fs', async () => {
   return { ...fs, default: fs }
 })
 
-describe('findConfig', () => {
+describe('findConfigFile', () => {
   beforeEach(() => {
     vol.reset()
   })
@@ -28,61 +29,52 @@ describe('findConfig', () => {
       vol.reset()
       vol.fromJSON({ [`/project/tsx-to-pdf.config.${extension}`]: '' })
 
-      expect(findConfig(undefined, '/project'), extension).toBe(
+      expect(findConfigFile(undefined, '/project'), extension).toBe(
         join('/project', `tsx-to-pdf.config.${extension}`)
       )
     }
   })
 
   it('says what to create when a project has no config at all', () => {
-    expect(() => findConfig(undefined, '/project')).toThrow('No config found')
+    expect(() => findConfigFile(undefined, '/project')).toThrow(
+      'No config found'
+    )
   })
 })
 
-describe('loadConfig', () => {
-  /** A minimal valid config, as the object a config file default-exports. */
+describe('resolveConfig', () => {
+  /** A minimal valid config, as written in code or default-exported from a file. */
   const MINIMAL = { entry: 'doc.tsx', outDir: 'outputs' } satisfies Config
+  const ROOT = '/project'
 
-  /**
-   * Writes a config to a real directory and loads it.
-   *
-   * `loadConfig` reaches its file through `import()`, which goes to the real
-   * loader rather than the mocked `node:fs` the rest of this file installs.
-   */
-  const loadFrom = async (source: string) => {
-    const dir = await mkdtemp(join(tmpdir(), 'tsx-to-pdf-'))
-    const path = join(dir, 'tsx-to-pdf.config.mjs')
-    await writeFile(path, source)
-    return { dir, config: await loadConfig(path) }
-  }
-
-  const buildConfigModule = (config: Config) =>
-    `export default ${JSON.stringify(config)}`
-
-  it('resolves the paths against the config file, not the process', async () => {
-    const { dir, config } = await loadFrom(
-      buildConfigModule({ ...MINIMAL, assets: '../shared/assets' })
-    )
-
-    expect(config).toMatchObject({
-      root: dir,
-      entryPath: join(dir, 'doc.tsx'),
-      outDir: join(dir, 'outputs'),
-      assetsDir: join(dir, '../shared/assets'),
+  it('resolves the paths against the root it is given', () => {
+    expect(
+      resolveConfig({ ...MINIMAL, assets: '../shared/assets' }, ROOT)
+    ).toMatchObject({
+      root: ROOT,
+      entryPath: join(ROOT, 'doc.tsx'),
+      outDir: join(ROOT, 'outputs'),
+      assetsDir: join(ROOT, '../shared/assets'),
     })
   })
 
-  it("fills the schema's defaults, and no others", async () => {
-    const { dir, config } = await loadFrom(buildConfigModule(MINIMAL))
+  it('resolves against the working directory when given no root', () => {
+    expect(resolveConfig(MINIMAL)).toMatchObject({
+      root: process.cwd(),
+      entryPath: join(process.cwd(), 'doc.tsx'),
+    })
+  })
+
+  it("fills the schema's defaults, and no others", () => {
     const DEFAULTS = getDefaults(CONFIG_SCHEMA)
 
     // Whole-object, so a default dropped or a key added on the way fails it.
-    expect(config).toEqual({
+    expect(resolveConfig(MINIMAL, ROOT)).toEqual({
       ...omit(DEFAULTS, ['pageSize']),
-      root: dir,
+      root: ROOT,
       entry: 'doc.tsx',
-      entryPath: join(dir, 'doc.tsx'),
-      outDir: join(dir, 'outputs'),
+      entryPath: join(ROOT, 'doc.tsx'),
+      outDir: join(ROOT, 'outputs'),
       // The entry's basename, so `doc.tsx` writes `doc.pdf`.
       name: 'doc',
       // The default `pageSize`, as the dimensions it names.
@@ -90,15 +82,84 @@ describe('loadConfig', () => {
     })
   })
 
-  it('takes explicit dimensions as the sheet', async () => {
-    const { config } = await loadFrom(
-      buildConfigModule({
-        ...MINIMAL,
-        pageSize: { width: '90mm', height: '50mm' },
-      })
+  it('names the offending key when a value is the wrong type', () => {
+    expect(() =>
+      // @ts-expect-error -- a string port, which only the runtime check can catch in a JS config
+      resolveConfig({ ...MINIMAL, port: 'four thousand' })
+    ).toThrow(/The config is invalid:\n {2}port: /)
+  })
+
+  describe('pageSize', () => {
+    it('takes explicit dimensions as the sheet', () => {
+      expect(
+        resolveConfig({
+          ...MINIMAL,
+          pageSize: { width: '90mm', height: '50mm' },
+        }).page
+      ).toEqual({ width: '90mm', height: '50mm' })
+    })
+
+    it('rejects a page size that is neither a name nor dimensions', () => {
+      expect(() =>
+        // @ts-expect-error -- a size that is not one of the named sheets
+        resolveConfig({ ...MINIMAL, pageSize: 'a6' })
+      ).toThrow('or { width, height } as CSS lengths')
+    })
+  })
+
+  describe('margin', () => {
+    it('rejects a margin naming some sides but not all four', () => {
+      expect(() =>
+        // @ts-expect-error -- two sides where the object form needs all four
+        resolveConfig({ ...MINIMAL, margin: { top: 1, bottom: 1 } })
+      ).toThrow('{ top, right, bottom, left }')
+    })
+
+    it('rejects a negative margin, while allowing zero', () => {
+      expect(() => resolveConfig({ ...MINIMAL, margin: -1 })).toThrow(/margin/)
+      expect(resolveConfig({ ...MINIMAL, margin: 0 }).margin).toBe(0)
+    })
+  })
+
+  describe('maxPages', () => {
+    it('rejects a maxPages that is not a whole page count', () => {
+      for (const maxPages of [0, 1.5]) {
+        expect(
+          () => resolveConfig({ ...MINIMAL, maxPages }),
+          String(maxPages)
+        ).toThrow(/maxPages/)
+      }
+    })
+  })
+})
+
+describe('loadConfigFile', () => {
+  /**
+   * Writes a config to a real directory and loads it.
+   *
+   * `loadConfigFile` reaches its file through `import()`, which goes to the real
+   * loader rather than the mocked `node:fs` the rest of this file installs.
+   */
+  const loadFrom = async (source: string, overrides?: Partial<Config>) => {
+    const dir = await mkdtemp(join(tmpdir(), 'tsx-to-pdf-'))
+    const path = join(dir, 'tsx-to-pdf.config.mjs')
+    await writeFile(path, source)
+    return { dir, config: await loadConfigFile(path, overrides) }
+  }
+
+  const buildConfigModule = (config: Config) =>
+    `export default ${JSON.stringify(config)}`
+
+  it('resolves the paths against the config file, not the process', async () => {
+    const { dir, config } = await loadFrom(
+      buildConfigModule({ entry: 'doc.tsx', outDir: 'outputs' })
     )
 
-    expect(config.page).toEqual({ width: '90mm', height: '50mm' })
+    expect(config).toMatchObject({
+      root: dir,
+      entryPath: join(dir, 'doc.tsx'),
+      outDir: join(dir, 'outputs'),
+    })
   })
 
   it('rejects a config file with no default export', async () => {
@@ -107,44 +168,27 @@ describe('loadConfig', () => {
     )
   })
 
-  it('names the offending key when a value is the wrong type', async () => {
-    await expect(
-      // @ts-expect-error -- a string port, which only the runtime check can catch in a JS config
-      loadFrom(buildConfigModule({ ...MINIMAL, port: 'four thousand' }))
-    ).rejects.toThrow(/port: /)
-  })
+  it("lets overrides replace the file's keys, and checks them alike", async () => {
+    const MODULE = buildConfigModule({
+      entry: 'doc.tsx',
+      outDir: 'outputs',
+      pdf: false,
+      port: 3000,
+    })
 
-  it('rejects a page size that is neither a name nor dimensions', async () => {
-    await expect(
-      // @ts-expect-error -- a size that is not one of the named sheets
-      loadFrom(buildConfigModule({ ...MINIMAL, pageSize: 'a6' }))
-    ).rejects.toThrow('or { width, height } as CSS lengths')
-  })
+    const { config } = await loadFrom(MODULE, { pdf: true, markdown: true })
+    expect(config).toMatchObject({ pdf: true, markdown: true, port: 3000 })
 
-  it('rejects a margin naming some sides but not all four', async () => {
-    await expect(
-      // @ts-expect-error -- two sides where the object form needs all four
-      loadFrom(buildConfigModule({ ...MINIMAL, margin: { top: 1, bottom: 1 } }))
-    ).rejects.toThrow('{ top, right, bottom, left }')
-  })
-
-  it('rejects a negative margin, while allowing zero', async () => {
-    await expect(
-      loadFrom(buildConfigModule({ ...MINIMAL, margin: -1 }))
-    ).rejects.toThrow(/margin/)
-
-    const { config } = await loadFrom(
-      buildConfigModule({ ...MINIMAL, margin: 0 })
+    await expect(loadFrom(MODULE, { port: Number.NaN })).rejects.toThrow(
+      /config\.mjs with its overrides is invalid:\n {2}port: /
     )
-    expect(config.margin).toBe(0)
   })
 
-  it('rejects a maxPages that is not a whole page count', async () => {
-    for (const maxPages of [0, 1.5]) {
-      await expect(
-        loadFrom(buildConfigModule({ ...MINIMAL, maxPages })),
-        String(maxPages)
-      ).rejects.toThrow(/maxPages/)
-    }
+  it('names the file when its config is invalid', async () => {
+    await expect(
+      loadFrom(
+        buildConfigModule({ entry: 'doc.tsx', outDir: 'outputs', margin: -1 })
+      )
+    ).rejects.toThrow(/tsx-to-pdf\.config\.mjs is invalid:/)
   })
 })

@@ -160,7 +160,7 @@ export const CONFIG_SCHEMA = object({
    * Needs Playwright, and Chromium installed through it (`playwright install
    * chromium`).
    *
-   * @cli `--no-pdf`
+   * @cli `--[no-]pdf`
    * @default true
    */
   pdf: optional(boolean(), true),
@@ -170,7 +170,7 @@ export const CONFIG_SCHEMA = object({
    * Content only: layout set by classes has no Markdown equivalent, so it is
    * dropped.
    *
-   * @cli `--md`
+   * @cli `--[no-]md`
    * @default false
    */
   markdown: optional(boolean(), false),
@@ -181,7 +181,7 @@ export const CONFIG_SCHEMA = object({
    * Needs Playwright and its Chromium, like {@link Config.pdf}, and shares the
    * one browser with it when both are on.
    *
-   * @cli `--png`
+   * @cli `--[no-]png`
    * @default false
    */
   png: optional(boolean(), false),
@@ -189,7 +189,7 @@ export const CONFIG_SCHEMA = object({
    * Also write `<name>.jpg`: the screenshot {@link Config.png} describes, as a
    * JPG.
    *
-   * @cli `--jpg`
+   * @cli `--[no-]jpg`
    * @default false
    */
   jpg: optional(boolean(), false),
@@ -239,7 +239,10 @@ const CONFIG_NAMES = CONFIG_EXTENSIONS.map(
 )
 
 /** Where the config lives: `--config` if given, else the nearest one at `from`. */
-export const findConfig = (explicit?: string, from = process.cwd()): string => {
+export const findConfigFile = (
+  explicit?: string,
+  from = process.cwd()
+): string => {
   if (explicit) {
     const path = isAbsolute(explicit) ? explicit : resolve(from, explicit)
 
@@ -268,28 +271,23 @@ const toDimensions = (pageSize: PageSize): PageDimensions =>
   typeof pageSize === 'string' ? PAGE_SIZES[pageSize] : pageSize
 
 /**
- * Reads the config at `path`, resolves its paths, and fills in its defaults.
- *
- * Loading a TypeScript config needs `tsx` registered first, which the CLI does
- * — hence taking the path rather than finding it here, so registration can
- * happen in between.
+ * Checks `input` against the schema, fills in its defaults, and resolves its
+ * paths against `root`, naming `source` in the error when it is invalid.
  */
-export const loadConfig = async (path: string): Promise<ResolvedConfig> => {
-  const root = dirname(path)
-
-  const module = (await import(pathToFileURL(path).href)) as {
-    default?: Partial<Config>
-  }
-
-  if (!module.default) {
-    throw new Error(`${path} has no default export.`)
-  }
-
-  const result = safeParse(CONFIG_SCHEMA, module.default)
+const checkAndResolve = ({
+  input,
+  root,
+  source,
+}: {
+  input: unknown
+  root: string
+  source: string
+}): ResolvedConfig => {
+  const result = safeParse(CONFIG_SCHEMA, input)
 
   if (!result.success) {
     throw new Error(
-      `${path} is invalid:\n${result.issues
+      `${source} is invalid:\n${result.issues
         .map(
           (issue) => `  ${getDotPath(issue) ?? '(config)'}: ${issue.message}`
         )
@@ -314,4 +312,43 @@ export const loadConfig = async (path: string): Promise<ResolvedConfig> => {
     name: config.name ?? basename(config.entry, extname(config.entry)),
     page: toDimensions(config.pageSize),
   }
+}
+
+/**
+ * Checks a config written in code, fills in its defaults, and resolves its
+ * paths against `root`, for `build()` or `serve()` without a config file.
+ */
+export const resolveConfig = (
+  config: Config,
+  root: string = process.cwd()
+): ResolvedConfig =>
+  checkAndResolve({ input: config, root, source: 'The config' })
+
+/**
+ * Reads the config at `path`, fills in its defaults, and resolves its paths
+ * against the file's directory.
+ *
+ * `overrides` replace the file's keys before the check, as the CLI's flags do.
+ * Loading a TypeScript config needs `tsx` registered first, which the CLI does
+ * — hence taking the path rather than finding it here, so registration can
+ * happen in between.
+ */
+export const loadConfigFile = async (
+  path: string,
+  overrides: Partial<Config> = {}
+): Promise<ResolvedConfig> => {
+  const module = (await import(pathToFileURL(path).href)) as {
+    default?: Partial<Config>
+  }
+
+  if (!module.default) {
+    throw new Error(`${path} has no default export.`)
+  }
+
+  return checkAndResolve({
+    input: { ...module.default, ...overrides },
+    root: dirname(path),
+    // So a bad override isn't blamed on the file alone.
+    source: Object.keys(overrides).length ? `${path} with its overrides` : path,
+  })
 }
