@@ -1,12 +1,14 @@
-/** Components a test entry can import: each one's source, and the markup it renders. */
+/** Components a test entry can import: each one's source, the markup it renders, and its import statement. */
 export const COMPONENTS = {
   NAME: {
     SOURCE: 'export const Name = () => <b>Ada</b>',
     MARKUP: '<b>Ada</b>',
+    importFrom: (specifier: string) => `import { Name } from '${specifier}'`,
   },
   LOGO: {
     SOURCE: 'export const Logo = () => <i>logo</i>',
     MARKUP: '<i>logo</i>',
+    importFrom: (specifier: string) => `import { Logo } from '${specifier}'`,
   },
 } as const
 
