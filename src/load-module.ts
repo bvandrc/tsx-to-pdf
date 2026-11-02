@@ -12,7 +12,7 @@ import { createJiti } from 'jiti'
 export const createImporter = (
   root: string,
   { fresh = false }: { fresh?: boolean } = {}
-): ((path: string) => Promise<unknown>) => {
+) => {
   const jiti = createJiti(pathToFileURL(join(root, '/')).href, {
     jsx: { runtime: 'automatic', importSource: 'preact' },
     // Each file's imports resolve through the tsconfig nearest to it, with
@@ -24,5 +24,5 @@ export const createImporter = (
     interopDefault: false,
   })
 
-  return (path) => jiti.import(path)
+  return (path: string) => jiti.import(path)
 }
