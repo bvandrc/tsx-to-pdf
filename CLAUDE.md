@@ -41,7 +41,7 @@ Synced from https://github.com/bvandrc/bvandrc-conventions — follow all of the
 - **Package manager**: pnpm. `npm install` writes a competing lockfile CI ignores.
 - **The consumer's tsconfig is not trusted to set JSX.** `createImporter` loads their config and document through `jiti`, with Preact's JSX pinned in its options, so their tsconfig only contributes its `paths` and `baseUrl`, which `jiti`'s `tsconfigPaths` resolves from the tsconfig nearest each file.
 - **No subprocesses.** Tailwind runs through `@tailwindcss/node`'s `compile()` and `@tailwindcss/oxide`'s `Scanner`, not its CLI: Windows `.bin` shims are shell scripts, and spawning them has broken before.
-- **`jiti` is a loader, not the bundler.** It is a runtime dependency only for loading the _consumer's_ config and document, since Node strips types natively but cannot parse JSX. It is plain JS with no native binary, and `@tailwindcss/node` depends on it already. `tsdown` builds this package.
+- **`jiti` loads the consumer's files.** It is a runtime dependency only for importing the _consumer's_ config and document, compiling each as it loads, since Node strips types natively but cannot parse JSX. It is plain JS with no native binary, and `@tailwindcss/node` depends on it already. This package's own build is `tsdown`.
 - **Preact**
   - **Only a serialiser**: `preact-render-to-string` turns static elements into HTML. No hooks, no state, no hydration. JSX escapes content, so there is no raw-HTML path.
   - **Why not React**: nothing binding. Preact ships its own types at a third of the install size, which is enough for serialising static elements.
