@@ -104,7 +104,7 @@
     }
   },
   "devDependencies": {
-    "@biomejs/biome": "^2",
+    "@biomejs/biome": "^2.6",
     "@types/node": "^24",
     "es-toolkit": "^1",
     "memfs": "^4",
