@@ -12,53 +12,58 @@ Commands:
 
 Options:
   --config <path>  Config file. Defaults to tsx-to-pdf.config.ts in the cwd
-  --no-pdf         build only: skip the PDF, so no browser is needed
-  --md             build only: also write the Markdown
-  --png            build only: also write a full-page PNG screenshot
-  --jpg            build only: also write a full-page JPG screenshot
-  --port <n>       dev only: overrides the configured port
+  --[no-]pdf       Write the PDF. --no-pdf needs no browser
+  --[no-]md        Write the Markdown
+  --[no-]png       Write a full-page PNG screenshot
+  --[no-]jpg       Write a full-page JPG screenshot
+  --port <n>       The port dev serves on
+
+Each of the last five sets its config key for this run: pdf, markdown, png,
+jpg, or port.
 `
 
 const main = async (args: string[]): Promise<void> => {
   const { values, positionals } = parseArgs({
     args,
     allowPositionals: true,
+    allowNegative: true, // allow for --X and --no-X , for every boolean
     options: {
       config: { type: 'string' },
-      'no-pdf': { type: 'boolean' },
+      help: { type: 'boolean', short: 'h' },
+      // The outputs, each named for the extension it writes.
+      pdf: { type: 'boolean' },
       md: { type: 'boolean' },
       png: { type: 'boolean' },
       jpg: { type: 'boolean' },
       port: { type: 'string' },
-      help: { type: 'boolean', short: 'h' },
     },
   })
 
   const [command] = positionals
+  const { config: configOption, help, port, md, ...outputs } = values
 
-  if (!command || values.help) {
+  if (!command || help) {
     console.info(USAGE)
     return
   }
 
-  const config = await loadConfigFile(findConfigFile(values.config))
+  // Checked by the config's own schema, so `--port abc` fails the way
+  // `port: 'abc'` would. A flag left off leaves the config's choice as it is.
+  const config = await loadConfigFile(findConfigFile(configOption), {
+    ...outputs,
+    ...(md !== undefined && { markdown: md }), // The one flag not named after its key.
+    ...(port !== undefined && { port: Number(port) }),
+  })
 
   switch (command) {
     case 'build': {
-      const written = await build({
-        ...config,
-        // A flag left off leaves the config's choice as it is.
-        ...(values['no-pdf'] && { pdf: false }),
-        ...(values.md && { markdown: true }),
-        ...(values.png && { png: true }),
-        ...(values.jpg && { jpg: true }),
-      })
+      const written = await build(config)
       console.info(`Wrote ${written.join(', ')}`)
       return
     }
 
     case 'dev': {
-      serve(values.port ? { ...config, port: Number(values.port) } : config)
+      serve(config)
       return
     }
 
