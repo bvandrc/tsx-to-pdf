@@ -2,8 +2,8 @@
 export { build } from './build.ts'
 export {
   type Config,
-  findConfig,
-  loadConfig,
+  findConfigFile,
+  loadConfigFile,
   type Margin,
   PAGE_SIZES,
   type PageDimensions,

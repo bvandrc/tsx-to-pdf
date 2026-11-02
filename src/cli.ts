@@ -3,7 +3,7 @@ import { parseArgs } from 'node:util'
 import { register } from 'tsx/esm/api'
 
 import { build } from './build.ts'
-import { findConfig, loadConfig } from './config.ts'
+import { findConfigFile, loadConfigFile } from './config.ts'
 import { serve } from './dev-server.tsx'
 import { jsxTsconfig } from './merge-tsconfig.ts'
 
@@ -46,7 +46,7 @@ const main = async (args: string[]): Promise<void> => {
 
   // Found before registering, since locating it only touches the filesystem
   // while loading it may need TypeScript.
-  const configPath = findConfig(values.config)
+  const configPath = findConfigFile(values.config)
 
   // Lets the config and the document be TypeScript without the project having
   // to compile them first. Node strips type annotations natively but cannot
@@ -56,7 +56,7 @@ const main = async (args: string[]): Promise<void> => {
   // a project needs no tsconfig, and nothing in an existing one has to be right.
   register({ tsconfig: await jsxTsconfig(dirname(configPath)) })
 
-  const config = await loadConfig(configPath)
+  const config = await loadConfigFile(configPath)
 
   switch (command) {
     case 'build': {

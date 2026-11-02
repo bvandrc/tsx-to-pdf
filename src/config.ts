@@ -239,7 +239,10 @@ const CONFIG_NAMES = CONFIG_EXTENSIONS.map(
 )
 
 /** Where the config lives: `--config` if given, else the nearest one at `from`. */
-export const findConfig = (explicit?: string, from = process.cwd()): string => {
+export const findConfigFile = (
+  explicit?: string,
+  from = process.cwd()
+): string => {
   if (explicit) {
     const path = isAbsolute(explicit) ? explicit : resolve(from, explicit)
 
@@ -329,7 +332,7 @@ export const resolveConfig = (
  * — hence taking the path rather than finding it here, so registration can
  * happen in between.
  */
-export const loadConfig = async (path: string): Promise<ResolvedConfig> => {
+export const loadConfigFile = async (path: string): Promise<ResolvedConfig> => {
   const module = (await import(pathToFileURL(path).href)) as {
     default?: unknown
   }

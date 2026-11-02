@@ -8,8 +8,8 @@ import { getDefaults } from 'valibot'
 import {
   CONFIG_SCHEMA,
   type Config,
-  findConfig,
-  loadConfig,
+  findConfigFile,
+  loadConfigFile,
   PAGE_SIZES,
   resolveConfig,
 } from '../config.ts'
@@ -19,7 +19,7 @@ vi.mock('node:fs', async () => {
   return { ...fs, default: fs }
 })
 
-describe('findConfig', () => {
+describe('findConfigFile', () => {
   beforeEach(() => {
     vol.reset()
   })
@@ -29,14 +29,16 @@ describe('findConfig', () => {
       vol.reset()
       vol.fromJSON({ [`/project/tsx-to-pdf.config.${extension}`]: '' })
 
-      expect(findConfig(undefined, '/project'), extension).toBe(
+      expect(findConfigFile(undefined, '/project'), extension).toBe(
         join('/project', `tsx-to-pdf.config.${extension}`)
       )
     }
   })
 
   it('says what to create when a project has no config at all', () => {
-    expect(() => findConfig(undefined, '/project')).toThrow('No config found')
+    expect(() => findConfigFile(undefined, '/project')).toThrow(
+      'No config found'
+    )
   })
 })
 
@@ -131,18 +133,18 @@ describe('resolveConfig', () => {
   })
 })
 
-describe('loadConfig', () => {
+describe('loadConfigFile', () => {
   /**
    * Writes a config to a real directory and loads it.
    *
-   * `loadConfig` reaches its file through `import()`, which goes to the real
+   * `loadConfigFile` reaches its file through `import()`, which goes to the real
    * loader rather than the mocked `node:fs` the rest of this file installs.
    */
   const loadFrom = async (source: string) => {
     const dir = await mkdtemp(join(tmpdir(), 'tsx-to-pdf-'))
     const path = join(dir, 'tsx-to-pdf.config.mjs')
     await writeFile(path, source)
-    return { dir, config: await loadConfig(path) }
+    return { dir, config: await loadConfigFile(path) }
   }
 
   const buildConfigModule = (config: Config) =>
