@@ -3,7 +3,7 @@ import { parseArgs } from 'node:util'
 import { register } from 'tsx/esm/api'
 
 import { build } from './build.ts'
-import { findConfig, loadConfig } from './config.ts'
+import { findConfigFile, loadConfigFile } from './config.ts'
 import { serve } from './dev-server.tsx'
 import { jsxTsconfig } from './merge-tsconfig.ts'
 
@@ -52,7 +52,7 @@ const main = async (args: string[]): Promise<void> => {
 
   // Found before registering, since locating it only touches the filesystem
   // while loading it may need TypeScript.
-  const configPath = findConfig(configOption)
+  const configPath = findConfigFile(configOption)
 
   // Lets the config and the document be TypeScript without the project having
   // to compile them first. Node strips type annotations natively but cannot
@@ -64,7 +64,7 @@ const main = async (args: string[]): Promise<void> => {
 
   // Checked by the config's own schema, so `--port abc` fails the way
   // `port: 'abc'` would. A flag left off leaves the config's choice as it is.
-  const config = await loadConfig(configPath, {
+  const config = await loadConfigFile(configPath, {
     ...outputs,
     // The one flag not named after its key.
     ...(md !== undefined && { markdown: md }),
