@@ -271,11 +271,15 @@ const toDimensions = (pageSize: PageSize): PageDimensions =>
  * Checks `input` against the schema, fills in its defaults, and resolves its
  * paths against `root`, naming `source` in the error when it is invalid.
  */
-const checkAndResolve = (
-  input: unknown,
-  root: string,
+const checkAndResolve = ({
+  input,
+  root,
+  source,
+}: {
+  input: unknown
+  root: string
   source: string
-): ResolvedConfig => {
+}): ResolvedConfig => {
   const result = safeParse(CONFIG_SCHEMA, input)
 
   if (!result.success) {
@@ -314,7 +318,8 @@ const checkAndResolve = (
 export const resolveConfig = (
   config: Config,
   root: string = process.cwd()
-): ResolvedConfig => checkAndResolve(config, root, 'The config')
+): ResolvedConfig =>
+  checkAndResolve({ input: config, root, source: 'The config' })
 
 /**
  * Reads the config at `path`, fills in its defaults, and resolves its paths
@@ -337,10 +342,10 @@ export const loadConfig = async (
     throw new Error(`${path} has no default export.`)
   }
 
-  return checkAndResolve(
-    { ...module.default, ...overrides },
-    dirname(path),
+  return checkAndResolve({
+    input: { ...module.default, ...overrides },
+    root: dirname(path),
     // So a bad override isn't blamed on the file alone.
-    Object.keys(overrides).length ? `${path} with its overrides` : path
-  )
+    source: Object.keys(overrides).length ? `${path} with its overrides` : path,
+  })
 }
