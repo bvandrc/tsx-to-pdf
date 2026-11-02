@@ -4,7 +4,7 @@ import { getDefaults } from 'valibot'
 
 import { buildStylesheet, copyAssets } from '../build-html.tsx'
 import { CONFIG_SCHEMA, PAGE_SIZES, type ResolvedConfig } from '../config.ts'
-import { createDirTree } from './create-dir-tree.ts'
+import { createDirTree } from './helpers/create-dir-tree.ts'
 
 /** The document a build is pointed at, and the directory it writes into. */
 const MOCK_FILE_NAME = 'doc'

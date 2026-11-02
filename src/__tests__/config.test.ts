@@ -11,7 +11,7 @@ import {
   PAGE_SIZES,
   resolveConfig,
 } from '../config.ts'
-import { createDirTree } from './create-dir-tree.ts'
+import { createDirTree } from './helpers/create-dir-tree.ts'
 
 vi.mock('node:fs', async () => {
   const { fs } = await import('memfs')

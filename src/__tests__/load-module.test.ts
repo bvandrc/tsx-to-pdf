@@ -3,7 +3,7 @@ import { h } from 'preact'
 import { render } from 'preact-render-to-string'
 
 import { createImporter } from '../load-module.ts'
-import { createDirTree } from './create-dir-tree.ts'
+import { createDirTree } from './helpers/create-dir-tree.ts'
 
 const ENTRY = 'doc.tsx'
 

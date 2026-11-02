@@ -20,7 +20,7 @@ afterAll(async () => {
  */
 export const createDirTree = async (files: Record<string, string>) => {
   const dir = await mkdtemp(
-    join(import.meta.dirname, '../../node_modules/.tsx-to-pdf-test-')
+    join(import.meta.dirname, '../../../node_modules/.tsx-to-pdf-test-')
   )
   roots.push(dir)
 
