@@ -28,8 +28,7 @@ const main = async (args: string[]): Promise<void> => {
   const { values, positionals } = parseArgs({
     args,
     allowPositionals: true,
-    // `--no-pdf` and the rest, for every boolean.
-    allowNegative: true,
+    allowNegative: true, // allow for --X and --no-X , for every boolean
     options: {
       config: { type: 'string' },
       help: { type: 'boolean', short: 'h' },
