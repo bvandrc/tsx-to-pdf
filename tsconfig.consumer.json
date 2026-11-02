@@ -1,7 +1,7 @@
 // Optional starting point for a project that uses tsx-to-pdf:
 //   { "extends": "tsx-to-pdf/tsconfig", "include": ["**/*.ts", "**/*.tsx"] }
 //
-// The build does not depend on this — it layers the `jsx` pair on at build time
+// The build does not depend on this — it compiles the JSX for Preact
 // regardless. Extending it just makes the editor and `tsc --noEmit` agree with
 // how the document is really compiled.
 //

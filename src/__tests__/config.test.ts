@@ -1,5 +1,3 @@
-import { mkdtemp, writeFile } from 'node:fs/promises'
-import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { omit } from 'es-toolkit'
 import { vol } from 'memfs'
@@ -13,6 +11,7 @@ import {
   PAGE_SIZES,
   resolveConfig,
 } from '../config.ts'
+import { createDirTree } from './helpers/create-dir-tree.ts'
 
 vi.mock('node:fs', async () => {
   const { fs } = await import('memfs')
@@ -141,10 +140,14 @@ describe('loadConfigFile', () => {
    * loader rather than the mocked `node:fs` the rest of this file installs.
    */
   const loadFrom = async (source: string, overrides?: Partial<Config>) => {
-    const dir = await mkdtemp(join(tmpdir(), 'tsx-to-pdf-'))
-    const path = join(dir, 'tsx-to-pdf.config.mjs')
-    await writeFile(path, source)
-    return { dir, config: await loadConfigFile(path, overrides) }
+    const dir = await createDirTree({ 'tsx-to-pdf.config.mjs': source })
+    return {
+      dir,
+      config: await loadConfigFile(
+        join(dir, 'tsx-to-pdf.config.mjs'),
+        overrides
+      ),
+    }
   }
 
   const buildConfigModule = (config: Config) =>

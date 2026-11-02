@@ -188,9 +188,7 @@ import {
   loadConfigFile,
   resolveConfig,
 } from 'tsx-to-pdf'
-import { register } from 'tsx/esm/api'
 
-register() // needed only if your config or document is TypeScript
 await build(await loadConfigFile(findConfigFile()))
 // Or with no config file, its paths resolved against the cwd or a second argument:
 await build(resolveConfig({ entry: './resume.tsx', outDir: './outputs' }))

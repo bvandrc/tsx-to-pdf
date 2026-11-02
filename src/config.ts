@@ -7,7 +7,6 @@ import {
   join,
   resolve,
 } from 'node:path'
-import { pathToFileURL } from 'node:url'
 import { omit } from 'es-toolkit'
 import type { SetRequired } from 'type-fest'
 import {
@@ -29,6 +28,7 @@ import {
   union,
 } from 'valibot'
 
+import { createImporter } from './load-module.ts'
 import { typedKeys } from './utils/index.ts'
 
 /** A length in inches. Zero is a legitimate margin; negative is not. */
@@ -329,15 +329,14 @@ export const resolveConfig = (
  * against the file's directory.
  *
  * `overrides` replace the file's keys before the check, as the CLI's flags do.
- * Loading a TypeScript config needs `tsx` registered first, which the CLI does
- * — hence taking the path rather than finding it here, so registration can
- * happen in between.
  */
 export const loadConfigFile = async (
   path: string,
   overrides: Partial<Config> = {}
 ): Promise<ResolvedConfig> => {
-  const module = (await import(pathToFileURL(path).href)) as {
+  const module = (await createImporter(dirname(path), { cacheModules: true })(
+    path
+  )) as {
     default?: Partial<Config>
   }
 
