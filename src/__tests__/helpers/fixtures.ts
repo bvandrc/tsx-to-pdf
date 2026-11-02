@@ -5,11 +5,6 @@ export const COMPONENTS = {
     MARKUP: '<b>Ada</b>',
     importFrom: (specifier: string) => `import { Name } from '${specifier}'`,
   },
-  LOGO: {
-    SOURCE: 'export const Logo = () => <i>logo</i>',
-    MARKUP: '<i>logo</i>',
-    importFrom: (specifier: string) => `import { Logo } from '${specifier}'`,
-  },
 } as const
 
 /**
