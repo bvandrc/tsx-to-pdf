@@ -8,6 +8,7 @@ import {
   resolve,
 } from 'node:path'
 import { omit } from 'es-toolkit'
+import { objectKeys } from 'ts-extras'
 import type { SetRequired } from 'type-fest'
 import {
   boolean,
@@ -29,7 +30,6 @@ import {
 } from 'valibot'
 
 import { createImporter } from './load-module.ts'
-import { typedKeys } from './utils/index.ts'
 
 /** A length in inches. Zero is a legitimate margin; negative is not. */
 const INCHES_SCHEMA = pipe(number(), minValue(0))
@@ -52,7 +52,7 @@ export const PAGE_SIZES = {
 export type PageSizeName = keyof typeof PAGE_SIZES
 
 /** The names, as a value, so the schema and its message can both read them. */
-const PAGE_SIZE_NAMES = typedKeys(PAGE_SIZES)
+const PAGE_SIZE_NAMES = objectKeys(PAGE_SIZES)
 
 /**
  * The config as a runtime check, with every default filled so nothing
