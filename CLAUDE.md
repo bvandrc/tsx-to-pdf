@@ -58,4 +58,3 @@ Synced from https://github.com/bvandrc/bvandrc-conventions — follow all of the
   - **`deps.onlyBundle`** names only those two, so nothing heavier is swallowed by accident.
   - **Real dependencies**: `type-fest` and `valibot`, because their types reach the declarations, where bundling inlines them: 33 kB for `type-fest`, and 55 kB for `valibot`, which `Config` is inferred from.
 - **`CONFIG_SCHEMA` is the source of `Config`**: each key's type, default, and JSDoc live on its entry in the valibot schema, and `Config` and `ResolvedConfig` are inferred from it, so the JSDoc there is what a consumer's editor shows.
-- **Typed `Object` walks**: `objectKeys`, `objectEntries`, and `objectFromEntries` come from `ts-extras`. They are the builtins with the cast a call site would otherwise write by hand, so reach for one instead of asserting the result -- and leave `Object.keys`/`entries`/`fromEntries` alone where the widened type is what's wanted.
